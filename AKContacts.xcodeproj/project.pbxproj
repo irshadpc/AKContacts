@@ -10,17 +10,17 @@
 		C669518C16B6FD7100D030A2 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C669518B16B6FD7100D030A2 /* UIKit.framework */; };
 		C669518E16B6FD7100D030A2 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C669518D16B6FD7100D030A2 /* Foundation.framework */; };
 		C669519016B6FD7100D030A2 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C669518F16B6FD7100D030A2 /* CoreGraphics.framework */; };
-		C669519616B6FD7100D030A2 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C669519416B6FD7100D030A2 /* InfoPlist.strings */; };
-		C669519816B6FD7100D030A2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C669519716B6FD7100D030A2 /* main.m */; };
-		C669519C16B6FD7100D030A2 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C669519B16B6FD7100D030A2 /* AppDelegate.m */; };
-		C669519E16B6FD7100D030A2 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = C669519D16B6FD7100D030A2 /* Default.png */; };
-		C66951A016B6FD7100D030A2 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C669519F16B6FD7100D030A2 /* Default@2x.png */; };
-		C66951A216B6FD7100D030A2 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C66951A116B6FD7100D030A2 /* Default-568h@2x.png */; };
 		C66951AA16B6FD7100D030A2 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C66951A916B6FD7100D030A2 /* SenTestingKit.framework */; };
 		C66951AB16B6FD7100D030A2 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C669518B16B6FD7100D030A2 /* UIKit.framework */; };
 		C66951AC16B6FD7100D030A2 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C669518D16B6FD7100D030A2 /* Foundation.framework */; };
 		C66951B416B6FD7100D030A2 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C66951B216B6FD7100D030A2 /* InfoPlist.strings */; };
 		C66951B716B6FD7100D030A2 /* AKContactsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C66951B616B6FD7100D030A2 /* AKContactsTests.m */; };
+		C66951C316B6FF8F00D030A2 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C66951C216B6FF8F00D030A2 /* AppDelegate.m */; };
+		C66951CC16B6FFA400D030A2 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C66951C716B6FFA400D030A2 /* Default-568h@2x.png */; };
+		C66951CD16B6FFA400D030A2 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = C66951C816B6FFA400D030A2 /* Default.png */; };
+		C66951CE16B6FFA400D030A2 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C66951C916B6FFA400D030A2 /* Default@2x.png */; };
+		C66951CF16B6FFA400D030A2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C66951CA16B6FFA400D030A2 /* main.m */; };
+		C66951D216B6FFE100D030A2 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C66951D016B6FFE100D030A2 /* InfoPlist.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,21 +38,21 @@
 		C669518B16B6FD7100D030A2 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		C669518D16B6FD7100D030A2 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		C669518F16B6FD7100D030A2 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
-		C669519316B6FD7100D030A2 /* AKContacts-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "AKContacts-Info.plist"; sourceTree = "<group>"; };
-		C669519516B6FD7100D030A2 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		C669519716B6FD7100D030A2 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		C669519916B6FD7100D030A2 /* AKContacts-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AKContacts-Prefix.pch"; sourceTree = "<group>"; };
-		C669519A16B6FD7100D030A2 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		C669519B16B6FD7100D030A2 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		C669519D16B6FD7100D030A2 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
-		C669519F16B6FD7100D030A2 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
-		C66951A116B6FD7100D030A2 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		C66951A816B6FD7100D030A2 /* AKContactsTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AKContactsTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C66951A916B6FD7100D030A2 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
 		C66951B116B6FD7100D030A2 /* AKContactsTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "AKContactsTests-Info.plist"; sourceTree = "<group>"; };
 		C66951B316B6FD7100D030A2 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C66951B516B6FD7100D030A2 /* AKContactsTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AKContactsTests.h; sourceTree = "<group>"; };
 		C66951B616B6FD7100D030A2 /* AKContactsTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AKContactsTests.m; sourceTree = "<group>"; };
+		C66951C116B6FF8F00D030A2 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = AKContactsDemo/AppDelegate.h; sourceTree = "<group>"; };
+		C66951C216B6FF8F00D030A2 /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = AKContactsDemo/AppDelegate.m; sourceTree = "<group>"; };
+		C66951C516B6FFA400D030A2 /* AKContacts-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "AKContacts-Info.plist"; path = "AKContactsDemo/AKContacts-Info.plist"; sourceTree = "<group>"; };
+		C66951C616B6FFA400D030A2 /* AKContacts-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "AKContacts-Prefix.pch"; path = "AKContactsDemo/AKContacts-Prefix.pch"; sourceTree = "<group>"; };
+		C66951C716B6FFA400D030A2 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default-568h@2x.png"; path = "AKContactsDemo/Default-568h@2x.png"; sourceTree = "<group>"; };
+		C66951C816B6FFA400D030A2 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Default.png; path = AKContactsDemo/Default.png; sourceTree = "<group>"; };
+		C66951C916B6FFA400D030A2 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default@2x.png"; path = "AKContactsDemo/Default@2x.png"; sourceTree = "<group>"; };
+		C66951CA16B6FFA400D030A2 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = AKContactsDemo/main.m; sourceTree = "<group>"; };
+		C66951D116B6FFE100D030A2 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = AKContactsDemo/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +82,7 @@
 		C669517F16B6FD7100D030A2 = {
 			isa = PBXGroup;
 			children = (
+				C66951C016B6FF8000D030A2 /* AKContactsDemo */,
 				C669519116B6FD7100D030A2 /* AKContacts */,
 				C66951AF16B6FD7100D030A2 /* AKContactsTests */,
 				C669518A16B6FD7100D030A2 /* Frameworks */,
@@ -112,25 +113,8 @@
 		C669519116B6FD7100D030A2 /* AKContacts */ = {
 			isa = PBXGroup;
 			children = (
-				C669519A16B6FD7100D030A2 /* AppDelegate.h */,
-				C669519B16B6FD7100D030A2 /* AppDelegate.m */,
-				C669519216B6FD7100D030A2 /* Supporting Files */,
 			);
 			path = AKContacts;
-			sourceTree = "<group>";
-		};
-		C669519216B6FD7100D030A2 /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				C669519316B6FD7100D030A2 /* AKContacts-Info.plist */,
-				C669519416B6FD7100D030A2 /* InfoPlist.strings */,
-				C669519716B6FD7100D030A2 /* main.m */,
-				C669519916B6FD7100D030A2 /* AKContacts-Prefix.pch */,
-				C669519D16B6FD7100D030A2 /* Default.png */,
-				C669519F16B6FD7100D030A2 /* Default@2x.png */,
-				C66951A116B6FD7100D030A2 /* Default-568h@2x.png */,
-			);
-			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 		C66951AF16B6FD7100D030A2 /* AKContactsTests */ = {
@@ -148,6 +132,30 @@
 			children = (
 				C66951B116B6FD7100D030A2 /* AKContactsTests-Info.plist */,
 				C66951B216B6FD7100D030A2 /* InfoPlist.strings */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		C66951C016B6FF8000D030A2 /* AKContactsDemo */ = {
+			isa = PBXGroup;
+			children = (
+				C66951C416B6FF9300D030A2 /* Supporting Files */,
+				C66951C116B6FF8F00D030A2 /* AppDelegate.h */,
+				C66951C216B6FF8F00D030A2 /* AppDelegate.m */,
+			);
+			name = AKContactsDemo;
+			sourceTree = "<group>";
+		};
+		C66951C416B6FF9300D030A2 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				C66951D016B6FFE100D030A2 /* InfoPlist.strings */,
+				C66951C516B6FFA400D030A2 /* AKContacts-Info.plist */,
+				C66951C616B6FFA400D030A2 /* AKContacts-Prefix.pch */,
+				C66951C716B6FFA400D030A2 /* Default-568h@2x.png */,
+				C66951C816B6FFA400D030A2 /* Default.png */,
+				C66951C916B6FFA400D030A2 /* Default@2x.png */,
+				C66951CA16B6FFA400D030A2 /* main.m */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -223,10 +231,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C669519616B6FD7100D030A2 /* InfoPlist.strings in Resources */,
-				C669519E16B6FD7100D030A2 /* Default.png in Resources */,
-				C66951A016B6FD7100D030A2 /* Default@2x.png in Resources */,
-				C66951A216B6FD7100D030A2 /* Default-568h@2x.png in Resources */,
+				C66951CC16B6FFA400D030A2 /* Default-568h@2x.png in Resources */,
+				C66951CD16B6FFA400D030A2 /* Default.png in Resources */,
+				C66951CE16B6FFA400D030A2 /* Default@2x.png in Resources */,
+				C66951D216B6FFE100D030A2 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -261,8 +269,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C669519816B6FD7100D030A2 /* main.m in Sources */,
-				C669519C16B6FD7100D030A2 /* AppDelegate.m in Sources */,
+				C66951C316B6FF8F00D030A2 /* AppDelegate.m in Sources */,
+				C66951CF16B6FFA400D030A2 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -285,18 +293,18 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		C669519416B6FD7100D030A2 /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				C669519516B6FD7100D030A2 /* en */,
-			);
-			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
 		C66951B216B6FD7100D030A2 /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
 				C66951B316B6FD7100D030A2 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		C66951D016B6FFE100D030A2 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C66951D116B6FFE100D030A2 /* en */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -364,8 +372,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "AKContacts/AKContacts-Prefix.pch";
-				INFOPLIST_FILE = "AKContacts/AKContacts-Info.plist";
+				GCC_PREFIX_HEADER = "AKContactsDemo/AKContacts-Prefix.pch";
+				INFOPLIST_FILE = "$(SRCROOT)/AKContactsDemo/AKContacts-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -375,8 +383,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "AKContacts/AKContacts-Prefix.pch";
-				INFOPLIST_FILE = "AKContacts/AKContacts-Info.plist";
+				GCC_PREFIX_HEADER = "AKContactsDemo/AKContacts-Prefix.pch";
+				INFOPLIST_FILE = "$(SRCROOT)/AKContactsDemo/AKContacts-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
