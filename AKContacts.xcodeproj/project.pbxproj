@@ -21,6 +21,12 @@
 		C66951CE16B6FFA400D030A2 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C66951C916B6FFA400D030A2 /* Default@2x.png */; };
 		C66951CF16B6FFA400D030A2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C66951CA16B6FFA400D030A2 /* main.m */; };
 		C66951D216B6FFE100D030A2 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C66951D016B6FFE100D030A2 /* InfoPlist.strings */; };
+		C66951DB16B702F800D030A2 /* AddressBookManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C66951D416B702F800D030A2 /* AddressBookManager.m */; };
+		C66951DC16B702F800D030A2 /* AKContact.m in Sources */ = {isa = PBXBuildFile; fileRef = C66951D616B702F800D030A2 /* AKContact.m */; };
+		C66951DD16B702F800D030A2 /* AKContactsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C66951D816B702F800D030A2 /* AKContactsViewController.m */; };
+		C66951DE16B702F800D030A2 /* Constants.m in Sources */ = {isa = PBXBuildFile; fileRef = C66951DA16B702F800D030A2 /* Constants.m */; };
+		C66951E216B7049C00D030A2 /* AKRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = C66951E116B7049C00D030A2 /* AKRecord.m */; };
+		C66951E416B705C400D030A2 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C66951E316B705C400D030A2 /* AddressBook.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +59,17 @@
 		C66951C916B6FFA400D030A2 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default@2x.png"; path = "AKContactsDemo/Default@2x.png"; sourceTree = "<group>"; };
 		C66951CA16B6FFA400D030A2 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = AKContactsDemo/main.m; sourceTree = "<group>"; };
 		C66951D116B6FFE100D030A2 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = AKContactsDemo/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		C66951D316B702F800D030A2 /* AddressBookManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddressBookManager.h; sourceTree = "<group>"; };
+		C66951D416B702F800D030A2 /* AddressBookManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AddressBookManager.m; sourceTree = "<group>"; };
+		C66951D516B702F800D030A2 /* AKContact.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContact.h; sourceTree = "<group>"; };
+		C66951D616B702F800D030A2 /* AKContact.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContact.m; sourceTree = "<group>"; };
+		C66951D716B702F800D030A2 /* AKContactsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactsViewController.h; sourceTree = "<group>"; };
+		C66951D816B702F800D030A2 /* AKContactsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactsViewController.m; sourceTree = "<group>"; };
+		C66951D916B702F800D030A2 /* Constants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
+		C66951DA16B702F800D030A2 /* Constants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Constants.m; sourceTree = "<group>"; };
+		C66951E016B7049C00D030A2 /* AKRecord.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKRecord.h; sourceTree = "<group>"; };
+		C66951E116B7049C00D030A2 /* AKRecord.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKRecord.m; sourceTree = "<group>"; };
+		C66951E316B705C400D030A2 /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +77,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C66951E416B705C400D030A2 /* AddressBook.framework in Frameworks */,
 				C669518C16B6FD7100D030A2 /* UIKit.framework in Frameworks */,
 				C669518E16B6FD7100D030A2 /* Foundation.framework in Frameworks */,
 				C669519016B6FD7100D030A2 /* CoreGraphics.framework in Frameworks */,
@@ -82,8 +100,8 @@
 		C669517F16B6FD7100D030A2 = {
 			isa = PBXGroup;
 			children = (
-				C66951C016B6FF8000D030A2 /* AKContactsDemo */,
 				C669519116B6FD7100D030A2 /* AKContacts */,
+				C66951C016B6FF8000D030A2 /* AKContactsDemo */,
 				C66951AF16B6FD7100D030A2 /* AKContactsTests */,
 				C669518A16B6FD7100D030A2 /* Frameworks */,
 				C669518916B6FD7100D030A2 /* Products */,
@@ -102,6 +120,7 @@
 		C669518A16B6FD7100D030A2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C66951E316B705C400D030A2 /* AddressBook.framework */,
 				C669518B16B6FD7100D030A2 /* UIKit.framework */,
 				C669518D16B6FD7100D030A2 /* Foundation.framework */,
 				C669518F16B6FD7100D030A2 /* CoreGraphics.framework */,
@@ -113,6 +132,15 @@
 		C669519116B6FD7100D030A2 /* AKContacts */ = {
 			isa = PBXGroup;
 			children = (
+				C66951D916B702F800D030A2 /* Constants.h */,
+				C66951DA16B702F800D030A2 /* Constants.m */,
+				C66951DF16B7030600D030A2 /* User Interface */,
+				C66951D316B702F800D030A2 /* AddressBookManager.h */,
+				C66951D416B702F800D030A2 /* AddressBookManager.m */,
+				C66951E016B7049C00D030A2 /* AKRecord.h */,
+				C66951E116B7049C00D030A2 /* AKRecord.m */,
+				C66951D516B702F800D030A2 /* AKContact.h */,
+				C66951D616B702F800D030A2 /* AKContact.m */,
 			);
 			path = AKContacts;
 			sourceTree = "<group>";
@@ -158,6 +186,15 @@
 				C66951CA16B6FFA400D030A2 /* main.m */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		C66951DF16B7030600D030A2 /* User Interface */ = {
+			isa = PBXGroup;
+			children = (
+				C66951D716B702F800D030A2 /* AKContactsViewController.h */,
+				C66951D816B702F800D030A2 /* AKContactsViewController.m */,
+			);
+			name = "User Interface";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -271,6 +308,11 @@
 			files = (
 				C66951C316B6FF8F00D030A2 /* AppDelegate.m in Sources */,
 				C66951CF16B6FFA400D030A2 /* main.m in Sources */,
+				C66951DB16B702F800D030A2 /* AddressBookManager.m in Sources */,
+				C66951DC16B702F800D030A2 /* AKContact.m in Sources */,
+				C66951DD16B702F800D030A2 /* AKContactsViewController.m in Sources */,
+				C66951DE16B702F800D030A2 /* Constants.m in Sources */,
+				C66951E216B7049C00D030A2 /* AKRecord.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

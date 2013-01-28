@@ -7,15 +7,25 @@
 //
 
 #import "AppDelegate.h"
+#import "AddressBookManager.h"
+#import "AKContactsViewController.h"
 
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    // Override point for customization after application launch.
+
+    self.addressBookManager = [[AddressBookManager alloc] init];
+    [self.addressBookManager requestAddressBookAccess];
+  
+    AKContactsViewController *contactsViewController = [[AKContactsViewController alloc] init];
+    self.navigationController = [[UINavigationController alloc] initWithRootViewController: contactsViewController];
+    self.window.rootViewController = self.navigationController;
+  
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
+  
     return YES;
 }
 
