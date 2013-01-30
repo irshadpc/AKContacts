@@ -29,7 +29,8 @@
 #import "AddressBookManager.h"
 #import "AKContact.h"
 #import "AppDelegate.h"
-#import "Constants.h"
+
+NSString *const AddressBookDidLoadNotification = @"AddressBookDidLoadNotification";
 
 @interface AddressBookManager ()
 
@@ -48,11 +49,11 @@
 
 @synthesize addressBook = _addressBook;
 @synthesize status = _status;
-@synthesize abContacts = _abContacts;
+@synthesize contacts = _contacts;
 @synthesize allContactIdentifiers = _allContactIdentifiers;
 @synthesize allKeys = _allKeys;
 @synthesize keys = _keys;
-@synthesize contactIdentifiersToDisplay = _contactIdentifiersToDisplay;
+@synthesize contactIdentifiers = _contactIdentifiers;
 
 void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, void *context);
 
@@ -60,7 +61,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   self = [super init];
   if (self) {
     _appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-    _contactIdentifiersToDisplay = nil;
+    _contactIdentifiers = nil;
     _dispatch_queue = dispatch_queue_create("com.AKContacts.addressBookManager", NULL);
 
     CFErrorRef error = NULL;
@@ -118,7 +119,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
   dispatch_block_t block = ^{
     NSMutableDictionary *tempContactIdentifiers = [[NSMutableDictionary alloc] init];
-    NSMutableDictionary *tempABContacts = [[NSMutableDictionary alloc] init];
+    NSMutableDictionary *tempContacts = [[NSMutableDictionary alloc] init];
 
     NSString *sectionKeys = @"ABCDEFGHIJKLMNOPQRSTUVWXYZ#";
 
@@ -159,7 +160,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
        
       NSLog(@"%d : %@", [contact recordID], [contact displayName]);
        
-      [tempABContacts setObject: contact forKey: recordId];
+      [tempContacts setObject: contact forKey: recordId];
       dispatch_semaphore_signal(self.semaphore);
 
       // Put the recordID in the corresponding section of contactIdentifiers
@@ -175,7 +176,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     NSDate *finish = [NSDate date];
     NSLog(@"Address book loaded in %f", [finish timeIntervalSinceDate: start]);
 
-    [self setAbContacts: tempABContacts];
+    [self setContacts: tempContacts];
     [self setAllContactIdentifiers: tempContactIdentifiers];
 
     self.allKeys = [[NSMutableArray alloc] init];
@@ -204,18 +205,18 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 }
 
 -(NSInteger)contactsCount {
-  return [[self.abContacts allKeys] count];
+  return [[self.contacts allKeys] count];
 }
 
 -(AKContact *)contactForIdentifier: (NSInteger)recordId {
-  return [self.abContacts objectForKey: [NSNumber numberWithInteger: recordId]];
+  return [self.contacts objectForKey: [NSNumber numberWithInteger: recordId]];
 }
 
 #pragma mark - Address Book Search
 
 -(void)resetSearch {
 
-  [self setContactIdentifiersToDisplay: [[NSMutableDictionary alloc] initWithCapacity: [self.allContactIdentifiers count]]];
+  [self setContactIdentifiers: [[NSMutableDictionary alloc] initWithCapacity: [self.allContactIdentifiers count]]];
   [self setKeys: [[NSMutableArray alloc] init]];
 
   NSEnumerator *enumerator = [self.allContactIdentifiers keyEnumerator];
@@ -225,7 +226,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     NSArray *arrayForKey = [self.allContactIdentifiers objectForKey: key];
     NSMutableArray *sectionArray = [[NSMutableArray alloc] initWithCapacity: [arrayForKey count]];
     [sectionArray addObjectsFromArray: [self.allContactIdentifiers objectForKey: key]];
-    [self.contactIdentifiersToDisplay setObject: sectionArray forKey: key];
+    [self.contactIdentifiers setObject: sectionArray forKey: key];
   }
 
   [self.keys addObject: UITableViewIndexSearch];
@@ -237,18 +238,14 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     [self.keys removeObjectAtIndex: 1];
   }
 
-  [self removeEmptyKeysFromContactIdentifiersToDisplay];
-}
-
--(void)removeEmptyKeysFromContactIdentifiersToDisplay {
-
+  // Remove empty keys
   NSMutableArray *emptyKeys = [[NSMutableArray alloc] init];
-  for (NSString *key in [self.contactIdentifiersToDisplay allKeys]) {
-    NSMutableArray *array = [self.contactIdentifiersToDisplay objectForKey: key];
+  for (NSString *key in [self.contactIdentifiers allKeys]) {
+    NSMutableArray *array = [self.contactIdentifiers objectForKey: key];
     if ([array count] == 0)
       [emptyKeys addObject: key];
   }
-  [self.contactIdentifiersToDisplay removeObjectsForKeys: emptyKeys];
+  [self.contactIdentifiers removeObjectsForKeys: emptyKeys];
   [self.keys removeObjectsInArray: emptyKeys];
 }
 
@@ -257,10 +254,10 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   [self resetSearch];
   
   for (NSString *key in self.keys) {
-    NSMutableArray *array = [self.contactIdentifiersToDisplay valueForKey: key];
+    NSMutableArray *array = [self.contactIdentifiers valueForKey: key];
     NSMutableArray *toRemove = [[NSMutableArray alloc] init];
     for (NSNumber *identifier in array) {
-      NSString *displayName = [[self.abContacts objectForKey: identifier] displayName];
+      NSString *displayName = [[self.contacts objectForKey: identifier] displayName];
       
       if ([displayName rangeOfString: searchTerm options: NSCaseInsensitiveSearch].location == NSNotFound)
         [toRemove addObject: identifier];

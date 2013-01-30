@@ -29,8 +29,9 @@
 #import "AKContactsViewController.h"
 #import "AKContact.h"
 #import "AddressBookManager.h"
-#import "Constants.h"
 #import "AppDelegate.h"
+
+static const float defaultCellHeight = 44.f;
 
 @implementation AKContactsViewController
 
@@ -134,7 +135,7 @@
 
     if ([appDelegate.addressBookManager.keys count] > section) {
       NSString *key = [appDelegate.addressBookManager.keys objectAtIndex: section];
-      NSArray *nameSection = [appDelegate.addressBookManager.contactIdentifiersToDisplay objectForKey: key];
+      NSArray *nameSection = [appDelegate.addressBookManager.contactIdentifiers objectForKey: key];
       ret = [nameSection count];
     }
   } else {
@@ -181,7 +182,7 @@
       if ([appDelegate.addressBookManager.keys count] > section)
         key = [appDelegate.addressBookManager.keys objectAtIndex: section];
 
-      NSArray *identifiersArray = [appDelegate.addressBookManager.contactIdentifiersToDisplay objectForKey: key];
+      NSArray *identifiersArray = [appDelegate.addressBookManager.contactIdentifiers objectForKey: key];
       if ([identifiersArray count] == 0) return cell;
       NSNumber *recordId = [identifiersArray objectAtIndex: row];
       AKContact *contact = [appDelegate.addressBookManager contactForIdentifier: [recordId integerValue]];
@@ -226,7 +227,7 @@
   NSString *key = nil;
   if ([appDelegate.addressBookManager.keys count] > section) {
     key = [appDelegate.addressBookManager.keys objectAtIndex: section];
-    NSArray *nameSection = [appDelegate.addressBookManager.contactIdentifiersToDisplay objectForKey: key];
+    NSArray *nameSection = [appDelegate.addressBookManager.contactIdentifiers objectForKey: key];
     if ([nameSection count] > 0) ret = key;
   }
   return ret;
