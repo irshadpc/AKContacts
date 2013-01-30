@@ -30,6 +30,8 @@
 #import <AddressBook/AddressBook.h>
 #import <AddressBookUI/AddressBookUI.h>
 
+FOUNDATION_EXPORT NSString *const AddressBookDidLoadNotification;
+
 @class AppDelegate;
 @class AKContact;
 
@@ -44,18 +46,31 @@ typedef enum {
 
 @property (assign) ABAddressBookRef addressBook;
 @property (assign) NSInteger status;
+/**
+ * AKContact objects with their recordIDs as keys
+ **/
 @property (strong) NSMutableDictionary *abContacts;
+/**
+ * Arrays of AKContact objects with their alphabetic lookup letters as keys
+ **/
 @property (strong) NSMutableDictionary *allContactIdentifiers;
+/**
+ * All letters of the alphabet plus '#' and UITableViewIndexSearch
+ **/
 @property (strong) NSMutableArray *allKeys;
+/**
+ * Elements from allKeys that are displayed
+ **/
 @property (strong) NSMutableArray *keys;
-@property (strong) NSMutableDictionary *contactIdentifiersToDisplay;
+/**
+ * Elements from allContactIdentifiers that are displayed
+ **/
+@property (strong) NSMutableDictionary *contactIdentifiers;
 
 -(void)requestAddressBookAccess;
--(void)loadAddressBook;
 -(NSInteger)contactsCount;
 -(AKContact *)contactForIdentifier: (NSInteger)recordId;
 -(void)resetSearch;
--(void)removeEmptyKeysFromContactIdentifiersToDisplay;
 
 -(void)handleSearchForTerm:(NSString *)searchTerm;
 
