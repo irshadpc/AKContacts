@@ -60,7 +60,7 @@ NSString *const kLabel = @"Label";
 }
 
 -(id)valueForProperty: (ABPropertyID)property {
-  return (__bridge id)ABRecordCopyValue(self.record, property);
+  return (id)CFBridgingRelease(ABRecordCopyValue(self.record, property));
 }
 
 -(NSInteger)countForProperty: (ABPropertyID) property {
@@ -98,8 +98,9 @@ NSString *const kLabel = @"Label";
   if (multiValueRecord){
     CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
     if (index != -1) {
-      ret = (__bridge id)ABMultiValueCopyValueAtIndex(multiValueRecord, index);
+      ret = (id)CFBridgingRelease(ABMultiValueCopyValueAtIndex(multiValueRecord, index));
     }
+    CFRelease(multiValueRecord);
   }
   return ret;
 }
@@ -120,8 +121,11 @@ NSString *const kLabel = @"Label";
   if (multiValueRecord) {
     CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
     if (index != -1) {
-      ret = (__bridge NSString *)ABAddressBookCopyLocalizedLabel(ABMultiValueCopyLabelAtIndex(multiValueRecord, index));
+      CFStringRef label = ABMultiValueCopyLabelAtIndex(multiValueRecord, index);
+      ret = (NSString *)CFBridgingRelease(ABAddressBookCopyLocalizedLabel(label));
+      CFRelease(label);
     }
+    CFRelease(multiValueRecord);
   }
   return ret;
 }
@@ -312,13 +316,7 @@ NSString *const kLabel = @"Label";
 
 }
 
--(void)commitWithAddressBook: (ABAddressBookRef)addressBook {
-
-  CFErrorRef error = NULL;
-  if (ABAddressBookHasUnsavedChanges(addressBook)) {
-    ABAddressBookSave(addressBook, &error);
-    if (error) NSLog(@"%@", error);
-  }
+-(void)commit {
 
   for (NSNumber *key in self.createDict) {
 
@@ -348,7 +346,6 @@ NSString *const kLabel = @"Label";
                                        (__bridge CFStringRef)label,
                                        NULL);
           ABRecordSetValue(self.record, property, mutableMultiValue, nil);
-          CFRelease(mutableMultiValue);
 
         }
         break;
@@ -391,7 +388,6 @@ NSString *const kLabel = @"Label";
             }
           }
           ABRecordSetValue(self.record, property, mutableMultiValue, nil);
-          CFRelease(mutableMultiValue);
 
         }
         break;
@@ -410,7 +406,9 @@ NSString *const kLabel = @"Label";
           CFIndex index = ABMultiValueGetIndexForIdentifier(mutableMultiValue, identifier);
           
           if (index != -1) {
-            NSMutableDictionary *oldValuesDict = [(__bridge NSDictionary *)ABMultiValueCopyValueAtIndex(mutableMultiValue, index) mutableCopy];
+            CFTypeRef dict = ABMultiValueCopyValueAtIndex(mutableMultiValue, index);
+            NSMutableDictionary *oldValuesDict = [(__bridge NSDictionary *)dict mutableCopy];
+            CFRelease(dict);
             [oldValuesDict addEntriesFromDictionary: newValuesDict];
 
             if ([label length] > 0) {
@@ -420,7 +418,6 @@ NSString *const kLabel = @"Label";
         }
 
         ABRecordSetValue(self.record, property, mutableMultiValue, nil);
-        CFRelease(mutableMultiValue);
 
         break;
       }
@@ -456,7 +453,6 @@ NSString *const kLabel = @"Label";
             ABMultiValueRemoveValueAndLabelAtIndex(mutableMultiValue, index);
           }
           ABRecordSetValue(self.record, property, mutableMultiValue, nil);
-          CFRelease(mutableMultiValue);
 
         }
         break;
@@ -469,7 +465,7 @@ NSString *const kLabel = @"Label";
   [self setDeleteDict: nil];
 }
 
--(void)revertWithAddressBook: (ABAddressBookRef)addressBook {
+-(void)revert {
   [self setCreateDict: nil];
   [self setUpdateDict: nil];
   [self setDeleteDict: nil];
@@ -477,9 +473,9 @@ NSString *const kLabel = @"Label";
 
 #pragma mark - Helper Methods
 
--(ABMultiValueRef)mutableMultiValueForProperty: (ABPropertyID)property {
+-(ABMutableMultiValueRef)mutableMultiValueForProperty: (ABPropertyID)property {
 
-  ABMultiValueRef mutableMultiValue = NULL;
+  ABMutableMultiValueRef mutableMultiValue = NULL;
   ABMultiValueRef multiValue = (ABMultiValueRef)ABRecordCopyValue(self.record, property);
   if (multiValue) {
     mutableMultiValue = ABMultiValueCreateMutableCopy(multiValue);
@@ -487,7 +483,7 @@ NSString *const kLabel = @"Label";
   } else {
     mutableMultiValue = ABMultiValueCreateMutable(ABPersonGetTypeOfProperty(property));
   }
-  return mutableMultiValue;
+  return (__bridge ABMutableMultiValueRef)(CFBridgingRelease(mutableMultiValue));
 }
 
 +(NSMutableDictionary *)mutableDictForProperty: (ABPropertyID)property

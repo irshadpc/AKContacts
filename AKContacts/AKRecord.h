@@ -84,7 +84,7 @@
 -(void)deleteValueForProperty: (ABPropertyID)property;
 -(void)deleteValueForMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier;
 
--(void)commitWithAddressBook: (ABAddressBookRef)addressBook;
--(void)revertWithAddressBook: (ABAddressBookRef)addressBook;
+-(void)commit;
+-(void)revert;
 
 @end
