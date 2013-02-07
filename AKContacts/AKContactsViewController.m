@@ -28,15 +28,26 @@
 
 #import "AKContactsViewController.h"
 #import "AKContact.h"
+#import "AKContactViewController.h"
 #import "AddressBookManager.h"
 #import "AppDelegate.h"
 
 static const float defaultCellHeight = 44.f;
 
+@interface AKContactsViewController ()
+
+@property (nonatomic, weak) AppDelegate *appDelegate;
+@property (nonatomic, retain) UITableView *tableView;
+@property (nonatomic, retain) UISearchBar *searchBar;
+
+@end
+
 @implementation AKContactsViewController
 
-@synthesize tableView;
-@synthesize searchBar;
+@synthesize appDelegate = _appDelegate;
+
+@synthesize tableView = _tableView;
+@synthesize searchBar = _searchBar;
 
 #pragma mark - View lifecycle
 
@@ -51,11 +62,11 @@ static const float defaultCellHeight = 44.f;
   [self.tableView setDelegate: self];
 
   [self setSearchBar: [[UISearchBar alloc] initWithFrame: CGRectMake(0.f, 0.f, 320.f, defaultCellHeight)]];
-  [self.tableView setTableHeaderView: searchBar];
+  [self.tableView setTableHeaderView: self.searchBar];
   [self.searchBar setDelegate: self];
 
   [self setView: [[UIView alloc] init]];
-  [self.view addSubview: self.tableView];
+  [self.view addSubview: self.tableView];  
 }
 
 -(void)viewDidLoad {
@@ -67,10 +78,14 @@ static const float defaultCellHeight = 44.f;
   // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
   // self.navigationItem.rightBarButtonItem = self.editButtonItem;
 
-  appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+  [self setAppDelegate: (AppDelegate *)[[UIApplication sharedApplication] delegate]];
+  
+  UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd
+                                                                             target: self
+                                                                             action: @selector(addButtonTouchUp:)];
+  [self.navigationItem setRightBarButtonItem: addButton];
 
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AddressBookDidLoadNotification object: nil];
-
 }
 
 -(void)viewWillAppear:(BOOL)animated {
@@ -93,6 +108,15 @@ static const float defaultCellHeight = 44.f;
 }
 
 #pragma mark - Custom methods
+
+-(void)addButtonTouchUp: (id)sender {
+  
+  AKContactViewController *contactView = [[AKContactViewController alloc] initWithContact: nil];
+  UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: contactView];
+
+  [self.navigationController presentViewController: navigationController animated: YES completion: ^{}];
+}
+
 
 -(BOOL)tableViewCellVisibleForIndexPath: (NSIndexPath *)indexPath {
   BOOL ret = NO;
@@ -120,8 +144,8 @@ static const float defaultCellHeight = 44.f;
 
 -(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
   
-  if (appDelegate.addressBookManager.status >= kAddressBookOnline)
-    return ([appDelegate.addressBookManager contactsCount] > 0) ? [appDelegate.addressBookManager.keys count] : 1;
+  if (_appDelegate.addressBookManager.status >= kAddressBookOnline)
+    return ([_appDelegate.addressBookManager contactsCount] > 0) ? [_appDelegate.addressBookManager.keys count] : 1;
   else
     return 1;
   
@@ -130,12 +154,12 @@ static const float defaultCellHeight = 44.f;
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
   NSInteger ret = 4;
 
-  if (appDelegate.addressBookManager.status >= kAddressBookOnline) {
-    if ([appDelegate.addressBookManager contactsCount] == 0) return ret;
+  if (_appDelegate.addressBookManager.status >= kAddressBookOnline) {
+    if ([_appDelegate.addressBookManager contactsCount] == 0) return ret;
 
-    if ([appDelegate.addressBookManager.keys count] > section) {
-      NSString *key = [appDelegate.addressBookManager.keys objectAtIndex: section];
-      NSArray *nameSection = [appDelegate.addressBookManager.contactIdentifiers objectForKey: key];
+    if ([_appDelegate.addressBookManager.keys count] > section) {
+      NSString *key = [_appDelegate.addressBookManager.keys objectAtIndex: section];
+      NSArray *nameSection = [_appDelegate.addressBookManager.contactIdentifiers objectForKey: key];
       ret = [nameSection count];
     }
   } else {
@@ -144,7 +168,7 @@ static const float defaultCellHeight = 44.f;
   return ret;
 }
  
--(UITableViewCell *)tableView:(UITableView *)table cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
   static NSString *CellIdentifier = @"Cell";
   
   UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
@@ -161,8 +185,8 @@ static const float defaultCellHeight = 44.f;
   NSInteger section = [indexPath section];
   NSInteger row = [indexPath row];
 
-  if (appDelegate.addressBookManager.status >= kAddressBookOnline) {
-    if ([appDelegate.addressBookManager contactsCount] == 0) {
+  if (_appDelegate.addressBookManager.status >= kAddressBookOnline) {
+    if ([_appDelegate.addressBookManager contactsCount] == 0) {
       [cell setAccessoryView: nil];
 
       [cell.textLabel setFont:[UIFont boldSystemFontOfSize: 17.f]];
@@ -179,13 +203,13 @@ static const float defaultCellHeight = 44.f;
       }
     } else {
       NSString *key = nil;
-      if ([appDelegate.addressBookManager.keys count] > section)
-        key = [appDelegate.addressBookManager.keys objectAtIndex: section];
+      if ([_appDelegate.addressBookManager.keys count] > section)
+        key = [_appDelegate.addressBookManager.keys objectAtIndex: section];
 
-      NSArray *identifiersArray = [appDelegate.addressBookManager.contactIdentifiers objectForKey: key];
+      NSArray *identifiersArray = [_appDelegate.addressBookManager.contactIdentifiers objectForKey: key];
       if ([identifiersArray count] == 0) return cell;
       NSNumber *recordId = [identifiersArray objectAtIndex: row];
-      AKContact *contact = [appDelegate.addressBookManager contactForIdentifier: [recordId integerValue]];
+      AKContact *contact = [_appDelegate.addressBookManager contactForIdentifier: [recordId integerValue]];
       if (!contact) return cell;
       [cell setTag: [contact recordID]];
       [cell setSelectionStyle: UITableViewCellSelectionStyleBlue];
@@ -205,12 +229,12 @@ static const float defaultCellHeight = 44.f;
     if (row == 3) {
       [cell.textLabel setTextColor: [UIColor grayColor]];
       [cell.textLabel setTextAlignment: NSTextAlignmentCenter];
-      if (appDelegate.addressBookManager.status == kAddressBookInitializing) {
+      if (_appDelegate.addressBookManager.status == kAddressBookInitializing) {
         [cell.textLabel setText: @"Loading address book..."];
         UIActivityIndicatorView *activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle: UIActivityIndicatorViewStyleGray];
         [cell setAccessoryView: activity];
         [activity startAnimating];
-      } else if (appDelegate.addressBookManager.status == kAddressBookOffline) {
+      } else if (_appDelegate.addressBookManager.status == kAddressBookOffline) {
         [cell.textLabel setText: @"No Contacts"];
       }
     }
@@ -219,38 +243,38 @@ static const float defaultCellHeight = 44.f;
   return cell;
 }
 
--(NSString *)tableView:(UITableView *)table titleForHeaderInSection: (NSInteger)section {
+-(NSString *)tableView:(UITableView *)tableView titleForHeaderInSection: (NSInteger)section {
   
   NSString *ret = @"";  
-  if ([appDelegate.addressBookManager.keys count] == 0) return ret;
+  if ([_appDelegate.addressBookManager.keys count] == 0) return ret;
   
   NSString *key = nil;
-  if ([appDelegate.addressBookManager.keys count] > section) {
-    key = [appDelegate.addressBookManager.keys objectAtIndex: section];
-    NSArray *nameSection = [appDelegate.addressBookManager.contactIdentifiers objectForKey: key];
+  if ([_appDelegate.addressBookManager.keys count] > section) {
+    key = [_appDelegate.addressBookManager.keys objectAtIndex: section];
+    NSArray *nameSection = [_appDelegate.addressBookManager.contactIdentifiers objectForKey: key];
     if ([nameSection count] > 0) ret = key;
   }
   return ret;
 }
 
--(NSArray *)sectionIndexTitlesForTableView:(UITableView *)table {
+-(NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView {
 
   BOOL index = YES;
   if ([self.searchBar isFirstResponder] ||
       [self.searchBar.text length] > 0 ||
-      [[appDelegate.addressBookManager keys] count] > 0)
+      [[_appDelegate.addressBookManager keys] count] > 0)
     index = NO;
   
-  return (index) ? [appDelegate.addressBookManager keys] : nil;
+  return (index) ? [_appDelegate.addressBookManager keys] : nil;
 }
 
--(NSInteger)tableView:(UITableView *)table sectionForSectionIndexTitle:(NSString *)title 
+-(NSInteger)tableView:(UITableView *)tableView sectionForSectionIndexTitle:(NSString *)title
               atIndex:(NSInteger)index { 
   NSInteger ret = NSNotFound;
-  if ([appDelegate.addressBookManager.keys count] > index) {
-    NSString *key = [appDelegate.addressBookManager.keys objectAtIndex: index]; 
+  if ([_appDelegate.addressBookManager.keys count] > index) {
+    NSString *key = [_appDelegate.addressBookManager.keys objectAtIndex: index];
     if (key == UITableViewIndexSearch) {
-      [table setContentOffset: CGPointZero animated:NO];
+      [tableView setContentOffset: CGPointZero animated:NO];
       ret = NSNotFound;
     } else {
       ret = index; 
@@ -296,13 +320,20 @@ static const float defaultCellHeight = 44.f;
 
 #pragma mark - Table view delegate
 
--(void)tableView:(UITableView *)table didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
   
-  [table deselectRowAtIndexPath: indexPath animated: YES];
+  UITableViewCell *cell = [tableView cellForRowAtIndexPath: indexPath];
+  
+  AKContact *contact = [_appDelegate.addressBookManager contactForIdentifier: cell.tag];
+  
+  AKContactViewController *contactView = [[AKContactViewController alloc ] initWithContact: contact];
+  [self.navigationController pushViewController: contactView animated: YES];
+
+  [tableView deselectRowAtIndexPath: indexPath animated: YES];
 }
 
--(NSIndexPath *)tableView: (UITableView *)table willSelectRowAtIndexPath: (NSIndexPath *)indexPath {
-  [searchBar resignFirstResponder];
+-(NSIndexPath *)tableView: (UITableView *)tableView willSelectRowAtIndexPath: (NSIndexPath *)indexPath {
+  [self.searchBar resignFirstResponder];
   return indexPath;
 }
 
@@ -323,27 +354,27 @@ static const float defaultCellHeight = 44.f;
 -(void)searchBarSearchButtonClicked:(UISearchBar *)search {
   
   NSString *searchTerm = [search text];
-  [appDelegate.addressBookManager handleSearchForTerm: searchTerm];
+  [_appDelegate.addressBookManager handleSearchForTerm: searchTerm];
   [self.tableView reloadData];
 }
 
 -(void)searchBar: (UISearchBar *)searchBar textDidChange: (NSString *)searchTerm {
   
   if ([searchTerm length] == 0) {
-    [appDelegate.addressBookManager resetSearch];
+    [_appDelegate.addressBookManager resetSearch];
     [self.tableView reloadData];
     return;
   }
-  [appDelegate.addressBookManager handleSearchForTerm: searchTerm];
+  [_appDelegate.addressBookManager handleSearchForTerm: searchTerm];
   [self.tableView reloadData];
 }
 
 -(void)searchBarCancelButtonClicked:(UISearchBar *)search {
   
   search.text = @"";
-  [appDelegate.addressBookManager resetSearch];
+  [_appDelegate.addressBookManager resetSearch];
   [self.tableView reloadData];
-  [searchBar resignFirstResponder];
+  [self.searchBar resignFirstResponder];
 }
 
 #pragma mark - Memory management

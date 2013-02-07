@@ -36,15 +36,7 @@
 @interface AKContactsViewController : UIViewController
   <UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate> {
 
-  UITableView* tableView;
-  UISearchBar *searchBar;
-
-  AppDelegate *appDelegate;
-
 }
-
-@property (nonatomic, retain) UITableView *tableView;
-@property (nonatomic, retain) UISearchBar *searchBar;
 
 -(void)reloadTableViewData;
 
