@@ -3,6 +3,28 @@
 //
 //  Copyright (c) 2013 Adam Kornafeld All rights reserved.
 //
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions
+//  are met:
+//  1. Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in the
+//  documentation and/or other materials provided with the distribution.
+//  3. The name of the author may not be used to endorse or promote products
+//  derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+//  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+//  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+//  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+//  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+//  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
 
 #import "AKContactAddressViewCell.h"
 #import "AKContact.h"
@@ -127,7 +149,9 @@ static const int editModeItem = 101;
     [textField setFont: [UIFont boldSystemFontOfSize: 15.]];
     [textField setDelegate: self];
     [textField setTag: kAddressStreet];
-    [textField setPlaceholder: (__bridge NSString *)(ABAddressBookCopyLocalizedLabel(kABPersonAddressStreetKey))];
+    CFStringRef placeholder = ABAddressBookCopyLocalizedLabel(kABPersonAddressStreetKey);
+    [textField setPlaceholder: (__bridge NSString *)placeholder];
+    CFRelease(placeholder);
     [textField setText: (self.identifier != NSNotFound) ? [self.parent.contact valueForMultiDictKey: (NSString *)kABPersonAddressStreetKey forIdentifier: self.identifier] : nil];
     
     textField = [[UITextField alloc] initWithFrame: CGRectMake(83.f, 51.f, 90.f, 19.f)];
@@ -137,7 +161,9 @@ static const int editModeItem = 101;
     [textField setFont: [UIFont boldSystemFontOfSize: 15.]];
     [textField setDelegate: self];
     [textField setTag: kAddressCity];
-    [textField setPlaceholder: (__bridge NSString *)(ABAddressBookCopyLocalizedLabel(kABPersonAddressCityKey))];
+    placeholder = ABAddressBookCopyLocalizedLabel(kABPersonAddressCityKey);
+    [textField setPlaceholder: (__bridge NSString *)placeholder];
+    CFRelease(placeholder);
     [textField setText: (self.identifier != NSNotFound) ? [self.parent.contact valueForMultiDictKey: (NSString *)kABPersonAddressCityKey forIdentifier: self.identifier] : nil];
     
     textField = [[UITextField alloc] initWithFrame: CGRectMake(180.f, 51.f, 85.f, 19.f)];
@@ -146,8 +172,10 @@ static const int editModeItem = 101;
     [textField setFont: [UIFont boldSystemFontOfSize: 15.]];
     [textField setDelegate: self];
     [textField setTag: kAddressState];
-    [textField setPlaceholder: (__bridge NSString *)(ABAddressBookCopyLocalizedLabel(kABPersonAddressStateKey))];
-    
+    placeholder = ABAddressBookCopyLocalizedLabel(kABPersonAddressStateKey);
+    [textField setPlaceholder: (__bridge NSString *)placeholder];
+    CFRelease(placeholder);
+
     [textField setText: (self.identifier != NSNotFound) ? [self.parent.contact valueForMultiDictKey: (NSString *)kABPersonAddressStateKey forIdentifier: self.identifier] : nil];
 
     textField = [[UITextField alloc] initWithFrame: CGRectMake(83.f, 91.f, 90.f, 19.f)];
@@ -157,7 +185,9 @@ static const int editModeItem = 101;
     [textField setFont: [UIFont boldSystemFontOfSize: 15.]];
     [textField setDelegate: self];
     [textField setTag: kAddressZIP];
-    [textField setPlaceholder: (__bridge NSString *)(ABAddressBookCopyLocalizedLabel(kABPersonAddressZIPKey))];
+    placeholder = ABAddressBookCopyLocalizedLabel(kABPersonAddressZIPKey);
+    [textField setPlaceholder: (__bridge NSString *)placeholder];
+    CFRelease(placeholder);
     [textField setText: (self.identifier != NSNotFound) ? [self.parent.contact valueForMultiDictKey: (NSString *)kABPersonAddressZIPKey forIdentifier: self.identifier] : nil];
 
     textField = [[UITextField alloc] initWithFrame: CGRectMake(180.f, 91.f, 85.f, 19.f)];
@@ -167,7 +197,9 @@ static const int editModeItem = 101;
     [textField setFont: [UIFont boldSystemFontOfSize: 15.]];
     [textField setDelegate: self];
     [textField setTag: kAddressCountry];
-    [textField setPlaceholder: (__bridge NSString *)(ABAddressBookCopyLocalizedLabel(kABPersonAddressCountryKey))];
+    placeholder = ABAddressBookCopyLocalizedLabel(kABPersonAddressCountryKey);
+    [textField setPlaceholder: (__bridge NSString *)placeholder];
+    CFRelease(placeholder);
     [textField setText: (self.identifier != NSNotFound) ? [self.parent.contact valueForMultiDictKey: (NSString *)kABPersonAddressCountryKey forIdentifier: self.identifier] : nil];
 
     [self.detailTextLabel setText: nil];

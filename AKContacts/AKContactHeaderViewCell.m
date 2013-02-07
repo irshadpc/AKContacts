@@ -3,6 +3,28 @@
 //
 //  Copyright (c) 2013 Adam Kornafeld All rights reserved.
 //
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions
+//  are met:
+//  1. Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in the
+//  documentation and/or other materials provided with the distribution.
+//  3. The name of the author may not be used to endorse or promote products
+//  derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+//  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+//  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+//  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+//  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+//  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
 
 #import "AKContactHeaderViewCell.h"
 #import "AKContact.h"
@@ -41,7 +63,7 @@ static const int editModeItem = 8;
 }
 
 - (void)setFrame:(CGRect)frame {
-  if ([self.parent.tableView isEditing]) {
+  if ([self.parent isEditing]) {
     frame.origin.x += 80.f;
     frame.size.width -= 80.f;
   }
@@ -55,7 +77,7 @@ static const int editModeItem = 8;
     [subView removeFromSuperview];
   }
 
-  if ([self.parent.tableView isEditing]) {
+  if ([self.parent isEditing]) {
 
     UITextField *textField = [[UITextField alloc] initWithFrame: CGRectMake(5.f, 12.f, 210.f, 19.f)];
     [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
@@ -69,7 +91,9 @@ static const int editModeItem = 8;
     if (row == 0) {
 
       [self setAbPropertyID: kABPersonLastNameProperty];
-      [textField setPlaceholder: (__bridge NSString *)(ABPersonCopyLocalizedPropertyName(kABPersonLastNameProperty))];
+      CFStringRef placeholder = ABPersonCopyLocalizedPropertyName(kABPersonLastNameProperty);
+      [textField setPlaceholder: (__bridge NSString *)placeholder];
+      CFRelease(placeholder);
       [textField setText: [self.parent.contact valueForProperty: kABPersonLastNameProperty]];
 
       UIButton *button = [[UIButton alloc] initWithFrame: CGRectMake(-80.f, 0.f, 64.f, 64.f)];
@@ -89,19 +113,25 @@ static const int editModeItem = 8;
       
       [self setAbPropertyID: kABPersonFirstNameProperty];
       [textField setText: [self.parent.contact valueForProperty: kABPersonFirstNameProperty]];
-      [textField setPlaceholder: (__bridge NSString *)(ABPersonCopyLocalizedPropertyName(kABPersonFirstNameProperty))];
+      CFStringRef placeholder = ABPersonCopyLocalizedPropertyName(kABPersonFirstNameProperty);
+      [textField setPlaceholder: (__bridge NSString *)placeholder];
+      CFRelease(placeholder);
 
     } else if (row == 2) {
 
       [self setAbPropertyID: kABPersonOrganizationProperty];
       [textField setText: [self.parent.contact valueForProperty: kABPersonOrganizationProperty]];
-      [textField setPlaceholder: (__bridge NSString *)(ABPersonCopyLocalizedPropertyName(kABPersonOrganizationProperty))];
+      CFStringRef placeholder = ABPersonCopyLocalizedPropertyName(kABPersonOrganizationProperty);
+      [textField setPlaceholder: (__bridge NSString *)placeholder];
+      CFRelease(placeholder);
 
     } else if (row == 3) {
       
       [self setAbPropertyID: kABPersonJobTitleProperty];
       [textField setText: [self.parent.contact valueForProperty: kABPersonJobTitleProperty]];
-      [textField setPlaceholder: (__bridge NSString *)(ABPersonCopyLocalizedPropertyName(kABPersonJobTitleProperty))];
+      CFStringRef placeholder = ABPersonCopyLocalizedPropertyName(kABPersonJobTitleProperty);
+      [textField setPlaceholder: (__bridge NSString *)placeholder];
+      CFRelease(placeholder);
 
     }
     

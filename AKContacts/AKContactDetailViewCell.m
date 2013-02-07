@@ -3,6 +3,28 @@
 //
 //  Copyright (c) 2013 Adam Kornafeld All rights reserved.
 //
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions
+//  are met:
+//  1. Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in the
+//  documentation and/or other materials provided with the distribution.
+//  3. The name of the author may not be used to endorse or promote products
+//  derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+//  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+//  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+//  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+//  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+//  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
 
 #import "AKContactDetailViewCell.h"
 #import "AKContact.h"
@@ -48,10 +70,12 @@ static const int editModeItem = 101;
   [self setIdentifier: NSNotFound];
   [self.textLabel setText: nil];
   [self.detailTextLabel setText: nil];
+  [self.detailTextLabel setTextColor: [UIColor blackColor]];
   [self setSelectionStyle: UITableViewCellSelectionStyleNone];
 
   if (self.abPropertyID == kABPersonPhoneProperty ||
-      self.abPropertyID == kABPersonEmailProperty) {
+      self.abPropertyID == kABPersonEmailProperty ||
+      self.abPropertyID == kABPersonURLProperty) {
 
     if (row < [parent.contact countForProperty: self.abPropertyID]) {
 
@@ -60,22 +84,34 @@ static const int editModeItem = 101;
       
       [self.detailTextLabel setText: [parent.contact valueForMultiValueProperty: self.abPropertyID forIdentifier: self.identifier]];
       [self.textLabel setText: [parent.contact labelForMultiValueProperty: self.abPropertyID forIdentifier: self.identifier]];
-  
+
     } else {
-      [self.textLabel setText: [(__bridge NSString *)ABAddressBookCopyLocalizedLabel(kABOtherLabel) lowercaseString]];
+      CFStringRef value = ABAddressBookCopyLocalizedLabel(kABOtherLabel);
+      [self.textLabel setText: [(__bridge NSString *)value lowercaseString]];
+      CFRelease(value);
     }
-    
+
   } else if (self.abPropertyID == kABPersonNoteProperty) {
 
-    [self.textLabel setText: [(__bridge NSString *)(ABPersonCopyLocalizedPropertyName(self.abPropertyID)) lowercaseString]];
+    CFStringRef value = ABPersonCopyLocalizedPropertyName(self.abPropertyID);
+    [self.textLabel setText: [(__bridge NSString *)value lowercaseString]];
+    CFRelease(value);
 
   } else if (self.abPropertyID == kABPersonBirthdayProperty) {
 
     NSDate *date = (NSDate *)[self.parent.contact valueForProperty: kABPersonBirthdayProperty];
-    [self.detailTextLabel setText: [NSDateFormatter localizedStringFromDate: date
-                                                                  dateStyle: NSDateFormatterLongStyle
-                                                                  timeStyle: NSDateFormatterNoStyle]];
-    [self.textLabel setText: [(__bridge NSString *)(ABPersonCopyLocalizedPropertyName(self.abPropertyID)) lowercaseString]];
+    CFStringRef placeholder = (ABPersonCopyLocalizedPropertyName(kABPersonDateProperty));
+    NSString *strDate = (date) ? [NSDateFormatter localizedStringFromDate: date
+                                                                dateStyle: NSDateFormatterLongStyle
+                                                                timeStyle: NSDateFormatterNoStyle] : (__bridge NSString *)placeholder;
+    [self.detailTextLabel setText: strDate];
+    CFRelease(placeholder);
+    [self.detailTextLabel setTextColor: (date) ? [UIColor blackColor] : [UIColor lightGrayColor]];
+    
+    CFStringRef value = ABPersonCopyLocalizedPropertyName(self.abPropertyID);
+    [self.textLabel setText: [(__bridge NSString *)value lowercaseString]];
+    CFRelease(value);
+    
     [self setSelectionStyle: UITableViewCellSelectionStyleNone];
 
   } else if (self.abPropertyID == kABPersonDateProperty) {
@@ -86,15 +122,25 @@ static const int editModeItem = 101;
       [self setIdentifier: [[identifiers objectAtIndex: row] integerValue]];
 
       NSDate *date = (NSDate *)[self.parent.contact valueForMultiValueProperty: kABPersonDateProperty forIdentifier: self.identifier];
-      [self.detailTextLabel setText: [NSDateFormatter localizedStringFromDate: date
-                                                                    dateStyle: NSDateFormatterLongStyle
-                                                                    timeStyle: NSDateFormatterNoStyle]];
+      CFStringRef placeholder = (ABPersonCopyLocalizedPropertyName(kABPersonDateProperty));
+      NSString *strDate = (date) ? [NSDateFormatter localizedStringFromDate: date
+                                                                  dateStyle: NSDateFormatterLongStyle
+                                                                  timeStyle: NSDateFormatterNoStyle] : (__bridge NSString *)placeholder;
+      [self.detailTextLabel setText: strDate];
+      CFRelease(placeholder);
+      [self.detailTextLabel setTextColor: (date) ? [UIColor blackColor] : [UIColor lightGrayColor]];
       NSString *label = [self.parent.contact labelForMultiValueProperty: kABPersonDateProperty forIdentifier: self.identifier];
       [self.textLabel setText: label];
       [self setSelectionStyle: UITableViewCellSelectionStyleNone];
 
     } else {
-      [self.textLabel setText: [(__bridge NSString *)ABAddressBookCopyLocalizedLabel(kABOtherLabel) lowercaseString]];
+      CFStringRef label = ABAddressBookCopyLocalizedLabel(kABOtherLabel);
+      [self.textLabel setText: [(__bridge NSString *)label lowercaseString]];
+      CFRelease(label);
+      CFStringRef value = ABPersonCopyLocalizedPropertyName(self.abPropertyID);
+      [self.detailTextLabel setText: (__bridge NSString *)value];
+      CFRelease(value);
+      [self.detailTextLabel setTextColor: [UIColor lightGrayColor]];
     }
   } else if (self.abPropertyID == kABPersonSocialProfileProperty) {
     
@@ -109,7 +155,9 @@ static const int editModeItem = 101;
       [self.textLabel setText: [dict objectForKey: (NSString *)kABPersonSocialProfileServiceKey]];
       
     } else {
-      [self.textLabel setText: (__bridge NSString *)ABAddressBookCopyLocalizedLabel(kABPersonSocialProfileServiceFacebook)];
+      CFStringRef label = ABAddressBookCopyLocalizedLabel(kABPersonSocialProfileServiceFacebook);
+      [self.textLabel setText: (__bridge NSString *)label];
+      CFRelease(label);
     }
   } else if (self.abPropertyID == kABPersonInstantMessageProperty) {
 
@@ -124,7 +172,9 @@ static const int editModeItem = 101;
       [self.textLabel setText: [dict objectForKey: (NSString *)kABPersonInstantMessageServiceKey]];
 
     } else {
-      [self.textLabel setText: (__bridge NSString *)ABAddressBookCopyLocalizedLabel(kABPersonInstantMessageServiceSkype)];
+      CFStringRef label = ABAddressBookCopyLocalizedLabel(kABPersonInstantMessageServiceSkype);
+      [self.textLabel setText: (__bridge NSString *)label];
+      CFRelease(label);
     }
   }
 
@@ -170,7 +220,9 @@ static const int editModeItem = 101;
       [textField setFont: [UIFont boldSystemFontOfSize: 15.]];
       [textField setTag: editModeItem];
       [textField setDelegate: self];
-      [textField setPlaceholder: (__bridge NSString *)(ABPersonCopyLocalizedPropertyName(self.abPropertyID))];
+      CFStringRef placeholder = ABPersonCopyLocalizedPropertyName(self.abPropertyID);
+      [textField setPlaceholder: (__bridge NSString *)placeholder];
+      CFRelease(placeholder);
 
       [textField setText: self.detailTextLabel.text];
       [self.detailTextLabel setText: nil];
@@ -288,10 +340,12 @@ static const int editModeItem = 101;
     forControlEvents: UIControlEventValueChanged];
 
   if (self.abPropertyID == kABPersonBirthdayProperty) {
-    [dPicker setDate: [self.parent.contact valueForProperty: kABPersonBirthdayProperty]];
+    NSDate *date = [self.parent.contact valueForProperty: kABPersonBirthdayProperty];
+    [dPicker setDate: (date) ? date : [NSDate date]];
   } else if (self.abPropertyID == kABPersonDateProperty) {
-    [dPicker setDate: [self.parent.contact valueForMultiValueProperty: kABPersonDateProperty
-                                                        forIdentifier: self.identifier]];
+    NSDate *date = [self.parent.contact valueForMultiValueProperty: kABPersonDateProperty
+                                                     forIdentifier: self.identifier];
+    [dPicker setDate: (date) ? date : [NSDate date]];
   }
 
   [self.actionSheet addSubview: dPicker];
@@ -306,6 +360,8 @@ static const int editModeItem = 101;
   [self.detailTextLabel setText: [NSDateFormatter localizedStringFromDate: dPicker.date
                                                           dateStyle: NSDateFormatterLongStyle
                                                           timeStyle: NSDateFormatterNoStyle]];
+  [self.detailTextLabel setTextColor: [UIColor blackColor]];
+  [self.detailTextLabel sizeToFit];
 }
 
 -(void)actionSheetDidPressButton: (id) sender {
@@ -316,17 +372,27 @@ static const int editModeItem = 101;
     if (self.abPropertyID == kABPersonBirthdayProperty) {
 
       NSDate *date = (NSDate *)[self.parent.contact valueForProperty: kABPersonBirthdayProperty];
-      [self.detailTextLabel setText: [NSDateFormatter localizedStringFromDate: date
-                                                                    dateStyle: NSDateFormatterLongStyle
-                                                                    timeStyle: NSDateFormatterNoStyle]];
+      CFStringRef placeholder = ABPersonCopyLocalizedPropertyName(kABPersonDateProperty);
+      NSString *dateStr = (date) ? [NSDateFormatter localizedStringFromDate: date
+                                                                  dateStyle: NSDateFormatterLongStyle
+                                                                  timeStyle: NSDateFormatterNoStyle] : (__bridge NSString *)placeholder;
+      [self.detailTextLabel setText: dateStr];
+      CFRelease(placeholder);
+      UIColor *color = (date) ? [UIColor blackColor] : [UIColor lightGrayColor];
+      [self.detailTextLabel setTextColor: color];
 
     } else if (self.abPropertyID == kABPersonDateProperty) {
 
       NSDate *date = (NSDate *)[self.parent.contact valueForMultiValueProperty: kABPersonDateProperty
                                                                  forIdentifier: self.identifier];
-      [self.detailTextLabel setText: [NSDateFormatter localizedStringFromDate: date
-                                                                    dateStyle: NSDateFormatterLongStyle
-                                                                    timeStyle: NSDateFormatterNoStyle]];
+      CFStringRef placeholder = ABPersonCopyLocalizedPropertyName(kABPersonDateProperty);
+      NSString *dateStr = (date) ? [NSDateFormatter localizedStringFromDate: date
+                                                                  dateStyle: NSDateFormatterLongStyle
+                                                                  timeStyle: NSDateFormatterNoStyle] : (__bridge NSString *)placeholder;
+      [self.detailTextLabel setText: dateStr];
+      CFRelease(placeholder);
+      UIColor *color = (date) ? [UIColor blackColor] : [UIColor lightGrayColor];
+      [self.detailTextLabel setTextColor: color];
 
     }
   }
