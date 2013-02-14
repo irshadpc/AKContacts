@@ -44,7 +44,6 @@ typedef enum {
 
 @interface AddressBookManager : NSObject
 
-@property (assign) ABAddressBookRef addressBook;
 @property (assign) NSInteger status;
 /**
  * AKContact objects with their recordIDs as keys
@@ -59,11 +58,11 @@ typedef enum {
  **/
 @property (strong) NSMutableArray *allKeys;
 /**
- * Elements from allKeys that are displayed
+ * Subset of allKeys that are displayed
  **/
 @property (strong) NSMutableArray *keys;
 /**
- * Elements from allContactIdentifiers that are displayed
+ * Subset of allContactIdentifiers that are displayed
  **/
 @property (strong) NSMutableDictionary *contactIdentifiers;
 

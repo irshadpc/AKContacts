@@ -36,9 +36,9 @@ static const float defaultCellHeight = 44.f;
 
 @interface AKContactsViewController ()
 
-@property (nonatomic, weak) AppDelegate *appDelegate;
-@property (nonatomic, retain) UITableView *tableView;
-@property (nonatomic, retain) UISearchBar *searchBar;
+@property (nonatomic, assign) AppDelegate *appDelegate;
+@property (nonatomic, strong) UITableView *tableView;
+@property (nonatomic, strong) UISearchBar *searchBar;
 
 @end
 

@@ -34,10 +34,11 @@ NSString *const AddressBookDidLoadNotification = @"AddressBookDidLoadNotificatio
 
 @interface AddressBookManager ()
 
-@property (nonatomic, weak) AppDelegate *appDelegate;
+@property (nonatomic, assign) AppDelegate *appDelegate;
+@property (assign) ABAddressBookRef abRef;
 
-@property (nonatomic, strong) dispatch_semaphore_t semaphore;
-@property (nonatomic, strong) dispatch_queue_t dispatch_queue;
+@property (nonatomic, assign) dispatch_semaphore_t semaphore;
+@property (nonatomic, assign) dispatch_queue_t ab_queue;
 
 @end
 
@@ -45,9 +46,9 @@ NSString *const AddressBookDidLoadNotification = @"AddressBookDidLoadNotificatio
 
 @synthesize appDelegate = _appDelegate;
 @synthesize semaphore = _semaphore;
-@synthesize dispatch_queue = _dispatch_queue;
+@synthesize ab_queue = _ab_queue;
 
-@synthesize addressBook = _addressBook;
+@synthesize abRef = _abRef;
 @synthesize status = _status;
 @synthesize contacts = _contacts;
 @synthesize allContactIdentifiers = _allContactIdentifiers;
@@ -61,15 +62,22 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   self = [super init];
   if (self) {
     _appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    
     _contactIdentifiers = nil;
-    _dispatch_queue = dispatch_queue_create("com.AKContacts.addressBookManager", NULL);
+    
+    _ab_queue = dispatch_queue_create("com.AKContacts.addressBookManager", NULL);
 
-    CFErrorRef error = NULL;
-    _addressBook = ABAddressBookCreateWithOptions(NULL, &error);
     _status = kAddressBookOffline;
 
     _semaphore = dispatch_semaphore_create(1);
-    
+
+    dispatch_async(_ab_queue, ^(void){
+      CFErrorRef error = NULL;
+      _abRef = SYSTEM_VERSION_LESS_THAN(@"6.0") ? ABAddressBookCreate() : ABAddressBookCreateWithOptions(NULL, &error);
+      if (error) {
+        NSLog(@"%ld", CFErrorGetCode(error));
+      }
+    });
   }
   return self;
 }
@@ -82,28 +90,33 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 -(void)requestAddressBookAccess {
   
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_6_1
-  ABAuthorizationStatus stat = ABAddressBookGetAuthorizationStatus();
-
-  if (stat == kABAuthorizationStatusNotDetermined) {
-    ABAddressBookRequestAccessWithCompletion(self.addressBook, ^(bool granted, CFErrorRef error) {
-      if (granted) {
-        NSLog(@"Access granted to addressBook");
-        [self loadAddressBook];
-      } else {
-        NSLog(@"Access denied to addressBook");
-      }
-    });
-  } else if (stat == kABAuthorizationStatusDenied) {
-    NSLog(@"kABAuthorizationStatusDenied");
-  } else if (stat == kABAuthorizationStatusRestricted) {
-    NSLog(@"kABAuthorizationStatusRestricted");
-  } else if (stat == kABAuthorizationStatusAuthorized) {
+  if (SYSTEM_VERSION_LESS_THAN(@"6.0")) {
     [self loadAddressBook];
+  } else {
+  
+    ABAuthorizationStatus stat = ABAddressBookGetAuthorizationStatus();
+
+    if (stat == kABAuthorizationStatusNotDetermined) {
+
+      dispatch_async(_ab_queue, ^(void){
+        ABAddressBookRequestAccessWithCompletion(_abRef, ^(bool granted, CFErrorRef error) {
+          if (granted) {
+            NSLog(@"Access granted to addressBook");
+            [self loadAddressBook];
+          } else {
+            NSLog(@"Access denied to addressBook");
+          }
+        });
+      });
+
+    } else if (stat == kABAuthorizationStatusDenied) {
+      NSLog(@"kABAuthorizationStatusDenied");
+    } else if (stat == kABAuthorizationStatusRestricted) {
+      NSLog(@"kABAuthorizationStatusRestricted");
+    } else if (stat == kABAuthorizationStatusAuthorized) {
+      [self loadAddressBook];
+    }
   }
-#else
-  [self loadAddressBook];
-#endif
 }
 
 -(void)loadAddressBook {
@@ -133,7 +146,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     CFMutableArrayRef peopleMutable = nil;
 
     // Get array of records in Address Book
-    people = ABAddressBookCopyArrayOfAllPeople(_addressBook);
+    people = ABAddressBookCopyArrayOfAllPeople(_abRef);
     // Make mutable copy of array
     peopleMutable = CFArrayCreateMutableCopy(kCFAllocatorDefault,
                                              CFArrayGetCount(people),
@@ -159,7 +172,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       NSNumber *recordId = [NSNumber numberWithUnsignedInteger: [contact recordID]];
        
       NSLog(@"%d : %@", [contact recordID], [contact displayName]);
-       
+
       [tempContacts setObject: contact forKey: recordId];
       dispatch_semaphore_signal(self.semaphore);
 
@@ -201,7 +214,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     }
   };
 
-  dispatch_async(self.dispatch_queue, block);
+  dispatch_async(_ab_queue, block);
 }
 
 -(NSInteger)contactsCount {
