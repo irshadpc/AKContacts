@@ -44,27 +44,29 @@ typedef enum {
 
 @interface AddressBookManager : NSObject
 
-@property (assign) NSInteger status;
+@property (assign, nonatomic) ABAddressBookRef addressBookRef;
+
+@property (assign, nonatomic) NSInteger status;
 /**
  * AKContact objects with their recordIDs as keys
  **/
-@property (strong) NSMutableDictionary *contacts;
+@property (strong, nonatomic) NSMutableDictionary *contacts;
 /**
  * Arrays of AKContact objects with their alphabetic lookup letters as keys
  **/
-@property (strong) NSMutableDictionary *allContactIdentifiers;
+@property (strong, nonatomic) NSMutableDictionary *allContactIdentifiers;
 /**
  * All letters of the alphabet plus '#' and UITableViewIndexSearch
  **/
-@property (strong) NSMutableArray *allKeys;
+@property (strong, nonatomic) NSMutableArray *allKeys;
 /**
  * Subset of allKeys that are displayed
  **/
-@property (strong) NSMutableArray *keys;
+@property (strong, nonatomic) NSMutableArray *keys;
 /**
  * Subset of allContactIdentifiers that are displayed
  **/
-@property (strong) NSMutableDictionary *contactIdentifiers;
+@property (strong, nonatomic) NSMutableDictionary *contactIdentifiers;
 
 -(void)requestAddressBookAccess;
 -(NSInteger)contactsCount;

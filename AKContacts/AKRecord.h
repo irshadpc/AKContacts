@@ -33,10 +33,10 @@
 
 }
 
-@property (assign) ABRecordRef record;
-@property (assign) ABRecordID recordID;
+@property (assign, nonatomic) ABRecordRef record;
+@property (assign, nonatomic) ABRecordID recordID;
 
--(id)initWithABRecordRef: (ABRecordRef) aRecord;
+-(id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef;
 
 /**
  * Return a value corresponding to an ABPropertyID.

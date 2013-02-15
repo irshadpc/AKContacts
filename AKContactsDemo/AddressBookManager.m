@@ -35,9 +35,7 @@ NSString *const AddressBookDidLoadNotification = @"AddressBookDidLoadNotificatio
 @interface AddressBookManager ()
 
 @property (nonatomic, assign) AppDelegate *appDelegate;
-@property (assign) ABAddressBookRef abRef;
 
-@property (nonatomic, assign) dispatch_semaphore_t semaphore;
 @property (nonatomic, assign) dispatch_queue_t ab_queue;
 
 @end
@@ -45,10 +43,9 @@ NSString *const AddressBookDidLoadNotification = @"AddressBookDidLoadNotificatio
 @implementation AddressBookManager
 
 @synthesize appDelegate = _appDelegate;
-@synthesize semaphore = _semaphore;
 @synthesize ab_queue = _ab_queue;
 
-@synthesize abRef = _abRef;
+@synthesize addressBookRef = _addressBookRef;
 @synthesize status = _status;
 @synthesize contacts = _contacts;
 @synthesize allContactIdentifiers = _allContactIdentifiers;
@@ -62,27 +59,22 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   self = [super init];
   if (self) {
     _appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-    
+
     _contactIdentifiers = nil;
-    
+
     _ab_queue = dispatch_queue_create("com.AKContacts.addressBookManager", NULL);
 
     _status = kAddressBookOffline;
 
-    _semaphore = dispatch_semaphore_create(1);
-
-    dispatch_async(_ab_queue, ^(void){
-      CFErrorRef error = NULL;
-      _abRef = SYSTEM_VERSION_LESS_THAN(@"6.0") ? ABAddressBookCreate() : ABAddressBookCreateWithOptions(NULL, &error);
-      if (error) {
-        NSLog(@"%ld", CFErrorGetCode(error));
-      }
-    });
+    CFErrorRef error = NULL;
+    _addressBookRef = SYSTEM_VERSION_LESS_THAN(@"6.0") ? ABAddressBookCreate() : ABAddressBookCreateWithOptions(NULL, &error);
+    if (error) NSLog(@"%ld", CFErrorGetCode(error));
   }
   return self;
 }
 
 -(void)dealloc {
+  CFRelease(_addressBookRef);
   [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 
@@ -98,15 +90,13 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     if (stat == kABAuthorizationStatusNotDetermined) {
 
-      dispatch_async(_ab_queue, ^(void){
-        ABAddressBookRequestAccessWithCompletion(_abRef, ^(bool granted, CFErrorRef error) {
-          if (granted) {
-            NSLog(@"Access granted to addressBook");
-            [self loadAddressBook];
-          } else {
-            NSLog(@"Access denied to addressBook");
-          }
-        });
+      ABAddressBookRequestAccessWithCompletion(_addressBookRef, ^(bool granted, CFErrorRef error) {
+        if (granted) {
+          NSLog(@"Access granted to addressBook");
+          [self loadAddressBook];
+        } else {
+          NSLog(@"Access denied to addressBook");
+        }
       });
 
     } else if (stat == kABAuthorizationStatusDenied) {
@@ -131,6 +121,11 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   }
 
   dispatch_block_t block = ^{
+
+    CFErrorRef error = NULL;
+    ABAddressBookRef addressBook = SYSTEM_VERSION_LESS_THAN(@"6.0") ? ABAddressBookCreate() : ABAddressBookCreateWithOptions(NULL, &error);
+    if (error) NSLog(@"%ld", CFErrorGetCode(error));
+
     NSMutableDictionary *tempContactIdentifiers = [[NSMutableDictionary alloc] init];
     NSMutableDictionary *tempContacts = [[NSMutableDictionary alloc] init];
 
@@ -146,7 +141,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     CFMutableArrayRef peopleMutable = nil;
 
     // Get array of records in Address Book
-    people = ABAddressBookCopyArrayOfAllPeople(_abRef);
+    people = ABAddressBookCopyArrayOfAllPeople(addressBook);
     // Make mutable copy of array
     peopleMutable = CFArrayCreateMutableCopy(kCFAllocatorDefault,
                                              CFArrayGetCount(people),
@@ -163,29 +158,43 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     NSDate *start = [NSDate date];
 
+    dispatch_semaphore_t semaphore = dispatch_semaphore_create(1);
+    
     [peopleArray enumerateObjectsWithOptions: NSEnumerationConcurrent usingBlock:
-     ^(id obj, NSUInteger idx, BOOL *stop){
-       
-      dispatch_semaphore_wait(self.semaphore, DISPATCH_TIME_FOREVER);
-      ABRecordRef record = (__bridge ABRecordRef)obj;
-      AKContact *contact = [[AKContact alloc] initWithABRecordRef: record];
-      NSNumber *recordId = [NSNumber numberWithUnsignedInteger: [contact recordID]];
-       
-      NSLog(@"%d : %@", [contact recordID], [contact displayName]);
+     ^(id obj, NSUInteger idx, BOOL *stop) {
 
-      [tempContacts setObject: contact forKey: recordId];
-      dispatch_semaphore_signal(self.semaphore);
+      dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+
+      ABRecordRef record = (__bridge ABRecordRef)obj;
+
+      ABRecordID recordID = ABRecordGetRecordID(record);
+      NSNumber *contactID = [NSNumber numberWithInteger: recordID];
+      AKContact *contact = [[AKContact alloc] initWithABRecordID: recordID andAddressBookRef: _addressBookRef];
+
+      NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(record));
+
+      NSLog(@"%d : %@", recordID, name);
+
+      NSString *dictionaryKey = @"#";
+      if ([name length] > 1) {
+        dictionaryKey = [[[[name substringToIndex: 1] decomposedStringWithCanonicalMapping] substringToIndex: 1] uppercaseString];
+      }
+
+      [tempContacts setObject: contact forKey: [NSNumber numberWithInteger: recordID]];
+      dispatch_semaphore_signal(semaphore);
 
       // Put the recordID in the corresponding section of contactIdentifiers
-      NSMutableArray *tArray = (NSMutableArray *)[tempContactIdentifiers objectForKey: [contact dictionaryKey]];
+      NSMutableArray *tArray = (NSMutableArray *)[tempContactIdentifiers objectForKey: dictionaryKey];
       if (tArray) {
-        [tArray addObject: recordId];
+        [tArray addObject: contactID];
       } else {
         tArray = (NSMutableArray *)[tempContactIdentifiers objectForKey: @"#"];
-        [tArray addObject: recordId];
+        [tArray addObject: contactID];
       }
     }]; // End [peopleArray enumerateObjectsWithOptions:
 
+    CFRelease(addressBook);
+    
     NSDate *finish = [NSDate date];
     NSLog(@"Address book loaded in %f", [finish timeIntervalSinceDate: start]);
 
@@ -212,6 +221,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     } else if (self.status == kAddressBookReloading) {
       [self setStatus: kAddressBookOnline];
     }
+
   };
 
   dispatch_async(_ab_queue, block);
@@ -271,7 +281,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     NSMutableArray *toRemove = [[NSMutableArray alloc] init];
     for (NSNumber *identifier in array) {
       NSString *displayName = [[self.contacts objectForKey: identifier] displayName];
-      
+
       if ([displayName rangeOfString: searchTerm options: NSCaseInsensitiveSearch].location == NSNotFound)
         [toRemove addObject: identifier];
     }

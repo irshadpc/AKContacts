@@ -50,11 +50,14 @@ NSString *const kLabel = @"Label";
 @synthesize record = _record;
 @synthesize recordID = _recordID;
 
--(id)initWithABRecordRef: (ABRecordRef) aRecord {
+-(id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef {
   self = [super init];
   if (self) {
-    _record = aRecord;
-    _recordID = ABRecordGetRecordID(aRecord);
+    _recordID = recordID;
+
+    dispatch_async(dispatch_get_main_queue(), ^(void){
+      _record = ABAddressBookGetPersonWithRecordID(addressBookRef, _recordID);
+    });
   }
   return  self;
 }
