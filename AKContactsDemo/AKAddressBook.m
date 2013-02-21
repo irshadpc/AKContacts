@@ -34,6 +34,8 @@ NSString *const AKAddressBookQueueName = @"AKAddressBookQueue";
 
 NSString *const AddressBookDidLoadNotification = @"AddressBookDidLoadNotification";
 
+const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
+
 @interface AKAddressBook ()
 
 @property (nonatomic, assign) AppDelegate *appDelegate;
@@ -68,6 +70,10 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     _status = kAddressBookOffline;
 
+    dispatch_queue_set_specific(dispatch_get_main_queue(), IsOnMainQueueKey, (__bridge void *)self, NULL);
+
+    NSAssert(dispatch_get_specific(IsOnMainQueueKey), @"Must be dispatched on main queue");
+
     CFErrorRef error = NULL;
     _addressBookRef = SYSTEM_VERSION_LESS_THAN(@"6.0") ? ABAddressBookCreate() : ABAddressBookCreateWithOptions(NULL, &error);
     if (error) NSLog(@"%ld", CFErrorGetCode(error));
@@ -83,6 +89,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 #pragma mark - Address Book
 
 -(void)requestAddressBookAccess {
+
+  NSAssert(dispatch_get_specific(IsOnMainQueueKey), @"Must be dispatched on main queue");
 
   if (SYSTEM_VERSION_LESS_THAN(@"6.0")) {
     [self loadAddressBook];
@@ -122,6 +130,9 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       break;
   }
 
+  /*
+   * Loading the addressbook runs in the background and uses a local ABAddressBookRef
+   */
   dispatch_block_t block = ^{
 
     CFErrorRef error = NULL;

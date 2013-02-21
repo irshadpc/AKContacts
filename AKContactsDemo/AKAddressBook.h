@@ -31,6 +31,7 @@
 #import <AddressBookUI/AddressBookUI.h>
 
 FOUNDATION_EXPORT NSString *const AddressBookDidLoadNotification;
+FOUNDATION_EXPORT const void *const IsOnMainQueueKey;
 
 @class AppDelegate;
 @class AKContact;

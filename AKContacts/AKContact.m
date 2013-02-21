@@ -38,7 +38,19 @@
 @implementation AKContact
 
 -(NSString *)displayName {
-  return (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(super.record)); // kABStringPropertyType
+
+  __block NSString *ret;
+
+  dispatch_block_t block = ^{
+		ret = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(super.record)); // kABStringPropertyType
+	};
+
+  if (dispatch_get_specific(IsOnMainQueueKey)) {
+    block();
+  } else {
+    dispatch_sync(dispatch_get_main_queue(), block);
+  }
+  return ret;
 }
 
 -(NSString *)searchName {

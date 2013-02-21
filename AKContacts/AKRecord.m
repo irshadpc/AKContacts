@@ -27,6 +27,7 @@
 //
 
 #import "AKRecord.h"
+#import "AKAddressBook.h"
 
 NSString *const kIdentifier = @"Identifier";
 NSString *const kValue = @"Value";
@@ -63,48 +64,88 @@ NSString *const kLabel = @"Label";
 }
 
 -(id)valueForProperty: (ABPropertyID)property {
-  return (id)CFBridgingRelease(ABRecordCopyValue(self.record, property));
+
+  __block id ret;
+
+  dispatch_block_t block = ^{
+		ret = (id)CFBridgingRelease(ABRecordCopyValue(self.record, property));
+	};
+  
+  if (dispatch_get_specific(IsOnMainQueueKey)) {
+    block();
+  } else {
+    dispatch_sync(dispatch_get_main_queue(), block);
+  }
+  return ret;
 }
 
 -(NSInteger)countForProperty: (ABPropertyID) property {
   
-  NSInteger ret = 0;
-  ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.record, property);
-  if (multiValueRecord) {
-    ret = ABMultiValueGetCount(multiValueRecord);
-    CFRelease(multiValueRecord);
+  __block NSInteger ret = 0;
+  
+  dispatch_block_t block = ^{
+    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.record, property);
+    if (multiValueRecord) {
+      ret = ABMultiValueGetCount(multiValueRecord);
+      CFRelease(multiValueRecord);
+    }
+  };
+
+  if (dispatch_get_specific(IsOnMainQueueKey)) {
+    block();
+  } else {
+    dispatch_sync(dispatch_get_main_queue(), block);
   }
   return ret;
 }
 
 -(NSArray *)identifiersForProperty: (ABPropertyID) property {
 
-  NSArray *ret = nil;
-  ABMultiValueRef multiValueRecord =(ABMultiValueRef)ABRecordCopyValue(self.record, property);
-  if (multiValueRecord) {
-    NSInteger count = ABMultiValueGetCount(multiValueRecord);
-    NSMutableArray *identifiers = [[NSMutableArray alloc] initWithCapacity: count];
-    for (NSInteger i = 0; i < count; ++i) {
-      NSInteger identifier = (NSInteger)ABMultiValueGetIdentifierAtIndex(multiValueRecord, i);
-      [identifiers addObject: [NSNumber numberWithUnsignedInt: identifier]];
+  __block NSArray *ret = nil;
+  
+  dispatch_block_t block = ^{
+    ABMultiValueRef multiValueRecord =(ABMultiValueRef)ABRecordCopyValue(self.record, property);
+    if (multiValueRecord) {
+      NSInteger count = ABMultiValueGetCount(multiValueRecord);
+      NSMutableArray *identifiers = [[NSMutableArray alloc] initWithCapacity: count];
+      for (NSInteger i = 0; i < count; ++i) {
+        NSInteger identifier = (NSInteger)ABMultiValueGetIdentifierAtIndex(multiValueRecord, i);
+        [identifiers addObject: [NSNumber numberWithUnsignedInt: identifier]];
+      }
+      ret = [identifiers copy];
+      CFRelease(multiValueRecord);
     }
-    ret = [identifiers copy];
-    CFRelease(multiValueRecord);
+  };
+  
+  if (dispatch_get_specific(IsOnMainQueueKey)) {
+    block();
+  } else {
+    dispatch_sync(dispatch_get_main_queue(), block);
   }
   return ret;
 }
 
 -(id)valueForMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier {
   
-  id ret = nil;
-  ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.record, property);
-  if (multiValueRecord){
-    CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
-    if (index != -1) {
-      ret = (id)CFBridgingRelease(ABMultiValueCopyValueAtIndex(multiValueRecord, index));
+  __block id ret = nil;
+  
+  dispatch_block_t block = ^{
+    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.record, property);
+    if (multiValueRecord){
+      CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
+      if (index != -1) {
+        ret = (id)CFBridgingRelease(ABMultiValueCopyValueAtIndex(multiValueRecord, index));
+      }
+      CFRelease(multiValueRecord);
     }
-    CFRelease(multiValueRecord);
+  };
+
+  if (dispatch_get_specific(IsOnMainQueueKey)) {
+    block();
+  } else {
+    dispatch_sync(dispatch_get_main_queue(), block);
   }
+
   return ret;
 }
 
@@ -119,16 +160,25 @@ NSString *const kLabel = @"Label";
 
 -(NSString *)labelForMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier {
   
-  NSString *ret = nil;
-  ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.record, property);
-  if (multiValueRecord) {
-    CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
-    if (index != -1) {
-      CFStringRef label = ABMultiValueCopyLabelAtIndex(multiValueRecord, index);
-      ret = (NSString *)CFBridgingRelease(ABAddressBookCopyLocalizedLabel(label));
-      CFRelease(label);
+  __block NSString *ret = nil;
+  
+  dispatch_block_t block = ^{
+    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.record, property);
+    if (multiValueRecord) {
+      CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
+      if (index != -1) {
+        CFStringRef label = ABMultiValueCopyLabelAtIndex(multiValueRecord, index);
+        ret = (NSString *)CFBridgingRelease(ABAddressBookCopyLocalizedLabel(label));
+        CFRelease(label);
+      }
+      CFRelease(multiValueRecord);
     }
-    CFRelease(multiValueRecord);
+  };
+  
+  if (dispatch_get_specific(IsOnMainQueueKey)) {
+    block();
+  } else {
+    dispatch_sync(dispatch_get_main_queue(), block);
   }
   return ret;
 }
