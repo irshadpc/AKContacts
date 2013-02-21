@@ -27,7 +27,7 @@
 //
 
 #import "AKContact.h"
-#import "AddressBookManager.h"
+#import "AKAddressBook.h"
 #import "AppDelegate.h"
 
 @interface AKContact ()

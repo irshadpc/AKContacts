@@ -55,7 +55,7 @@ NSString *const kLabel = @"Label";
   if (self) {
     _recordID = recordID;
 
-    dispatch_async(dispatch_get_main_queue(), ^(void){
+    dispatch_sync(dispatch_get_main_queue(), ^(void){
       _record = ABAddressBookGetPersonWithRecordID(addressBookRef, _recordID);
     });
   }

@@ -6,7 +6,7 @@
 //
 
 #import "AppDelegate.h"
-#import "AddressBookManager.h"
+#import "AKAddressBook.h"
 #import "AKContactsViewController.h"
 
 @implementation AppDelegate
@@ -15,9 +15,9 @@
 {
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
 
-    self.addressBookManager = [[AddressBookManager alloc] init];
-    [self.addressBookManager requestAddressBookAccess];
-  
+    self.akAddressBook = [[AKAddressBook alloc] init];
+    [self.akAddressBook requestAddressBookAccess];
+
     AKContactsViewController *contactsViewController = [[AKContactsViewController alloc] init];
     self.navigationController = [[UINavigationController alloc] initWithRootViewController: contactsViewController];
     self.window.rootViewController = self.navigationController;
