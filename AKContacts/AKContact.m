@@ -184,10 +184,18 @@
 }
 
 -(NSData*)pictureData{
+
+  __block NSData *ret = nil;
   
-  NSData *ret = nil;
-  if (ABPersonHasImageData(super.record)) {
-    ret = (NSData *)CFBridgingRelease(ABPersonCopyImageDataWithFormat(super.record, kABPersonImageFormatThumbnail));
+  dispatch_block_t block = ^{
+    if (ABPersonHasImageData(super.record)) {
+      ret = (NSData *)CFBridgingRelease(ABPersonCopyImageDataWithFormat(super.record, kABPersonImageFormatThumbnail));
+    }
+  };
+  if (dispatch_get_specific(IsOnMainQueueKey)) {
+    block();
+  } else {
+    dispatch_sync(dispatch_get_main_queue(), block);
   }
   return ret;
 }
