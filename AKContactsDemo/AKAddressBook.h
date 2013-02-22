@@ -57,11 +57,7 @@ typedef enum {
  **/
 @property (strong, nonatomic) NSMutableDictionary *allContactIdentifiers;
 /**
- * All letters of the alphabet plus '#' and UITableViewIndexSearch
- **/
-@property (strong, nonatomic) NSMutableArray *allKeys;
-/**
- * Subset of allKeys that are displayed
+ * Dictionary keys of contacts that are displayed
  **/
 @property (strong, nonatomic) NSMutableArray *keys;
 /**

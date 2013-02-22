@@ -53,7 +53,6 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 @synthesize status = _status;
 @synthesize contacts = _contacts;
 @synthesize allContactIdentifiers = _allContactIdentifiers;
-@synthesize allKeys = _allKeys;
 @synthesize keys = _keys;
 @synthesize contactIdentifiers = _contactIdentifiers;
 
@@ -70,6 +69,14 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     _status = kAddressBookOffline;
 
+    /*
+     * The ABAddressBook API is not thread safe. ABAddressBook related calls are dispatched on the main queue.
+     * The only exception to this is the initial loading of the contacts data that needs to be executed in
+     * the background so the UI remains responsive. See loadAddressBook that uses a local addressBook reference.
+     *
+     * dispatch_queue_set_specific is used to set a unique key for the main queue that can be used to 
+     * determine if the current queue is the main one
+     */
     dispatch_queue_set_specific(dispatch_get_main_queue(), IsOnMainQueueKey, (__bridge void *)self, NULL);
 
     NSAssert(dispatch_get_specific(IsOnMainQueueKey), @"Must be dispatched on main queue");
@@ -207,16 +214,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     [self setContacts: tempContacts];
     [self setAllContactIdentifiers: tempContactIdentifiers];
-
-    self.allKeys = [[NSMutableArray alloc] init];
-    [self.allKeys addObject: UITableViewIndexSearch];
-    [self.allKeys addObjectsFromArray: [[self.allContactIdentifiers allKeys]
-                                sortedArrayUsingSelector: @selector(compare:)]];
-    // Little hack to move # to the end of the list
-    if ([self.allKeys count] > 0) {
-      [self.allKeys addObject: [self.allKeys objectAtIndex: 1]];
-      [self.allKeys removeObjectAtIndex: 1];
-    }
 
     [self resetSearch];
 
