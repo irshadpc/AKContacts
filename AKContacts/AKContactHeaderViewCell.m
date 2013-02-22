@@ -72,6 +72,8 @@ static const int editModeItem = 8;
 
 -(void)configureCellAtRow:(NSInteger)row {
 
+  [self setSelectionStyle: UITableViewCellSelectionStyleNone];
+
   // Clear content view
   for (UIView *subView in [self.contentView subviews]) {
     [subView removeFromSuperview];

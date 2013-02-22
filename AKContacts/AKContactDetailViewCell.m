@@ -71,7 +71,7 @@ static const int editModeItem = 101;
   [self.textLabel setText: nil];
   [self.detailTextLabel setText: nil];
   [self.detailTextLabel setTextColor: [UIColor blackColor]];
-  [self setSelectionStyle: UITableViewCellSelectionStyleNone];
+  [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
 
   if (self.abPropertyID == kABPersonPhoneProperty ||
       self.abPropertyID == kABPersonEmailProperty ||

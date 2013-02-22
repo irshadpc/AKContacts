@@ -74,6 +74,7 @@ static const int editModeItem = 101;
   [self setIdentifier: NSNotFound];
   [self.textLabel setText: nil];
   [self.detailTextLabel setText: nil];
+  [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
 
   // Remove edit mode items that might be hanging around on reused cells
   for (UIView *subView in [self.contentView subviews]) {
