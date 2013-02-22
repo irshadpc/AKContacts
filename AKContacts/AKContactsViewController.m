@@ -91,8 +91,8 @@ static const float defaultCellHeight = 44.f;
 -(void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
 
-  if (self.tableView.contentOffset.y <= self.searchBar.frame.size.height)
-    self.tableView.contentOffset = CGPointMake(0.f, self.searchBar.frame.size.height);
+  if (_tableView.contentOffset.y <= _searchBar.frame.size.height)
+    _tableView.contentOffset = CGPointMake(0.f, _searchBar.frame.size.height);
 }
 
 -(void)viewDidAppear:(BOOL)animated {
@@ -120,9 +120,9 @@ static const float defaultCellHeight = 44.f;
 
 -(BOOL)tableViewCellVisibleForIndexPath: (NSIndexPath *)indexPath {
   BOOL ret = NO;
-  
-  NSArray *indexPathForVisibleCells = [self.tableView indexPathsForVisibleRows];
-  
+
+  NSArray *indexPathForVisibleCells = [_tableView indexPathsForVisibleRows];
+
   for (NSIndexPath *index in indexPathForVisibleCells) {
     if (index.section == indexPath.section &&
         index.row == indexPath.row) {
@@ -130,13 +130,13 @@ static const float defaultCellHeight = 44.f;
       break;
     }
   }
-  
+
   return ret;
 }
 
 -(void)reloadTableViewData {
   dispatch_async(dispatch_get_main_queue(), ^(void){
-    [self.tableView reloadData];
+    [_tableView reloadData];
   });
 }
 
@@ -192,7 +192,7 @@ static const float defaultCellHeight = 44.f;
       [cell.textLabel setFont:[UIFont boldSystemFontOfSize: 17.f]];
       [cell.textLabel setTextAlignment: NSTextAlignmentCenter];
       [cell.textLabel setTextColor: [UIColor lightGrayColor]];
-      if ([self.searchBar isFirstResponder]) {
+      if ([_searchBar isFirstResponder]) {
         if (row == 2) {
           [cell.textLabel setText: @"No Results"];
         }
@@ -260,16 +260,15 @@ static const float defaultCellHeight = 44.f;
 -(NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView {
 
   BOOL index = YES;
-  if ([self.searchBar isFirstResponder] ||
-      [self.searchBar.text length] > 0 ||
-      [[_appDelegate.akAddressBook keys] count] > 0)
+  if ([_searchBar isFirstResponder] ||
+      [_searchBar.text length] > 0 ||
+      [[_appDelegate.akAddressBook keys] count] == 0)
     index = NO;
-  
+
   return (index) ? [_appDelegate.akAddressBook keys] : nil;
 }
 
--(NSInteger)tableView:(UITableView *)tableView sectionForSectionIndexTitle:(NSString *)title
-              atIndex:(NSInteger)index { 
+-(NSInteger)tableView:(UITableView *)tableView sectionForSectionIndexTitle:(NSString *)title atIndex:(NSInteger)index { 
   NSInteger ret = NSNotFound;
   if ([_appDelegate.akAddressBook.keys count] > index) {
     NSString *key = [_appDelegate.akAddressBook.keys objectAtIndex: index];
@@ -333,7 +332,7 @@ static const float defaultCellHeight = 44.f;
 }
 
 -(NSIndexPath *)tableView: (UITableView *)tableView willSelectRowAtIndexPath: (NSIndexPath *)indexPath {
-  [self.searchBar resignFirstResponder];
+  [_searchBar resignFirstResponder];
   return indexPath;
 }
 
@@ -342,39 +341,39 @@ static const float defaultCellHeight = 44.f;
 -(void)searchBarTextDidBeginEditing:(UISearchBar *)search {
 	[search becomeFirstResponder];
 	[search setShowsCancelButton: YES animated: YES];
-  [self.tableView reloadData]; // To hide index
+  [_tableView reloadData]; // To hide index
 }
 
 -(void)searchBarTextDidEndEditing:(UISearchBar *)search {
 	[search resignFirstResponder];
 	[search setShowsCancelButton:NO animated:YES];
-  [self.tableView reloadData]; // To show index
+  [_tableView reloadData]; // To show index
 }
 
 -(void)searchBarSearchButtonClicked:(UISearchBar *)search {
   
   NSString *searchTerm = [search text];
   [_appDelegate.akAddressBook handleSearchForTerm: searchTerm];
-  [self.tableView reloadData];
+  [_tableView reloadData];
 }
 
 -(void)searchBar: (UISearchBar *)searchBar textDidChange: (NSString *)searchTerm {
   
   if ([searchTerm length] == 0) {
     [_appDelegate.akAddressBook resetSearch];
-    [self.tableView reloadData];
+    [_tableView reloadData];
     return;
   }
   [_appDelegate.akAddressBook handleSearchForTerm: searchTerm];
-  [self.tableView reloadData];
+  [_tableView reloadData];
 }
 
 -(void)searchBarCancelButtonClicked:(UISearchBar *)search {
   
   search.text = @"";
   [_appDelegate.akAddressBook resetSearch];
-  [self.tableView reloadData];
-  [self.searchBar resignFirstResponder];
+  [_tableView reloadData];
+  [_searchBar resignFirstResponder];
 }
 
 #pragma mark - Memory management
