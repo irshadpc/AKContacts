@@ -66,6 +66,7 @@
   [self setIdentifier: NSNotFound];
   [self.textLabel setText: nil];
   [self.detailTextLabel setText: nil];
+  [self setSelectionStyle: UITableViewCellSelectionStyleNone];
 
   [self.detailTextLabel setText: @"Switch"];
 
