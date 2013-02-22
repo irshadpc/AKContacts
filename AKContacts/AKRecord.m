@@ -552,14 +552,15 @@ NSString *const kLabel = @"Label";
     array = [[NSMutableArray alloc] init];
     [dictionary setObject: array forKey: propertyKey];
   }
-  
+
   // Locate the dictionary in the array
-  for (int i = 0; i < [array count]; i++) {
-    NSNumber *nIdentifier = [[array objectAtIndex: i] objectForKey: kIdentifier];
+  for (NSMutableDictionary *dict in array) {
+    NSNumber *nIdentifier = [dict objectForKey: kIdentifier];
     if ([nIdentifier integerValue] == identifier) {
-      ret = [array objectAtIndex: i];
+      ret = dict;
       break;
     }
+    
   }
   if (!ret) { // If dictionary is not found, put it in
     ret = [[NSMutableDictionary alloc] init];

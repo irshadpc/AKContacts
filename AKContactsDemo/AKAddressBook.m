@@ -191,7 +191,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       NSLog(@"%d : %@", recordID, name);
 
       NSString *dictionaryKey = @"#";
-      if ([name length] > 1) {
+      if ([name length] > 0) {
         dictionaryKey = [[[[name substringToIndex: 1] decomposedStringWithCanonicalMapping] substringToIndex: 1] uppercaseString];
       }
 

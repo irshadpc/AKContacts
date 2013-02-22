@@ -53,13 +53,13 @@ typedef enum {
  **/
 @property (strong, nonatomic) NSMutableDictionary *contacts;
 /**
+ * Dictionary keys of displayed contacts
+ **/
+@property (strong, nonatomic) NSMutableArray *keys;
+/**
  * Arrays of AKContact objects with their alphabetic lookup letters as keys
  **/
 @property (strong, nonatomic) NSMutableDictionary *allContactIdentifiers;
-/**
- * Dictionary keys of contacts that are displayed
- **/
-@property (strong, nonatomic) NSMutableArray *keys;
 /**
  * Subset of allContactIdentifiers that are displayed
  **/
