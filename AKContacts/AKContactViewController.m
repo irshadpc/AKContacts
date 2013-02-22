@@ -375,8 +375,6 @@ static const float defaultCellHeight = 44.f;
   NSMutableIndexSet *insertSet = [[NSMutableIndexSet alloc] init];
   NSMutableArray *insertSections = [[NSMutableArray alloc] init];
 
-  //[reloadSet addIndex: [self.sections indexOfObject: [NSNumber numberWithInteger: kSectionHeader]]];
-
   for (NSNumber *numSection in self.sectionIdentifiers) {
     NSInteger section = [numSection integerValue];
 
@@ -401,50 +399,24 @@ static const float defaultCellHeight = 44.f;
           [insertSections addObject: [NSNumber numberWithInteger: section]];
       }
     }
-    
   }
-  
-  /*
-  if (self.editing == YES) {
-    if ([self.sections indexOfObject: [NSNumber numberWithInteger: kSectionPhone]] != NSNotFound) {
-      if ([self isSectionEditable: kSectionPhone] == YES)
-        [reloadSet addIndex: [self.sections indexOfObject: [NSNumber numberWithInteger: kSectionPhone]]];
-      else
-        [deleteSet addIndex: [self.sections indexOfObject: [NSNumber numberWithInteger: kSectionPhone]]];
-    } else {
-      [insertSections addObject: [NSNumber numberWithInteger: kSectionPhone]];
-    }
-  } else {
-    if ([self.sections indexOfObject: [NSNumber numberWithInteger: kSectionPhone]] != NSNotFound) {
-      if ([self numberOfElementsInSection: kSectionPhone] == 0) {
-        [deleteSet addIndex: [self.sections indexOfObject: [NSNumber numberWithInteger: kSectionPhone]]];
-      } else {
-        [reloadSet addIndex: [self.sections indexOfObject: [NSNumber numberWithInteger: kSectionPhone]]];
-      }
-    } else {
-      if ([self isSectionEditable: kSectionPhone] == NO)
-        [insertSections addObject: [NSNumber numberWithInteger: kSectionPhone]];
-    }
-  }
-   */
-  
-  /* Custom sections that cannot be edited */
-/*
-  if (self.editing == YES) {
-    if ([self.sections indexOfObject: [NSNumber numberWithInteger: kSectionSwitch]] != NSNotFound)
-      [deleteSet addIndex: [self.sections indexOfObject: [NSNumber numberWithInteger: kSectionSwitch]]];
-  } else {
-    if ([self.sections indexOfObject: [NSNumber numberWithInteger: kSectionSwitch]] == NSNotFound) {
-      [insertSections addObject: [NSNumber numberWithInteger: kSectionSwitch]];
-    }
-  }  
-*/
 
   [self.sections removeObjectsAtIndexes: deleteSet];
 
+  /*
+   * Insert indexes are determined assuming reload and delete operations have already taken place
+   * From the UITableView Class Reference:
+   * Note the behavior of this method when it is called in an animation block defined by the beginUpdates and
+   * endUpdates methods. UITableView defers any insertions of rows or sections until after it has
+   * handled the deletions of rows or sections. This happens regardless of ordering of the insertion and 
+   * deletion method calls. This is unlike inserting or removing an item in a mutable array, where the 
+   * operation can affect the array index used for the successive insertion or removal operation.
+   */
+  
   for (NSNumber *section in insertSections) {
-    [insertSet addIndex: [section integerValue]];
-    [self.sections insertObject: section atIndex: [self insertIndexForSection: [section integerValue]]];
+    NSInteger index = [self insertIndexForSection: [section integerValue]];
+    [insertSet addIndex: index];
+    [self.sections insertObject: section atIndex: index];
   }
   
   [self.tableView beginUpdates];
