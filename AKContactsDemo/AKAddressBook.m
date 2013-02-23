@@ -32,6 +32,7 @@
 
 NSString *const AKAddressBookQueueName = @"AKAddressBookQueue";
 
+NSString *const AddressBookDidInitializeNotification = @"AddressBookDidInitializeNotification";
 NSString *const AddressBookDidLoadNotification = @"AddressBookDidLoadNotification";
 
 const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
@@ -42,12 +43,24 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 
 @property (nonatomic, assign) dispatch_queue_t ab_queue;
 
+/*
+ * ABAddressBookRegisterExternalChangeCallback tends to fire multiple times
+ * for a single change, so we store the last date when the addressbook
+ * is reloaded and skip callbacks that fire too close to this date
+ */
+@property (nonatomic, strong) NSDate *dateAddressBookLoaded;
+
+-(void)reloadAddressBook;
+-(void)loadContactsWithABAddressBookRef: (ABAddressBookRef)addressBook;
+-(void)loadGroupsWithABAddressBookRef: (ABAddressBookRef)addressBook;
+
 @end
 
 @implementation AKAddressBook
 
 @synthesize appDelegate = _appDelegate;
 @synthesize ab_queue = _ab_queue;
+@synthesize dateAddressBookLoaded = _dateAddressBookLoaded;
 
 @synthesize addressBookRef = _addressBookRef;
 @synthesize status = _status;
@@ -56,7 +69,14 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 @synthesize keys = _keys;
 @synthesize contactIdentifiers = _contactIdentifiers;
 
-void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, void *context);
+#pragma mark - Address Book Changed Callback
+
+void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, void *context) {
+  @autoreleasepool {
+    AKAddressBook *addressBook = (__bridge AKAddressBook *)context;
+    [addressBook reloadAddressBook];
+  }
+}
 
 -(id)init {
   self = [super init];
@@ -84,6 +104,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     CFErrorRef error = NULL;
     _addressBookRef = SYSTEM_VERSION_LESS_THAN(@"6.0") ? ABAddressBookCreate() : ABAddressBookCreateWithOptions(NULL, &error);
     if (error) NSLog(@"%ld", CFErrorGetCode(error));
+
+    ABAddressBookRegisterExternalChangeCallback(_addressBookRef, addressBookChanged, (__bridge void*) self);
   }
   return self;
 }
@@ -126,13 +148,33 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   }
 }
 
+-(void)reloadAddressBook {
+  NSLog(@"AKAddressBook reloadAddressBook");
+
+  if (_dateAddressBookLoaded) {
+    NSTimeInterval elapsed = fabs([_dateAddressBookLoaded timeIntervalSinceNow]);
+    NSLog(@"Elasped since last AB load: %f", elapsed);
+    if (elapsed < 5.0) return;
+  }
+
+  if (_status != kAddressBookReloading) {
+    [self setDateAddressBookLoaded: [NSDate date]];
+    [self loadAddressBook];
+  }
+
+}
+
 -(void)loadAddressBook {
+
+  NSAssert(dispatch_get_specific(IsOnMainQueueKey), @"Must be dispatched on main queue");
 
   switch (self.status) {
     case kAddressBookOffline:
       [self setStatus: kAddressBookInitializing];
       break;
     case kAddressBookOnline:
+      // _addressBookRef needs a revert to recognize external changes
+      ABAddressBookRevert(_addressBookRef);
       [self setStatus: kAddressBookReloading];
       break;
   }
@@ -143,92 +185,126 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   dispatch_block_t block = ^{
 
     CFErrorRef error = NULL;
-    ABAddressBookRef addressBook = SYSTEM_VERSION_LESS_THAN(@"6.0") ? ABAddressBookCreate() : ABAddressBookCreateWithOptions(NULL, &error);
+    ABAddressBookRef addressBook = SYSTEM_VERSION_LESS_THAN(@"6.0") ?
+                                    ABAddressBookCreate() :
+                                    ABAddressBookCreateWithOptions(NULL, &error);
     if (error) NSLog(@"%ld", CFErrorGetCode(error));
 
-    NSMutableDictionary *tempContactIdentifiers = [[NSMutableDictionary alloc] init];
-    NSMutableDictionary *tempContacts = [[NSMutableDictionary alloc] init];
-
-    NSString *sectionKeys = @"ABCDEFGHIJKLMNOPQRSTUVWXYZ#";
-
-    for (int i = 0; i < [sectionKeys length]; i++) {
-      NSString *sectionKey = [NSString stringWithFormat: @"%c", [sectionKeys characterAtIndex: i]];
-      NSMutableArray *sectionArray = [[NSMutableArray alloc] init];
-      [tempContactIdentifiers setObject: sectionArray forKey: sectionKey];
-    }
-
-    CFArrayRef people = nil;
-    CFMutableArrayRef peopleMutable = nil;
-
-    // Get array of records in Address Book
-    people = ABAddressBookCopyArrayOfAllPeople(addressBook);
-    // Make mutable copy of array
-    peopleMutable = CFArrayCreateMutableCopy(kCFAllocatorDefault,
-                                             CFArrayGetCount(people),
-                                             people);
-    CFRelease(people);
-
-    // Sort array or records
-    CFArraySortValues(peopleMutable,
-                      CFRangeMake(0, CFArrayGetCount(peopleMutable)),
-                      (CFComparatorFunction) ABPersonComparePeopleByName,
-                      (void*) ABPersonGetSortOrdering());
-
-    NSMutableArray *peopleArray = (__bridge NSMutableArray *)peopleMutable;
-
     NSDate *start = [NSDate date];
-
-    for (id obj in peopleArray) {
-
-      ABRecordRef record = (__bridge ABRecordRef)obj;
-
-      ABRecordID recordID = ABRecordGetRecordID(record);
-      NSNumber *contactID = [NSNumber numberWithInteger: recordID];
-      AKContact *contact = [[AKContact alloc] initWithABRecordID: recordID andAddressBookRef: _addressBookRef];
-
-      NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(record));
-
-      NSLog(@"%d : %@", recordID, name);
-
-      NSString *dictionaryKey = @"#";
-      if ([name length] > 0) {
-        dictionaryKey = [[[[name substringToIndex: 1] decomposedStringWithCanonicalMapping] substringToIndex: 1] uppercaseString];
-      }
-
-      [tempContacts setObject: contact forKey: [NSNumber numberWithInteger: recordID]];
-
-      // Put the recordID in the corresponding section of contactIdentifiers
-      NSMutableArray *tArray = (NSMutableArray *)[tempContactIdentifiers objectForKey: dictionaryKey];
-      if (tArray) {
-        [tArray addObject: contactID];
-      } else {
-        tArray = (NSMutableArray *)[tempContactIdentifiers objectForKey: @"#"];
-        [tArray addObject: contactID];
-      }
-    }
-
+    
+    [self loadContactsWithABAddressBookRef: addressBook];
+    
+    [self loadGroupsWithABAddressBookRef: addressBook];
+    
     CFRelease(addressBook);
     
     NSDate *finish = [NSDate date];
     NSLog(@"Address book loaded in %f", [finish timeIntervalSinceDate: start]);
-
-    [self setContacts: tempContacts];
-    [self setAllContactIdentifiers: tempContactIdentifiers];
 
     [self resetSearch];
 
     if (self.status == kAddressBookInitializing) {
       [self setStatus: kAddressBookOnline];
       dispatch_async(dispatch_get_main_queue(), ^{
-        [[NSNotificationCenter defaultCenter] postNotificationName: AddressBookDidLoadNotification object: nil];
+        [[NSNotificationCenter defaultCenter] postNotificationName: AddressBookDidInitializeNotification object: nil];
       });
     } else if (self.status == kAddressBookReloading) {
       [self setStatus: kAddressBookOnline];
     }
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [[NSNotificationCenter defaultCenter] postNotificationName: AddressBookDidLoadNotification object: nil];
+    });
 
   };
 
   dispatch_async(_ab_queue, block);
+}
+
+-(void)loadContactsWithABAddressBookRef: (ABAddressBookRef)addressBook {
+
+  NSMutableDictionary *tempContactIdentifiers = [[NSMutableDictionary alloc] init];
+  NSMutableDictionary *tempContacts = [[NSMutableDictionary alloc] init];
+
+  NSString *sectionKeys = @"ABCDEFGHIJKLMNOPQRSTUVWXYZ#";
+
+  for (int i = 0; i < [sectionKeys length]; i++) {
+    NSString *sectionKey = [NSString stringWithFormat: @"%c", [sectionKeys characterAtIndex: i]];
+    NSMutableArray *sectionArray = [[NSMutableArray alloc] init];
+    [tempContactIdentifiers setObject: sectionArray forKey: sectionKey];
+  }
+
+  // Get array of records in Address Book
+  CFArrayRef people = ABAddressBookCopyArrayOfAllPeople(addressBook);
+  // Make mutable copy of array
+  CFMutableArrayRef peopleMutable = CFArrayCreateMutableCopy(kCFAllocatorDefault,
+                                                             CFArrayGetCount(people),
+                                                             people);
+  CFRelease(people);
+
+  // Sort array or records
+  CFArraySortValues(peopleMutable,
+                    CFRangeMake(0, CFArrayGetCount(peopleMutable)),
+                    (CFComparatorFunction) ABPersonComparePeopleByName,
+                    (void*) ABPersonGetSortOrdering());
+
+  for (id obj in (__bridge NSMutableArray *)(peopleMutable)) {
+
+    ABRecordRef record = (__bridge ABRecordRef)obj;
+
+    ABRecordID recordID = ABRecordGetRecordID(record);
+    NSNumber *contactID = [NSNumber numberWithInteger: recordID];
+    AKContact *contact = [[AKContact alloc] initWithABRecordID: recordID andAddressBookRef: _addressBookRef];
+
+    NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(record));
+
+    NSLog(@"% 3d : %@", recordID, name);
+
+    NSString *dictionaryKey = @"#";
+    if ([name length] > 0) {
+      dictionaryKey = [[[[name substringToIndex: 1] decomposedStringWithCanonicalMapping] substringToIndex: 1] uppercaseString];
+    }
+
+    [tempContacts setObject: contact forKey: [NSNumber numberWithInteger: recordID]];
+
+    // Put the recordID in the corresponding section of contactIdentifiers
+    NSMutableArray *tArray = (NSMutableArray *)[tempContactIdentifiers objectForKey: dictionaryKey];
+    if (tArray) {
+      [tArray addObject: contactID];
+    } else {
+      tArray = (NSMutableArray *)[tempContactIdentifiers objectForKey: @"#"];
+      [tArray addObject: contactID];
+    }
+  }
+
+  CFRelease(peopleMutable);
+
+  [self setContacts: tempContacts];
+  [self setAllContactIdentifiers: tempContactIdentifiers];
+
+}
+
+-(void)loadGroupsWithABAddressBookRef: (ABAddressBookRef)addressBook {
+
+  NSArray *groups = (__bridge NSMutableArray *)ABAddressBookCopyArrayOfAllGroups(addressBook);
+
+  for (id obj in groups) {
+
+    ABRecordRef groupRef = (__bridge ABRecordRef)obj;
+
+    NSArray *group = CFBridgingRelease(ABGroupCopyArrayOfAllMembers(groupRef)); // CFRelease crashes
+
+    for (id member in group) {
+
+      ABRecordRef record = (__bridge ABRecordRef)member;
+      // From ABGRoup Reference: Groups may not contain other groups
+      if(ABRecordGetRecordType(record) == kABPersonType) {
+        
+      }
+    }
+  }
+
+  CFRelease((__bridge CFArrayRef)groups);
+  
 }
 
 -(NSInteger)contactsCount {
@@ -284,6 +360,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     NSMutableArray *array = [self.contactIdentifiers valueForKey: key];
     NSMutableArray *toRemove = [[NSMutableArray alloc] init];
     for (NSNumber *identifier in array) {
+//      AKContact *contact = [self contactForIdentifier: [identifier integerValue]]
       NSString *displayName = [[self.contacts objectForKey: identifier] displayName];
 
       if ([displayName rangeOfString: searchTerm options: NSCaseInsensitiveSearch].location == NSNotFound)

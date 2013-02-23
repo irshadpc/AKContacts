@@ -30,6 +30,7 @@
 #import <AddressBook/AddressBook.h>
 #import <AddressBookUI/AddressBookUI.h>
 
+FOUNDATION_EXPORT NSString *const AddressBookDidInitializeNotification;
 FOUNDATION_EXPORT NSString *const AddressBookDidLoadNotification;
 FOUNDATION_EXPORT const void *const IsOnMainQueueKey;
 

@@ -86,6 +86,7 @@ static const float defaultCellHeight = 44.f;
   [self.navigationItem setRightBarButtonItem: addButton];
 
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AddressBookDidLoadNotification object: nil];
+
 }
 
 -(void)viewWillAppear:(BOOL)animated {
