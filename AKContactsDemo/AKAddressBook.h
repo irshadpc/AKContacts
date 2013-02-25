@@ -69,6 +69,11 @@ typedef enum {
 -(void)requestAddressBookAccess;
 -(NSInteger)contactsCount;
 -(AKContact *)contactForIdentifier: (NSInteger)recordId;
+/**
+ * Returns the name of the source a given record belongs to.
+ * From the docs: Each record in the address book database can belong to only one source.
+ **/
+-(NSString *)sourceNameForContactIdentifier: (ABRecordRef)record;
 -(void)resetSearch;
 
 -(void)handleSearchForTerm:(NSString *)searchTerm;

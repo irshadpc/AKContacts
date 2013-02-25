@@ -91,7 +91,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     /*
      * The ABAddressBook API is not thread safe. ABAddressBook related calls are dispatched on the main queue.
-     * The only exception to this is the initial loading of the contacts data that needs to be executed in
+     * The only exception to this is the initial loading of the contacts data that is executed in
      * the background so the UI remains responsive. See loadAddressBook that uses a local addressBook reference.
      *
      * dispatch_queue_set_specific is used to set a unique key for the main queue that can be used to 
@@ -221,7 +221,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 }
 
 -(void)loadContactsWithABAddressBookRef: (ABAddressBookRef)addressBook {
-
+  
   NSMutableDictionary *tempContactIdentifiers = [[NSMutableDictionary alloc] init];
   NSMutableDictionary *tempContacts = [[NSMutableDictionary alloc] init];
 
@@ -234,20 +234,12 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   }
 
   // Get array of records in Address Book
-  CFArrayRef people = ABAddressBookCopyArrayOfAllPeople(addressBook);
-  // Make mutable copy of array
-  CFMutableArrayRef peopleMutable = CFArrayCreateMutableCopy(kCFAllocatorDefault,
-                                                             CFArrayGetCount(people),
-                                                             people);
-  CFRelease(people);
+  ABRecordRef source = ABAddressBookCopyDefaultSource(addressBook);
+  CFArrayRef people = ABAddressBookCopyArrayOfAllPeopleInSourceWithSortOrdering(addressBook,
+                                                                                source,
+                                                                                ABPersonGetSortOrdering());
 
-  // Sort array or records
-  CFArraySortValues(peopleMutable,
-                    CFRangeMake(0, CFArrayGetCount(peopleMutable)),
-                    (CFComparatorFunction) ABPersonComparePeopleByName,
-                    (void*) ABPersonGetSortOrdering());
-
-  for (id obj in (__bridge NSMutableArray *)(peopleMutable)) {
+  for (id obj in (__bridge NSMutableArray *)(people)) {
 
     ABRecordRef record = (__bridge ABRecordRef)obj;
 
@@ -256,8 +248,18 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     AKContact *contact = [[AKContact alloc] initWithABRecordID: recordID andAddressBookRef: _addressBookRef];
 
     NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(record));
-
+    
     NSLog(@"% 3d : %@", recordID, name);
+    
+    [self sourceNameForContactIdentifier: record];
+
+    NSArray *linkedRecords = (__bridge NSArray *)ABPersonCopyArrayOfAllLinkedPeople(record);
+    for (id obj in linkedRecords) {
+      ABRecordRef record = (__bridge ABRecordRef)obj;
+      ABRecordID recordID = ABRecordGetRecordID(record);
+      NSLog(@"Linked: %d", recordID);
+    }
+    CFRelease((__bridge CFArrayRef)linkedRecords);
 
     NSString *dictionaryKey = @"#";
     if ([name length] > 0) {
@@ -276,7 +278,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     }
   }
 
-  CFRelease(peopleMutable);
+  CFRelease(people);
 
   [self setContacts: tempContacts];
   [self setAllContactIdentifiers: tempContactIdentifiers];
@@ -313,6 +315,30 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 -(AKContact *)contactForIdentifier: (NSInteger)recordId {
   return [self.contacts objectForKey: [NSNumber numberWithInteger: recordId]];
+}
+
+-(NSString *)sourceNameForContactIdentifier: (ABRecordRef)record {
+
+  NSString *ret = nil;
+
+  ABRecordRef source = ABPersonCopySource(record);
+
+  NSInteger type = [(NSNumber *) CFBridgingRelease(ABRecordCopyValue(source, kABSourceTypeProperty)) integerValue];
+  
+  if (type == kABSourceTypeLocal) {
+    ret = [[UIDevice currentDevice] localizedModel];
+  } else if ((type & kABSourceTypeExchange) == kABSourceTypeExchange) {
+    ret = @"Exchange";
+  } else if (type == kABSourceTypeMobileMe) {
+    ret = @"MobileMe";
+  } else if ((type & kABSourceTypeLDAP) == kABSourceTypeLDAP) {
+    ret = @"LDAP";
+  } else if ((type & kABSourceTypeCardDAV) == kABSourceTypeCardDAV) {
+    NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyValue(source, kABSourceNameProperty));
+    ret = ([name isEqualToString: @"Card"]) ? @"iCloud" : @"CardDAV";
+  }
+
+  return ret;
 }
 
 #pragma mark - Address Book Search
@@ -360,7 +386,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     NSMutableArray *array = [self.contactIdentifiers valueForKey: key];
     NSMutableArray *toRemove = [[NSMutableArray alloc] init];
     for (NSNumber *identifier in array) {
-//      AKContact *contact = [self contactForIdentifier: [identifier integerValue]]
       NSString *displayName = [[self.contacts objectForKey: identifier] displayName];
 
       if ([displayName rangeOfString: searchTerm options: NSCaseInsensitiveSearch].location == NSNotFound)
