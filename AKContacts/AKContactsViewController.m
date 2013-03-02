@@ -33,10 +33,11 @@
 #import "AppDelegate.h"
 
 static const float defaultCellHeight = 44.f;
+static const int manyContacts = 20;
 
 @interface AKContactsViewController ()
 
-@property (nonatomic, assign) AppDelegate *appDelegate;
+@property (nonatomic, unsafe_unretained) AppDelegate *appDelegate;
 @property (nonatomic, strong) UITableView *tableView;
 @property (nonatomic, strong) UISearchBar *searchBar;
 
@@ -64,7 +65,7 @@ static const float defaultCellHeight = 44.f;
   [self setSearchBar: [[UISearchBar alloc] initWithFrame: CGRectMake(0.f, 0.f, 320.f, defaultCellHeight)]];
   [self.tableView setTableHeaderView: self.searchBar];
   [self.searchBar setDelegate: self];
-
+  
   [self setView: [[UIView alloc] init]];
   [self.view addSubview: self.tableView];  
 }
@@ -79,7 +80,7 @@ static const float defaultCellHeight = 44.f;
   // self.navigationItem.rightBarButtonItem = self.editButtonItem;
 
   [self setAppDelegate: (AppDelegate *)[[UIApplication sharedApplication] delegate]];
-  
+
   UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd
                                                                              target: self
                                                                              action: @selector(addButtonTouchUp:)];
@@ -91,6 +92,8 @@ static const float defaultCellHeight = 44.f;
 
 -(void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
+
+  [self.tableView setTableHeaderView: ([_appDelegate.akAddressBook displayedContactsCount] > manyContacts) ? self.searchBar : nil];
 
   if (_tableView.contentOffset.y <= _searchBar.frame.size.height)
     _tableView.contentOffset = CGPointMake(0.f, _searchBar.frame.size.height);
@@ -118,25 +121,11 @@ static const float defaultCellHeight = 44.f;
   [self.navigationController presentViewController: navigationController animated: YES completion: ^{}];
 }
 
-
--(BOOL)tableViewCellVisibleForIndexPath: (NSIndexPath *)indexPath {
-  BOOL ret = NO;
-
-  NSArray *indexPathForVisibleCells = [_tableView indexPathsForVisibleRows];
-
-  for (NSIndexPath *index in indexPathForVisibleCells) {
-    if (index.section == indexPath.section &&
-        index.row == indexPath.row) {
-      ret = YES;
-      break;
-    }
-  }
-
-  return ret;
-}
-
 -(void)reloadTableViewData {
   dispatch_async(dispatch_get_main_queue(), ^(void){
+    
+    [self.tableView setTableHeaderView: ([_appDelegate.akAddressBook displayedContactsCount] > manyContacts) ? self.searchBar : nil];
+
     [_tableView reloadData];
   });
 }
@@ -146,25 +135,23 @@ static const float defaultCellHeight = 44.f;
 -(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
   
   if (_appDelegate.akAddressBook.status >= kAddressBookOnline)
-    return ([_appDelegate.akAddressBook contactsCount] > 0) ? [_appDelegate.akAddressBook.keys count] : 1;
+    return ([_appDelegate.akAddressBook displayedContactsCount] > 0) ? [_appDelegate.akAddressBook.keys count] : 1;
   else
     return 1;
   
 }
 
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-  NSInteger ret = 4;
+  NSInteger ret = 8;
 
   if (_appDelegate.akAddressBook.status >= kAddressBookOnline) {
-    if ([_appDelegate.akAddressBook contactsCount] == 0) return ret;
-
-    if ([_appDelegate.akAddressBook.keys count] > section) {
-      NSString *key = [_appDelegate.akAddressBook.keys objectAtIndex: section];
-      NSArray *nameSection = [_appDelegate.akAddressBook.contactIdentifiers objectForKey: key];
-      ret = [nameSection count];
+    if ([_appDelegate.akAddressBook displayedContactsCount] > 0) {
+      if ([_appDelegate.akAddressBook.keys count] > section) {
+        NSString *key = [_appDelegate.akAddressBook.keys objectAtIndex: section];
+        NSArray *nameSection = [_appDelegate.akAddressBook.contactIdentifiers objectForKey: key];
+        ret = [nameSection count];
+      }
     }
-  } else {
-    ret = 8;
   }
   return ret;
 }
@@ -187,7 +174,7 @@ static const float defaultCellHeight = 44.f;
   NSInteger row = [indexPath row];
 
   if (_appDelegate.akAddressBook.status >= kAddressBookOnline) {
-    if ([_appDelegate.akAddressBook contactsCount] == 0) {
+    if ([_appDelegate.akAddressBook displayedContactsCount] == 0) {
       [cell setAccessoryView: nil];
 
       [cell.textLabel setFont:[UIFont boldSystemFontOfSize: 17.f]];
@@ -195,11 +182,11 @@ static const float defaultCellHeight = 44.f;
       [cell.textLabel setTextColor: [UIColor lightGrayColor]];
       if ([_searchBar isFirstResponder]) {
         if (row == 2) {
-          [cell.textLabel setText: @"No Results"];
+          [cell.textLabel setText: NSLocalizedString(@"No Results", @"")];
         }
       } else {
         if (row == 3) {
-          [cell.textLabel setText: @"No Contacts"];
+          [cell.textLabel setText: NSLocalizedString(@"No Contacts", @"")];
         }
       }
     } else {
@@ -216,12 +203,12 @@ static const float defaultCellHeight = 44.f;
       [cell setSelectionStyle: UITableViewCellSelectionStyleBlue];
       
       [cell setAccessoryView: nil];
-      if (![contact displayName]) {
+      if (![contact name]) {
         cell.textLabel.font = [UIFont italicSystemFontOfSize: 20];
-        cell.textLabel.text = @"No Name";
+        cell.textLabel.text = NSLocalizedString(@"No Name", @"");
       } else {
         cell.textLabel.font = [UIFont boldSystemFontOfSize: 20];
-        cell.textLabel.text = [contact displayName];
+        cell.textLabel.text = [contact name];
       }
     }
   } else {
@@ -231,12 +218,12 @@ static const float defaultCellHeight = 44.f;
       [cell.textLabel setTextColor: [UIColor grayColor]];
       [cell.textLabel setTextAlignment: NSTextAlignmentCenter];
       if (_appDelegate.akAddressBook.status == kAddressBookInitializing) {
-        [cell.textLabel setText: @"Loading address book..."];
+        [cell.textLabel setText: NSLocalizedString(@"Loading address book...", @"")];
         UIActivityIndicatorView *activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle: UIActivityIndicatorViewStyleGray];
         [cell setAccessoryView: activity];
         [activity startAnimating];
       } else if (_appDelegate.akAddressBook.status == kAddressBookOffline) {
-        [cell.textLabel setText: @"No Contacts"];
+        [cell.textLabel setText: NSLocalizedString(@"No Contacts", @"")];
       }
     }
   }
@@ -263,7 +250,7 @@ static const float defaultCellHeight = 44.f;
   BOOL index = YES;
   if ([_searchBar isFirstResponder] ||
       [_searchBar.text length] > 0 ||
-      [[_appDelegate.akAddressBook keys] count] == 0)
+      [_appDelegate.akAddressBook displayedContactsCount] < 8)
     index = NO;
 
   return (index) ? [_appDelegate.akAddressBook keys] : nil;
@@ -320,6 +307,11 @@ static const float defaultCellHeight = 44.f;
 
 #pragma mark - Table view delegate
 
+-(NSIndexPath *)tableView: (UITableView *)tableView willSelectRowAtIndexPath: (NSIndexPath *)indexPath {
+  [_searchBar resignFirstResponder];
+  return indexPath;
+}
+
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
   
   UITableViewCell *cell = [tableView cellForRowAtIndexPath: indexPath];
@@ -330,11 +322,6 @@ static const float defaultCellHeight = 44.f;
   [self.navigationController pushViewController: contactView animated: YES];
 
   [tableView deselectRowAtIndexPath: indexPath animated: YES];
-}
-
--(NSIndexPath *)tableView: (UITableView *)tableView willSelectRowAtIndexPath: (NSIndexPath *)indexPath {
-  [_searchBar resignFirstResponder];
-  return indexPath;
 }
 
 #pragma mark - Search Bar delegate
