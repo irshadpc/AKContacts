@@ -8,6 +8,7 @@
 #import "AppDelegate.h"
 #import "AKAddressBook.h"
 #import "AKContactsViewController.h"
+#import "AKGroupsViewController.h"
 
 @implementation AppDelegate
 
@@ -18,8 +19,9 @@
     self.akAddressBook = [[AKAddressBook alloc] init];
     [self.akAddressBook requestAddressBookAccess];
 
-    AKContactsViewController *contactsViewController = [[AKContactsViewController alloc] init];
-    self.navigationController = [[UINavigationController alloc] initWithRootViewController: contactsViewController];
+    UIViewController *rootViewController = (ShowGroups == YES) ? [[AKGroupsViewController alloc] init] : [[AKContactsViewController alloc] init];
+  
+    self.navigationController = [[UINavigationController alloc] initWithRootViewController: rootViewController];
     self.window.rootViewController = self.navigationController;
   
     self.window.backgroundColor = [UIColor whiteColor];

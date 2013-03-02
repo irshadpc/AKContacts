@@ -33,9 +33,11 @@
 FOUNDATION_EXPORT NSString *const AddressBookDidInitializeNotification;
 FOUNDATION_EXPORT NSString *const AddressBookDidLoadNotification;
 FOUNDATION_EXPORT const void *const IsOnMainQueueKey;
+FOUNDATION_EXPORT const BOOL ShowGroups;
 
 @class AppDelegate;
 @class AKContact;
+@class AKGroup;
 
 typedef enum {
   kAddressBookOffline = 0,
@@ -43,6 +45,14 @@ typedef enum {
   kAddressBookOnline,
   kAddressBookReloading,
 } AddressBookStatus;
+
+/**
+ * Add custom groups with negative IDs to avoid 
+ * ID collision with groups from address book
+ **/
+typedef enum {
+  kGroupAllContacts = -1,
+} Groups;
 
 @interface AKAddressBook : NSObject
 
@@ -53,6 +63,10 @@ typedef enum {
  * AKContact objects with their recordIDs as keys
  **/
 @property (strong, nonatomic) NSMutableDictionary *contacts;
+/**
+ * AKGroup objects in the order of display
+ **/
+@property (strong, nonatomic) NSMutableArray *groups;
 /**
  * Dictionary keys of displayed contacts
  **/
@@ -65,15 +79,22 @@ typedef enum {
  * Subset of allContactIdentifiers that are displayed
  **/
 @property (strong, nonatomic) NSMutableDictionary *contactIdentifiers;
+/**
+ * ID of displayed group
+ **/
+@property (assign, nonatomic) NSInteger groupID;
 
 -(void)requestAddressBookAccess;
 -(NSInteger)contactsCount;
+-(NSInteger)displayedContactsCount;
+-(NSInteger)groupsCount;
 -(AKContact *)contactForIdentifier: (NSInteger)recordId;
+-(AKGroup *)groupForIdentifier: (NSInteger)recordId;
 /**
  * Returns the name of the source a given record belongs to.
  * From the docs: Each record in the address book database can belong to only one source.
  **/
--(NSString *)sourceNameForContactIdentifier: (ABRecordRef)record;
+-(NSString *)sourceNameForRecordIdentifier: (ABRecordRef)record;
 -(void)resetSearch;
 
 -(void)handleSearchForTerm:(NSString *)searchTerm;
