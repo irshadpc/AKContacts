@@ -36,10 +36,10 @@
 }
 
 /**
- * Return displayName using system default naming convention
+ * Return full name using system default naming convention
  * eg: first, last or last, first
  **/
--(NSString *)displayName;
+-(NSString *)name;
 
 /**
  * Return displayName sans diacritics and whitespace

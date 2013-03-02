@@ -37,12 +37,24 @@
 
 @implementation AKContact
 
--(NSString *)displayName {
+-(id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef {
+  self = [super init];
+  if (self) {
+    super.recordID = recordID;
+    
+    dispatch_sync(dispatch_get_main_queue(), ^(void){
+      super.recordRef = ABAddressBookGetPersonWithRecordID(addressBookRef, recordID);
+    });
+  }
+  return  self;
+}
+
+-(NSString *)name {
 
   __block NSString *ret;
 
   dispatch_block_t block = ^{
-		ret = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(super.record)); // kABStringPropertyType
+		ret = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(super.recordRef)); // kABStringPropertyType
 	};
 
   if (dispatch_get_specific(IsOnMainQueueKey)) {
@@ -54,7 +66,7 @@
 }
 
 -(NSString *)searchName {
-  NSString *ret = [self displayName];
+  NSString *ret = [self name];
   ret = [ret stringByFoldingWithOptions: NSDiacriticInsensitiveSearch locale: [NSLocale currentLocale]];
   return [ret stringByReplacingOccurrencesOfString: @" " withString: @""];
 }
@@ -188,8 +200,8 @@
   __block NSData *ret = nil;
   
   dispatch_block_t block = ^{
-    if (ABPersonHasImageData(super.record)) {
-      ret = (NSData *)CFBridgingRelease(ABPersonCopyImageDataWithFormat(super.record, kABPersonImageFormatThumbnail));
+    if (ABPersonHasImageData(super.recordRef)) {
+      ret = (NSData *)CFBridgingRelease(ABPersonCopyImageDataWithFormat(super.recordRef, kABPersonImageFormatThumbnail));
     }
   };
   if (dispatch_get_specific(IsOnMainQueueKey)) {
@@ -214,7 +226,7 @@
 }
 
 -(NSComparisonResult)compareByName:(AKContact *)otherContact {
-  return [self.displayName localizedCaseInsensitiveCompare: otherContact.displayName];
+  return [self.name localizedCaseInsensitiveCompare: otherContact.name];
 }
 
 @end

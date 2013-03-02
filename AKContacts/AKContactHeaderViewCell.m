@@ -153,7 +153,7 @@ static const int editModeItem = 8;
     UILabel *contactNameLabel = [[UILabel alloc] initWithFrame: CGRectMake(80.f, 0.f, 210.f, 23.f)];
     [self.contentView addSubview: contactNameLabel];
     [contactNameLabel setBackgroundColor: [UIColor clearColor]];
-    [contactNameLabel setText: [self.parent.contact displayName]];
+    [contactNameLabel setText: [self.parent.contact name]];
     [contactNameLabel setFont: [UIFont boldSystemFontOfSize: 18.f]];
     [contactNameLabel setTextColor: [UIColor blackColor]];
     
