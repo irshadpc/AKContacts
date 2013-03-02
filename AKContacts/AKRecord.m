@@ -48,19 +48,46 @@ NSString *const kLabel = @"Label";
 @synthesize updateDict = _updateDict;
 @synthesize deleteDict = _deleteDict;
 
-@synthesize record = _record;
+@synthesize recordRef = _recordRef;
 @synthesize recordID = _recordID;
 
 -(id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef {
   self = [super init];
   if (self) {
-    _recordID = recordID;
-
-    dispatch_sync(dispatch_get_main_queue(), ^(void){
-      _record = ABAddressBookGetPersonWithRecordID(addressBookRef, _recordID);
-    });
+    _recordID = NSNotFound;
   }
   return  self;
+}
+
+-(NSString *)description {
+  NSString *type = nil;
+  switch ([self recordType ]) {
+    case kABPersonType:
+      type = @"Person";
+      break;
+    case kABGroupType:
+      type = @"Group";
+      break;
+    case kABSourceType:
+      type = @"Source";
+      break;
+  }
+  return [NSString stringWithFormat: @"%@ - %d", type, _recordID];
+}
+
+-(ABRecordType)recordType {
+  __block ABRecordType ret;
+  
+  dispatch_block_t block = ^{
+		  ret = ABRecordGetRecordType(_recordRef);
+	};
+
+  if (dispatch_get_specific(IsOnMainQueueKey)) {
+    block();
+  } else {
+    dispatch_sync(dispatch_get_main_queue(), block);
+  }
+  return ret;
 }
 
 -(id)valueForProperty: (ABPropertyID)property {
@@ -68,9 +95,9 @@ NSString *const kLabel = @"Label";
   __block id ret;
 
   dispatch_block_t block = ^{
-		ret = (id)CFBridgingRelease(ABRecordCopyValue(self.record, property));
+		ret = (id)CFBridgingRelease(ABRecordCopyValue(_recordRef, property));
 	};
-  
+
   if (dispatch_get_specific(IsOnMainQueueKey)) {
     block();
   } else {
@@ -84,7 +111,7 @@ NSString *const kLabel = @"Label";
   __block NSInteger ret = 0;
   
   dispatch_block_t block = ^{
-    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.record, property);
+    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(_recordRef, property);
     if (multiValueRecord) {
       ret = ABMultiValueGetCount(multiValueRecord);
       CFRelease(multiValueRecord);
@@ -104,7 +131,7 @@ NSString *const kLabel = @"Label";
   __block NSArray *ret = nil;
   
   dispatch_block_t block = ^{
-    ABMultiValueRef multiValueRecord =(ABMultiValueRef)ABRecordCopyValue(self.record, property);
+    ABMultiValueRef multiValueRecord =(ABMultiValueRef)ABRecordCopyValue(_recordRef, property);
     if (multiValueRecord) {
       NSInteger count = ABMultiValueGetCount(multiValueRecord);
       NSMutableArray *identifiers = [[NSMutableArray alloc] initWithCapacity: count];
@@ -130,7 +157,7 @@ NSString *const kLabel = @"Label";
   __block id ret = nil;
   
   dispatch_block_t block = ^{
-    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.record, property);
+    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(_recordRef, property);
     if (multiValueRecord){
       CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
       if (index != -1) {
@@ -163,7 +190,7 @@ NSString *const kLabel = @"Label";
   __block NSString *ret = nil;
   
   dispatch_block_t block = ^{
-    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.record, property);
+    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(_recordRef, property);
     if (multiValueRecord) {
       CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
       if (index != -1) {
@@ -381,7 +408,7 @@ NSString *const kLabel = @"Label";
       case kABStringPropertyType:
       case kABDateTimePropertyType:
 
-        ABRecordSetValue(self.record, property, (__bridge CFTypeRef)dictValue, NULL);
+        ABRecordSetValue(_recordRef, property, (__bridge CFTypeRef)dictValue, NULL);
         break;
 
       case kABMultiStringPropertyType:
@@ -398,7 +425,7 @@ NSString *const kLabel = @"Label";
                                        (__bridge CFTypeRef)value,
                                        (__bridge CFStringRef)label,
                                        NULL);
-          ABRecordSetValue(self.record, property, mutableMultiValue, nil);
+          ABRecordSetValue(_recordRef, property, mutableMultiValue, nil);
 
         }
         break;
@@ -416,7 +443,7 @@ NSString *const kLabel = @"Label";
       case kABStringPropertyType:
       case kABDateTimePropertyType:
 
-        ABRecordSetValue(self.record, property, (__bridge CFTypeRef)dictValue, NULL);
+        ABRecordSetValue(_recordRef, property, (__bridge CFTypeRef)dictValue, NULL);
         break;
 
       case kABMultiStringPropertyType:
@@ -440,7 +467,7 @@ NSString *const kLabel = @"Label";
               ABMultiValueReplaceLabelAtIndex(mutableMultiValue, (__bridge CFTypeRef)label, index);
             }
           }
-          ABRecordSetValue(self.record, property, mutableMultiValue, nil);
+          ABRecordSetValue(_recordRef, property, mutableMultiValue, nil);
 
         }
         break;
@@ -470,7 +497,7 @@ NSString *const kLabel = @"Label";
           }
         }
 
-        ABRecordSetValue(self.record, property, mutableMultiValue, nil);
+        ABRecordSetValue(_recordRef, property, mutableMultiValue, nil);
 
         break;
       }
@@ -488,7 +515,7 @@ NSString *const kLabel = @"Label";
       case kABStringPropertyType:
       case kABDateTimePropertyType:
 
-        ABRecordRemoveValue(self.record, property, NULL);
+        ABRecordRemoveValue(_recordRef, property, NULL);
         break;
         
       case kABMultiStringPropertyType:
@@ -505,7 +532,7 @@ NSString *const kLabel = @"Label";
           if (index != -1) {
             ABMultiValueRemoveValueAndLabelAtIndex(mutableMultiValue, index);
           }
-          ABRecordSetValue(self.record, property, mutableMultiValue, nil);
+          ABRecordSetValue(_recordRef, property, mutableMultiValue, nil);
 
         }
         break;
@@ -529,7 +556,7 @@ NSString *const kLabel = @"Label";
 -(ABMutableMultiValueRef)mutableMultiValueForProperty: (ABPropertyID)property {
 
   ABMutableMultiValueRef mutableMultiValue = NULL;
-  ABMultiValueRef multiValue = (ABMultiValueRef)ABRecordCopyValue(self.record, property);
+  ABMultiValueRef multiValue = (ABMultiValueRef)ABRecordCopyValue(_recordRef, property);
   if (multiValue) {
     mutableMultiValue = ABMultiValueCreateMutableCopy(multiValue);
     CFRelease(multiValue);

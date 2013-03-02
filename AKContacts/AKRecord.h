@@ -33,15 +33,19 @@
 
 }
 
-@property (assign, nonatomic) ABRecordRef record;
+@property (assign, nonatomic) ABRecordRef recordRef;
 @property (assign, nonatomic) ABRecordID recordID;
 
 -(id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef;
-
+-(NSString *)description;
+/**
+ * Return kABPersonType, kABGroupType or kABSourceType
+**/
+-(ABRecordType)recordType;
 /**
  * Return a value corresponding to an ABPropertyID.
  * Return type can be NSString, NSDate
-**/
+ **/
 -(id)valueForProperty: (ABPropertyID)property;
 
 /**
