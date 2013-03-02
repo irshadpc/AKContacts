@@ -68,7 +68,7 @@
   [self.detailTextLabel setText: nil];
   [self setSelectionStyle: UITableViewCellSelectionStyleNone];
 
-  [self.detailTextLabel setText: @"Switch"];
+  [self.detailTextLabel setText: NSLocalizedString(@"Switch", @"")];
 
   UISwitch *sw = [[UISwitch alloc] initWithFrame: CGRectZero];
   [sw addTarget: self action:@selector(uiSwitchDidChangeValue:) forControlEvents: UIControlEventValueChanged];
