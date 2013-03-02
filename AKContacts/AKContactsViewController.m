@@ -250,7 +250,7 @@ static const int manyContacts = 20;
   BOOL index = YES;
   if ([_searchBar isFirstResponder] ||
       [_searchBar.text length] > 0 ||
-      [_appDelegate.akAddressBook displayedContactsCount] < 8)
+      [_appDelegate.akAddressBook displayedContactsCount] < manyContacts)
     index = NO;
 
   return (index) ? [_appDelegate.akAddressBook keys] : nil;
