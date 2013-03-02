@@ -95,7 +95,7 @@ static const int manyContacts = 20;
 
   [self.tableView setTableHeaderView: ([_appDelegate.akAddressBook displayedContactsCount] > manyContacts) ? self.searchBar : nil];
 
-  if (_tableView.contentOffset.y <= _searchBar.frame.size.height)
+  if (_tableView.tableHeaderView && _tableView.contentOffset.y <= _searchBar.frame.size.height)
     _tableView.contentOffset = CGPointMake(0.f, _searchBar.frame.size.height);
 }
 
