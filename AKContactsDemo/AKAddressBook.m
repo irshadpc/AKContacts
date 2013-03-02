@@ -299,7 +299,9 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 -(void)loadGroupsWithABAddressBookRef: (ABAddressBookRef)addressBook {
 
-  NSArray *groups = (__bridge NSMutableArray *)ABAddressBookCopyArrayOfAllGroups(addressBook);
+  ABRecordRef source = ABAddressBookCopyDefaultSource(addressBook);
+  NSArray *groups = (__bridge NSMutableArray *)ABAddressBookCopyArrayOfAllGroupsInSource(addressBook, source);
+  CFRelease(source);
 
   for (id obj in groups) {
 
