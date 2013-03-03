@@ -1,5 +1,5 @@
 //
-//  AKGroup.m
+//  AKSource.m
 //  AKContacts
 //
 //  Copyright (c) 2013 Adam Kornafeld All rights reserved.
@@ -27,54 +27,87 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#import "AKGroup.h"
+#import "AKSource.h"
 #import "AKAddressBook.h"
+#import "AKGroup.h"
 
-@implementation AKGroup
+@implementation AKSource
 
-@synthesize memberIDs = _memberIDs;
+@synthesize groups = _groups;
+@synthesize isDefault = _isDefault;
 
 -(id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef {
   self = [super init];
   if (self) {
     super.recordID = recordID;
     
-    if (recordID >= 0) { // Custom groups don't use the AddressBook database
+    _isDefault = NO;
+    
+    _groups = [[NSMutableArray alloc] init];
+
+    if (recordID >= 0) { // Custom sources don't use the AddressBook database
       dispatch_block_t block = ^{
-        super.recordRef =  ABAddressBookGetGroupWithRecordID(addressBookRef, recordID);
-        NSAssert(super.recordRef, @"Failed to get group recordRef");
+        super.recordRef =  ABAddressBookGetSourceWithRecordID(addressBookRef, recordID);
+        NSAssert(super.recordRef, @"Failed to get source recordRef");
       };
-      
+
       if (dispatch_get_specific(IsOnMainQueueKey)) {
         block();
       } else {
         dispatch_sync(dispatch_get_main_queue(), block);
       }
     }
-
-    _memberIDs = [[NSMutableArray alloc] init];
   }
   return  self;
 }
 
--(NSInteger)count {
-  return [_memberIDs count];
-}
+-(NSString *)typeName {
 
--(NSString *)name {
-  NSString *ret = nil;
   if (super.recordID < 0) {
     switch (super.recordID) {
-      case kGroupAggregate:
-        ret = NSLocalizedString(@"All Contacts", @"");
-        break;
+      case kSourceAggregate:
+        return nil;
       default:
-        ret = NSLocalizedString(@"No Name", @"");
-        break;
+        return nil;
     }
-  } else {
-    ret = (NSString *)[self valueForProperty: kABGroupNameProperty];
   }
+
+  NSInteger type = [(NSNumber *)[self valueForProperty: kABSourceTypeProperty] integerValue];
+  type = type & ~kABSourceTypeSearchableMask;
+
+  switch (type) {
+    case kABSourceTypeLocal:
+      return [[UIDevice currentDevice] localizedModel];
+
+    case kABSourceTypeExchange:
+      return @"Exchange";
+
+    case kABSourceTypeMobileMe:
+      return @"MobileMe";
+
+    case kABSourceTypeLDAP:
+      return @"LDAP";
+
+    case kABSourceTypeCardDAV:
+      return ([(NSString *)[self valueForProperty: kABSourceNameProperty] isEqualToString: @"Card"]) ? @"iCloud" : @"CardDAV";
+
+    default:
+      return @"Anonym Source";
+  }
+}
+
+-(AKGroup *)groupForGroupId: (NSInteger)recordId {
+  AKGroup *ret = nil;
+  
+  for (AKGroup *group in _groups) {
+    if (group.recordID == recordId) {
+      ret = group;
+      break;
+    }
+  }
+  
+  NSAssert(ret != nil, @"Group does not exist");
+  
   return ret;
 }
 

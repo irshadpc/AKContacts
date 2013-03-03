@@ -24,6 +24,11 @@
     self.navigationController = [[UINavigationController alloc] initWithRootViewController: rootViewController];
     self.window.rootViewController = self.navigationController;
   
+    if (ShowGroups == YES) {
+      [rootViewController setTitle: NSLocalizedString(@"Groups", @"")];
+      [self.navigationController pushViewController: [[AKContactsViewController alloc] init] animated: NO];
+    }
+
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
   

@@ -185,6 +185,30 @@
   return ret;
 }
 
+-(NSArray *)linkedContactIDs {
+
+  __block NSMutableArray *ret = [[NSMutableArray alloc] init];
+
+  dispatch_block_t block = ^{
+
+		NSArray *array = (NSArray *)CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople(super.recordRef));
+
+    for (id obj in array) {
+      ABRecordRef record = (__bridge ABRecordRef)obj;
+      ABRecordID recordID = ABRecordGetRecordID(record);
+      [ret addObject: [NSNumber numberWithInteger: recordID]];
+    }
+	};
+
+  if (dispatch_get_specific(IsOnMainQueueKey)) {
+    block();
+  } else {
+    dispatch_sync(dispatch_get_main_queue(), block);
+  }
+
+  return [[NSArray alloc] initWithArray: ret];
+}
+
 -(NSString *)dictionaryKey {
   return [self dictionaryKeyBySortOrdering: ABPersonGetSortOrdering()];
 }

@@ -95,8 +95,8 @@ static const int manyContacts = 20;
 
   [self.tableView setTableHeaderView: ([_appDelegate.akAddressBook displayedContactsCount] > manyContacts) ? self.searchBar : nil];
 
-  if (_tableView.tableHeaderView && _tableView.contentOffset.y <= _searchBar.frame.size.height)
-    _tableView.contentOffset = CGPointMake(0.f, _searchBar.frame.size.height);
+  if (self.tableView.tableHeaderView && self.tableView.contentOffset.y <= self.searchBar.frame.size.height)
+    self.tableView.contentOffset = CGPointMake(0.f, self.searchBar.frame.size.height);
 }
 
 -(void)viewDidAppear:(BOOL)animated {
@@ -126,7 +126,10 @@ static const int manyContacts = 20;
     
     [self.tableView setTableHeaderView: ([_appDelegate.akAddressBook displayedContactsCount] > manyContacts) ? self.searchBar : nil];
 
-    [_tableView reloadData];
+    if (self.tableView.tableHeaderView && self.tableView.contentOffset.y <= self.searchBar.frame.size.height)
+      self.tableView.contentOffset = CGPointMake(0.f, self.searchBar.frame.size.height);
+    
+    [self.tableView reloadData];
   });
 }
 
@@ -197,7 +200,7 @@ static const int manyContacts = 20;
       NSArray *identifiersArray = [_appDelegate.akAddressBook.contactIdentifiers objectForKey: key];
       if ([identifiersArray count] == 0) return cell;
       NSNumber *recordId = [identifiersArray objectAtIndex: row];
-      AKContact *contact = [_appDelegate.akAddressBook contactForIdentifier: [recordId integerValue]];
+      AKContact *contact = [_appDelegate.akAddressBook contactForContactId: [recordId integerValue]];
       if (!contact) return cell;
       [cell setTag: [contact recordID]];
       [cell setSelectionStyle: UITableViewCellSelectionStyleBlue];
@@ -316,7 +319,7 @@ static const int manyContacts = 20;
   
   UITableViewCell *cell = [tableView cellForRowAtIndexPath: indexPath];
   
-  AKContact *contact = [_appDelegate.akAddressBook contactForIdentifier: cell.tag];
+  AKContact *contact = [_appDelegate.akAddressBook contactForContactId: cell.tag];
   
   AKContactViewController *contactView = [[AKContactViewController alloc ] initWithContact: contact];
   [self.navigationController pushViewController: contactView animated: YES];

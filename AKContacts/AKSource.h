@@ -1,5 +1,5 @@
 //
-//  AKContact.h
+//  AKSource.h
 //
 //  Copyright (c) 2013 Adam Kornafeld All rights reserved.
 //
@@ -26,39 +26,20 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#import <Foundation/Foundation.h>
-#import <AddressBook/AddressBook.h>
-
 #import "AKRecord.h"
 
-@interface AKContact : AKRecord {
+@class AKGroup;
 
-}
-
-/**
- * Return full name using system default naming convention
- * eg: first, last or last, first
- **/
--(NSString *)name;
+@interface AKSource : AKRecord
 
 /**
- * Return displayName sans diacritics and whitespace
+ * From the docs: Each record in the address book database can belong to only one source.
  **/
--(NSString *)searchName;
--(NSString *)displayNameByOrdering: (ABPersonSortOrdering)ordering;
--(NSString *)phoneticNameByOrdering: (ABPersonSortOrdering)ordering;
--(NSString *)displayDetails;
--(NSArray *)linkedContactIDs;
+@property (nonatomic, strong) NSMutableArray *groups;
+@property (nonatomic, assign) BOOL isDefault;
 
-/**
- * Return the lookup alphabet letter for the name of the contact
- **/
--(NSString *)dictionaryKey;
--(NSString *)dictionaryKeyBySortOrdering: (ABPersonSortOrdering)ordering;
-
--(NSData*)pictureData;
--(UIImage *)picture;
-
--(NSComparisonResult)compareByName:(AKContact *)otherContact;
+-(id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef;
+-(NSString *)typeName;
+-(AKGroup *)groupForGroupId: (NSInteger)recordId;
 
 @end

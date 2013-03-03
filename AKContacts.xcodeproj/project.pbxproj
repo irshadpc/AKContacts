@@ -33,6 +33,7 @@
 		C66951E416B705C400D030A2 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C66951E316B705C400D030A2 /* AddressBook.framework */; };
 		C6C2066016E1828F0033C58A /* AKGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2065F16E1828F0033C58A /* AKGroup.m */; };
 		C6C2066316E18A810033C58A /* AKGroupsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2066216E18A810033C58A /* AKGroupsViewController.m */; };
+		C6C2066616E39D790033C58A /* AKSource.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2066516E39D760033C58A /* AKSource.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -88,6 +89,8 @@
 		C6C2065F16E1828F0033C58A /* AKGroup.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKGroup.m; sourceTree = "<group>"; };
 		C6C2066116E18A800033C58A /* AKGroupsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKGroupsViewController.h; sourceTree = "<group>"; };
 		C6C2066216E18A810033C58A /* AKGroupsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKGroupsViewController.m; sourceTree = "<group>"; };
+		C6C2066416E39D750033C58A /* AKSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKSource.h; sourceTree = "<group>"; };
+		C6C2066516E39D760033C58A /* AKSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKSource.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -174,6 +177,8 @@
 				C6C2066216E18A810033C58A /* AKGroupsViewController.m */,
 				C66951E016B7049C00D030A2 /* AKRecord.h */,
 				C66951E116B7049C00D030A2 /* AKRecord.m */,
+				C6C2066416E39D750033C58A /* AKSource.h */,
+				C6C2066516E39D760033C58A /* AKSource.m */,
 				C6C2065E16E1828D0033C58A /* AKGroup.h */,
 				C6C2065F16E1828F0033C58A /* AKGroup.m */,
 				C66951D516B702F800D030A2 /* AKContact.h */,
@@ -349,6 +354,7 @@
 				C620081216B997A900C16121 /* AKContactViewController.m in Sources */,
 				C6C2066016E1828F0033C58A /* AKGroup.m in Sources */,
 				C6C2066316E18A810033C58A /* AKGroupsViewController.m in Sources */,
+				C6C2066616E39D790033C58A /* AKSource.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

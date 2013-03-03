@@ -29,6 +29,7 @@
 #import "AKAddressBook.h"
 #import "AKContact.h"
 #import "AKGroup.h"
+#import "AKSource.h"
 #import "AppDelegate.h"
 
 NSString *const AKAddressBookQueueName = @"AKAddressBookQueue";
@@ -38,6 +39,13 @@ NSString *const AddressBookDidLoadNotification = @"AddressBookDidLoadNotificatio
 
 const BOOL ShowGroups = YES;
 
+/**
+ * This key is set for the main_queue to tell if we are on the main queue
+ * From the docs:  
+ * Keys are only compared as pointers and are never dereferenced.
+ * Thus, you can use a pointer to a static variable for a specific 
+ * subsystem or any other value that allows you to identify the value uniquely.
+ **/
 const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 
 @interface AKAddressBook ()
@@ -54,8 +62,9 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 @property (nonatomic, strong) NSDate *dateAddressBookLoaded;
 
 -(void)reloadAddressBook;
--(void)loadContactsWithABAddressBookRef: (ABAddressBookRef)addressBook;
+-(void)loadSourcesWithABAddressBookRef: (ABAddressBookRef)addressBook;
 -(void)loadGroupsWithABAddressBookRef: (ABAddressBookRef)addressBook;
+-(void)loadContactsWithABAddressBookRef: (ABAddressBookRef)addressBook;
 
 @end
 
@@ -67,10 +76,12 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 
 @synthesize addressBookRef = _addressBookRef;
 @synthesize status = _status;
+@synthesize sources = _sources;
 @synthesize contacts = _contacts;
 @synthesize allContactIdentifiers = _allContactIdentifiers;
 @synthesize keys = _keys;
 @synthesize contactIdentifiers = _contactIdentifiers;
+@synthesize sourceID = _sourceID;
 @synthesize groupID = _groupID;
 
 #pragma mark - Address Book Changed Callback
@@ -93,8 +104,10 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     _status = kAddressBookOffline;
 
-    _groupID = kGroupAllContacts;
-    _groups = [[NSMutableArray alloc] init];
+    _sourceID = kSourceAggregate;
+    _groupID = kGroupAggregate;
+
+    _sources = [[NSMutableArray alloc] init];
 
     /*
      * The ABAddressBook API is not thread safe. ABAddressBook related calls are dispatched on the main queue.
@@ -198,13 +211,14 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     if (error) NSLog(@"%ld", CFErrorGetCode(error));
 
     NSDate *start = [NSDate date];
-    
+
+    // Do not change order of loading
+    [self loadSourcesWithABAddressBookRef: addressBook];
+
+    [self loadGroupsWithABAddressBookRef: addressBook];
+
     [self loadContactsWithABAddressBookRef: addressBook];
-    
-    if (ShowGroups == YES) {
-      [self loadGroupsWithABAddressBookRef: addressBook];
-    }
-    
+
     CFRelease(addressBook);
     
     NSDate *finish = [NSDate date];
@@ -229,8 +243,81 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   dispatch_async(_ab_queue, block);
 }
 
--(void)loadContactsWithABAddressBookRef: (ABAddressBookRef)addressBook {
+-(void)loadSourcesWithABAddressBookRef: (ABAddressBookRef)addressBook {
   
+  NSAssert(dispatch_get_specific(IsOnMainQueueKey) == NULL, @"Must not be dispatched on main queue");
+  
+  AKSource *aggregatorSource = [[AKSource alloc] initWithABRecordID: kSourceAggregate andAddressBookRef: _addressBookRef];
+  [_sources addObject: aggregatorSource];
+
+  NSArray *sources = (NSArray *)CFBridgingRelease(ABAddressBookCopyArrayOfAllSources(addressBook));
+
+  ABRecordRef source = ABAddressBookCopyDefaultSource(addressBook);
+  ABRecordID defaultSourceID = ABRecordGetRecordID(source);
+  CFRelease(source);
+
+  for (id obj in sources) {
+
+    ABRecordRef recordRef = (__bridge ABRecordRef)obj;
+    ABRecordID recordID = ABRecordGetRecordID(recordRef);
+
+    AKSource *source = [[AKSource alloc] initWithABRecordID: recordID andAddressBookRef: _addressBookRef];
+    [source setIsDefault: (defaultSourceID == recordID) ? YES : NO];
+
+    [_sources addObject: source];
+
+  }
+}
+
+-(void)loadGroupsWithABAddressBookRef: (ABAddressBookRef)addressBook {
+  
+  NSAssert(dispatch_get_specific(IsOnMainQueueKey) == NULL, @"Must not be dispatched on main queue");
+  
+  AKSource *aggregateSource = [self sourceForSourceId: kSourceAggregate];
+  AKGroup *mainAggregateGroup = [[AKGroup alloc] initWithABRecordID: kGroupAggregate andAddressBookRef: nil];
+  [aggregateSource.groups addObject: mainAggregateGroup];
+
+  if (ShowGroups == NO) return;
+  
+  for (AKSource *source in _sources) {
+
+    NSArray *groups = (NSArray *) CFBridgingRelease(ABAddressBookCopyArrayOfAllGroupsInSource(addressBook, source.recordRef));
+
+    AKGroup *aggregateGroup = [[AKGroup alloc] initWithABRecordID: kGroupAggregate andAddressBookRef: nil];
+    [source.groups addObject: aggregateGroup];
+
+    for (id obj in groups) {
+      
+      ABRecordRef recordRef = (__bridge ABRecordRef)obj;
+      ABRecordID recordID = ABRecordGetRecordID(recordRef);
+      
+      NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABGroupNameProperty));
+      NSLog(@"% 3d : %@", recordID, name);
+      
+      AKGroup *group = [[AKGroup alloc] initWithABRecordID: recordID andAddressBookRef: _addressBookRef];
+      [source.groups addObject: group];
+
+      NSArray *members = (NSArray *) CFBridgingRelease(ABGroupCopyArrayOfAllMembers(recordRef));
+      for (id member in members) {
+        
+        ABRecordRef record = (__bridge ABRecordRef)member;
+        // From ABGRoup Reference: Groups may not contain other groups
+        if(ABRecordGetRecordType(record) == kABPersonType) {
+          
+          ABRecordID contactID = ABRecordGetRecordID(record);
+          [group.memberIDs addObject: [NSNumber numberWithInteger: contactID]];
+          [aggregateGroup.memberIDs addObject: [NSNumber numberWithInteger: contactID]];
+          [mainAggregateGroup.memberIDs addObject: [NSNumber numberWithInteger: contactID]];
+        }
+      }
+    }
+  }
+}
+
+-(void)loadContactsWithABAddressBookRef: (ABAddressBookRef)addressBook {
+
+  NSAssert(dispatch_get_specific(IsOnMainQueueKey) == NULL, @"Must not be dispatched on main queue");
+
   NSMutableDictionary *tempContactIdentifiers = [[NSMutableDictionary alloc] init];
   NSMutableDictionary *tempContacts = [[NSMutableDictionary alloc] init];
 
@@ -243,87 +330,76 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   }
 
   // Get array of records in Address Book
-  ABRecordRef source = ABAddressBookCopyDefaultSource(addressBook);
-  NSArray *people = (NSArray *)CFBridgingRelease(ABAddressBookCopyArrayOfAllPeopleInSourceWithSortOrdering(addressBook,
-                                                                                source,
-                                                                                ABPersonGetSortOrdering()));
-  CFRelease(source);
-  AKGroup *allContactsGroup = [[AKGroup alloc] initWithABRecordID: kGroupAllContacts andAddressBookRef: nil];
-  [_groups addObject: allContactsGroup];
-  
-  for (id obj in people) {
+  for (AKSource *source in _sources) {
 
-    ABRecordRef recordRef = (__bridge ABRecordRef)obj;
+    NSArray *people = (NSArray *)CFBridgingRelease(ABAddressBookCopyArrayOfAllPeopleInSourceWithSortOrdering(addressBook,
+                                                                                                             source.recordRef,
+                                                                                                             ABPersonGetSortOrdering()));
 
-    ABRecordID recordID = ABRecordGetRecordID(recordRef);
-    AKContact *contact = [[AKContact alloc] initWithABRecordID: recordID andAddressBookRef: _addressBookRef];
+    for (id obj in people) {
 
-    [allContactsGroup.memberIDs addObject: [NSNumber numberWithInteger: recordID]];
+      ABRecordRef recordRef = (__bridge ABRecordRef)obj;
 
-    NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef));
-    
-    NSLog(@"% 3d : %@", recordID, name);
+      ABRecordID recordID = ABRecordGetRecordID(recordRef);
+      AKContact *contact = [[AKContact alloc] initWithABRecordID: recordID andAddressBookRef: _addressBookRef];
 
-    NSArray *linkedRecords = (NSArray *)CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople(recordRef));
-    for (id obj in linkedRecords) {
-      ABRecordRef record = (__bridge ABRecordRef)obj;
-      ABRecordID recordID = ABRecordGetRecordID(record);
-      NSLog(@"Linked: %d", recordID);
-    }
+      NSArray *linkedContactIDs = [contact linkedContactIDs];
 
-    NSString *dictionaryKey = @"#";
-    if ([name length] > 0) {
-      dictionaryKey = [[[[name substringToIndex: 1] decomposedStringWithCanonicalMapping] substringToIndex: 1] uppercaseString];
-    }
+      AKSource *aggregateSource = [self sourceForSourceId: kSourceAggregate];
+      AKGroup *aggregateGroup = [aggregateSource groupForGroupId: kGroupAggregate];
+      NSMutableArray *allContactIDs = aggregateGroup.memberIDs;
 
-    [tempContacts setObject: contact forKey: [NSNumber numberWithInteger: recordID]];
+      for (NSNumber *linkedID in linkedContactIDs) {
+        if ([allContactIDs indexOfObject: linkedID] == NSNotFound) {
+          [allContactIDs addObject: linkedID];
+          break;
+        }
+      }
 
-    // Put the recordID in the corresponding section of contactIdentifiers
-    NSMutableArray *tArray = (NSMutableArray *)[tempContactIdentifiers objectForKey: dictionaryKey];
-    if (tArray) {
-      [tArray addObject: [NSNumber numberWithInteger: recordID]];
-    } else {
-      tArray = (NSMutableArray *)[tempContactIdentifiers objectForKey: @"#"];
-      [tArray addObject: [NSNumber numberWithInteger: recordID]];
-    }
-  }
+      [aggregateGroup.memberIDs addObject: [NSNumber numberWithInteger: recordID]];
 
-  [self setContacts: tempContacts];
-  [self setAllContactIdentifiers: tempContactIdentifiers];
-
-}
-
--(void)loadGroupsWithABAddressBookRef: (ABAddressBookRef)addressBook {
-
-  ABRecordRef source = ABAddressBookCopyDefaultSource(addressBook);
-  NSArray *groups = (NSArray *) CFBridgingRelease(ABAddressBookCopyArrayOfAllGroupsInSource(addressBook, source));
-  CFRelease(source);
-
-  for (id obj in groups) {
-
-    ABRecordRef recordRef = (__bridge ABRecordRef)obj;
-    ABRecordID recordID = ABRecordGetRecordID(recordRef);
-
-    NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABGroupNameProperty));
-    NSLog(@"% 3d : %@", recordID, name);
-    
-    AKGroup *group = [[AKGroup alloc] initWithABRecordID: recordID andAddressBookRef: _addressBookRef];
-    
-    [self.groups addObject: group];
-    
-    NSArray *members = (NSArray *) CFBridgingRelease(ABGroupCopyArrayOfAllMembers(recordRef));
-    for (id member in members) {
-
-      ABRecordRef record = (__bridge ABRecordRef)member;
-      // From ABGRoup Reference: Groups may not contain other groups
-      if(ABRecordGetRecordType(record) == kABPersonType) {
-
-        ABRecordID contactID = ABRecordGetRecordID(record);
-        [group.memberIDs addObject: [NSNumber numberWithInteger: contactID]];
-
+      NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef));
+      
+      NSLog(@"% 3d : %@", recordID, name);
+            
+      NSString *dictionaryKey = @"#";
+      if ([name length] > 0) {
+        dictionaryKey = [[[[name substringToIndex: 1] decomposedStringWithCanonicalMapping] substringToIndex: 1] uppercaseString];
+      }
+      
+      [tempContacts setObject: contact forKey: [NSNumber numberWithInteger: recordID]];
+      
+      // Put the recordID in the corresponding section of contactIdentifiers
+      NSMutableArray *tArray = (NSMutableArray *)[tempContactIdentifiers objectForKey: dictionaryKey];
+      if (tArray) {
+        [tArray addObject: [NSNumber numberWithInteger: recordID]];
+      } else {
+        tArray = (NSMutableArray *)[tempContactIdentifiers objectForKey: @"#"];
+        [tArray addObject: [NSNumber numberWithInteger: recordID]];
       }
     }
+    
+    [self setContacts: tempContacts];
+    [self setAllContactIdentifiers: tempContactIdentifiers];
+    
   }
+}
+
+-(AKSource *)defaultSource {
+
+  AKSource *ret = nil;
+
+  for (AKSource *source in _sources) {
+    
+    if ([source isDefault] == YES) {
+      ret = source;
+      break;
+    }
+  }
+
+  NSAssert(ret != nil, @"No default source present");
+  
+  return ret;
 }
 
 -(NSInteger)contactsCount {
@@ -338,48 +414,24 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   return ret;
 }
 
--(NSInteger)groupsCount {
-  return [self.groups count];
-}
-
--(AKContact *)contactForIdentifier: (NSInteger)recordId {
-  return [self.contacts objectForKey: [NSNumber numberWithInteger: recordId]];
-}
-
--(AKGroup *)groupForIdentifier: (NSInteger)recordId {
-  AKGroup *ret = nil;
+-(AKSource *)sourceForSourceId: (NSInteger)recordId {
   
-  for (AKGroup *group in self.groups) {
-    if ([group recordID] == recordId) {
-      ret = group;
+  AKSource *ret = nil;
+  
+  for (AKSource *source in _sources) {
+    if (source.recordID == recordId) {
+      ret = source;
       break;
     }
   }
+  
+  NSAssert(ret != nil, @"Source does not exist");
+
   return ret;
 }
 
--(NSString *)sourceNameForRecordIdentifier: (ABRecordRef)record {
-
-  NSString *ret = nil;
-
-  ABRecordRef source = ABPersonCopySource(record);
-  NSInteger type = [(NSNumber *) CFBridgingRelease(ABRecordCopyValue(source, kABSourceTypeProperty)) integerValue];
-  CFRelease(source);
-
-  if (type == kABSourceTypeLocal) {
-    ret = [[UIDevice currentDevice] localizedModel];
-  } else if ((type & kABSourceTypeExchange) == kABSourceTypeExchange) {
-    ret = @"Exchange";
-  } else if (type == kABSourceTypeMobileMe) {
-    ret = @"MobileMe";
-  } else if ((type & kABSourceTypeLDAP) == kABSourceTypeLDAP) {
-    ret = @"LDAP";
-  } else if ((type & kABSourceTypeCardDAV) == kABSourceTypeCardDAV) {
-    NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyValue(source, kABSourceNameProperty));
-    ret = ([name isEqualToString: @"Card"]) ? @"iCloud" : @"CardDAV";
-  }
-
-  return ret;
+-(AKContact *)contactForContactId: (NSInteger)recordId {
+  return [self.contacts objectForKey: [NSNumber numberWithInteger: recordId]];
 }
 
 #pragma mark - Address Book Search
@@ -392,7 +444,9 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   NSEnumerator *enumerator = [self.allContactIdentifiers keyEnumerator];
   NSString *key;
 
-  NSMutableArray *groupMembers = [[self groupForIdentifier: _groupID] memberIDs];
+  AKSource *source = [self sourceForSourceId: _sourceID];
+  AKGroup *group = [source groupForGroupId: _groupID];
+  NSMutableArray *groupMembers = [group memberIDs];
 
   while ((key = [enumerator nextObject])) {
     NSArray *arrayForKey = [self.allContactIdentifiers objectForKey: key];

@@ -29,6 +29,7 @@
 #import "AKGroupsViewController.h"
 #import "AKContactsViewController.h"
 #import "AKGroup.h"
+#import "AKSource.h"
 #import "AKAddressBook.h"
 #import "AppDelegate.h"
 
@@ -50,12 +51,12 @@ static const float defaultCellHeight = 44.f;
 #pragma mark - View lifecycle
 
 - (void)loadView {
-  
+
   CGFloat navBarHeight = ([self.navigationController isNavigationBarHidden]) ? 0.f :
   self.navigationController.navigationBar.frame.size.height;
   
   [self setTableView: [[UITableView alloc] initWithFrame: CGRectMake(0.f, 0.f, 320.f, 460.f - navBarHeight)
-                                                   style: UITableViewStylePlain]];
+                                                   style: UITableViewStyleGrouped]];
   [self.tableView setDataSource: self];
   [self.tableView setDelegate: self];
 
@@ -114,18 +115,20 @@ static const float defaultCellHeight = 44.f;
 #pragma mark - Table view data source
 
 -(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-
-    return 1;
+  
+  NSInteger ret = 0;
+  
+  if (_appDelegate.akAddressBook.status >= kAddressBookOnline) {
+    ret = [[_appDelegate.akAddressBook sources] count];
+  }
+  
+  return ret;
 }
 
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-  NSInteger ret = 8;
-  
-  if (_appDelegate.akAddressBook.status >= kAddressBookOnline) {
-    if ([_appDelegate.akAddressBook groupsCount] > 0)
-      ret = [_appDelegate.akAddressBook groupsCount];
-  }
-  return ret;
+
+  AKSource *source = [[_appDelegate.akAddressBook sources] objectAtIndex: section];
+  return [[source groups] count];
 }
 
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -142,53 +145,24 @@ static const float defaultCellHeight = 44.f;
   [cell.textLabel setTextColor: [UIColor blackColor]];
   [cell setSelectionStyle: UITableViewCellSelectionStyleNone];
 
-  if (_appDelegate.akAddressBook.status >= kAddressBookOnline) {
-    if ([_appDelegate.akAddressBook contactsCount] == 0) {
-      [cell setAccessoryView: nil];
+  AKSource *source = [_appDelegate.akAddressBook.sources objectAtIndex: indexPath.section];
+  AKGroup *group = [source.groups objectAtIndex: indexPath.row];
 
-      [cell.textLabel setFont:[UIFont boldSystemFontOfSize: 17.f]];
-      [cell.textLabel setTextAlignment: NSTextAlignmentCenter];
-      [cell.textLabel setTextColor: [UIColor lightGrayColor]];
-      if (indexPath.row == 3) {
-        [cell.textLabel setText: NSLocalizedString(@"No Contacts", @"")];
-      }
-    } else {
-      
-      AKGroup *group = [_appDelegate.akAddressBook.groups objectAtIndex: indexPath.row];
-      if (!group) return cell;
-      [cell setTag: [group recordID]];
-      [cell setSelectionStyle: UITableViewCellSelectionStyleBlue];
+  if (!group) return cell;
+  [cell setTag: group.recordID];
+  [cell setSelectionStyle: UITableViewCellSelectionStyleBlue];
 
-      [cell setAccessoryView: nil];
-      [cell.textLabel setFont: [UIFont boldSystemFontOfSize: 20.f]];
-      [cell.textLabel setText: [group name]];
+  [cell setAccessoryType: UITableViewCellAccessoryDisclosureIndicator];
+  [cell.textLabel setFont: [UIFont boldSystemFontOfSize: 20.f]];
+  [cell.textLabel setText: [group name]];
 
-    }
-  } else {
-    [cell setAccessoryView: nil];
-    
-    if (indexPath.row == 3) {
-      [cell.textLabel setTextColor: [UIColor grayColor]];
-      [cell.textLabel setTextAlignment: NSTextAlignmentCenter];
-      if (_appDelegate.akAddressBook.status == kAddressBookInitializing) {
-        [cell.textLabel setText: NSLocalizedString(@"Loading address book...", @"")];
-        UIActivityIndicatorView *activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle: UIActivityIndicatorViewStyleGray];
-        [cell setAccessoryView: activity];
-        [activity startAnimating];
-      } else if (_appDelegate.akAddressBook.status == kAddressBookOffline) {
-        [cell.textLabel setText: NSLocalizedString(@"No Contacts", @"")];
-      }
-    }
-  }
-  
   return cell;
 }
 
 -(NSString *)tableView:(UITableView *)tableView titleForHeaderInSection: (NSInteger)section {
-  NSString *ret = nil;
-  if (_appDelegate.akAddressBook.status >= kAddressBookOnline)
-    ret = NSLocalizedString(@"Groups", @"");
-  return ret;
+  
+  AKSource *source = [[_appDelegate.akAddressBook sources] objectAtIndex: section];
+  return [source typeName];
 }
 
 /*
@@ -233,8 +207,11 @@ static const float defaultCellHeight = 44.f;
 }
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
- 
-  AKGroup *group = [[_appDelegate.akAddressBook groups] objectAtIndex: indexPath.row];
+
+  AKSource *source = [_appDelegate.akAddressBook.sources objectAtIndex: indexPath.section];
+  AKGroup *group = [source.groups objectAtIndex: indexPath.row];
+
+  [_appDelegate.akAddressBook setSourceID: [source recordID]];
   [_appDelegate.akAddressBook setGroupID: [group recordID]];
   [_appDelegate.akAddressBook resetSearch];
 
