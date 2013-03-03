@@ -161,7 +161,7 @@ static const float defaultCellHeight = 44.f;
 
       [cell setAccessoryView: nil];
       [cell.textLabel setFont: [UIFont boldSystemFontOfSize: 20.f]];
-      [cell.textLabel setText: @"" /*[group name]*/];
+      [cell.textLabel setText: [group name]];
 
     }
   } else {
