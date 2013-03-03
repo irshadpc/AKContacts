@@ -40,11 +40,18 @@
     super.recordID = recordID;
     
     if (recordID >= 0) { // Custom groups don't use the AddressBook database
-      dispatch_sync(dispatch_get_main_queue(), ^(void){
-        super.recordRef = ABAddressBookGetGroupWithRecordID(addressBookRef, recordID);
-      });
+      dispatch_block_t block = ^{
+        super.recordRef =  ABAddressBookGetGroupWithRecordID(addressBookRef, recordID);
+        NSAssert(super.recordRef, @"Failed to get group recordRef");
+      };
+      
+      if (dispatch_get_specific(IsOnMainQueueKey)) {
+        block();
+      } else {
+        dispatch_sync(dispatch_get_main_queue(), block);
+      }
     }
-    
+
     _memberIDs = [[NSMutableArray alloc] init];
   }
   return  self;

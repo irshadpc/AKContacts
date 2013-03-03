@@ -72,7 +72,7 @@ NSString *const kLabel = @"Label";
       type = @"Source";
       break;
   }
-  return [NSString stringWithFormat: @"%@ - %d", type, _recordID];
+  return [NSString stringWithFormat: @"<AK%@ %p> %d", type, _recordRef, _recordID];
 }
 
 -(ABRecordType)recordType {
@@ -95,7 +95,7 @@ NSString *const kLabel = @"Label";
   __block id ret;
 
   dispatch_block_t block = ^{
-		ret = (id)CFBridgingRelease(ABRecordCopyValue(_recordRef, property));
+    ret = (id)CFBridgingRelease(ABRecordCopyValue(_recordRef, property));
 	};
 
   if (dispatch_get_specific(IsOnMainQueueKey)) {

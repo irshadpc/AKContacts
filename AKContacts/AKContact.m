@@ -41,10 +41,17 @@
   self = [super init];
   if (self) {
     super.recordID = recordID;
-    
-    dispatch_sync(dispatch_get_main_queue(), ^(void){
+
+    dispatch_block_t block = ^{
       super.recordRef = ABAddressBookGetPersonWithRecordID(addressBookRef, recordID);
-    });
+      NSAssert(super.recordRef, @"Failed to get person recordRef");
+    };
+
+    if (dispatch_get_specific(IsOnMainQueueKey)) {
+      block();
+    } else {
+      dispatch_sync(dispatch_get_main_queue(), block);
+    }
   }
   return  self;
 }
