@@ -61,21 +61,4 @@
   return [_memberIDs count];
 }
 
--(NSString *)name {
-  NSString *ret = nil;
-  if (super.recordID < 0) {
-    switch (super.recordID) {
-      case kGroupAggregate:
-        ret = NSLocalizedString(@"All Contacts", @"");
-        break;
-      default:
-        ret = NSLocalizedString(@"No Name", @"");
-        break;
-    }
-  } else {
-    ret = (NSString *)[self valueForProperty: kABGroupNameProperty];
-  }
-  return ret;
-}
-
 @end

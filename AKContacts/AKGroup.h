@@ -37,6 +37,5 @@
  * Return the member count of the group
  **/
 -(NSInteger)count;
--(NSString *)name;
 
 @end
