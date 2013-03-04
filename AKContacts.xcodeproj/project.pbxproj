@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C620080216B8842A00C16121 /* AKAddressBook.m in Sources */ = {isa = PBXBuildFile; fileRef = C620080116B8842A00C16121 /* AKAddressBook.m */; };
 		C620080E16B997A900C16121 /* AKContactAddressViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C620080516B997A900C16121 /* AKContactAddressViewCell.m */; };
 		C620080F16B997A900C16121 /* AKContactDetailViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C620080716B997A900C16121 /* AKContactDetailViewCell.m */; };
 		C620081016B997A900C16121 /* AKContactHeaderViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C620080916B997A900C16121 /* AKContactHeaderViewCell.m */; };
@@ -34,6 +33,7 @@
 		C6C2066016E1828F0033C58A /* AKGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2065F16E1828F0033C58A /* AKGroup.m */; };
 		C6C2066316E18A810033C58A /* AKGroupsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2066216E18A810033C58A /* AKGroupsViewController.m */; };
 		C6C2066616E39D790033C58A /* AKSource.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2066516E39D760033C58A /* AKSource.m */; };
+		C6C2066916E436BE0033C58A /* AKAddressBook.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2066816E436BE0033C58A /* AKAddressBook.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,8 +47,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		C620080016B8842A00C16121 /* AKAddressBook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AKAddressBook.h; path = AKContactsDemo/AKAddressBook.h; sourceTree = SOURCE_ROOT; };
-		C620080116B8842A00C16121 /* AKAddressBook.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AKAddressBook.m; path = AKContactsDemo/AKAddressBook.m; sourceTree = SOURCE_ROOT; };
 		C620080416B997A900C16121 /* AKContactAddressViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactAddressViewCell.h; sourceTree = "<group>"; };
 		C620080516B997A900C16121 /* AKContactAddressViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactAddressViewCell.m; sourceTree = "<group>"; };
 		C620080616B997A900C16121 /* AKContactDetailViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactDetailViewCell.h; sourceTree = "<group>"; };
@@ -91,6 +89,8 @@
 		C6C2066216E18A810033C58A /* AKGroupsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKGroupsViewController.m; sourceTree = "<group>"; };
 		C6C2066416E39D750033C58A /* AKSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKSource.h; sourceTree = "<group>"; };
 		C6C2066516E39D760033C58A /* AKSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKSource.m; sourceTree = "<group>"; };
+		C6C2066716E436BE0033C58A /* AKAddressBook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKAddressBook.h; sourceTree = "<group>"; };
+		C6C2066816E436BE0033C58A /* AKAddressBook.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKAddressBook.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -183,8 +183,8 @@
 				C6C2065F16E1828F0033C58A /* AKGroup.m */,
 				C66951D516B702F800D030A2 /* AKContact.h */,
 				C66951D616B702F800D030A2 /* AKContact.m */,
-				C620080016B8842A00C16121 /* AKAddressBook.h */,
-				C620080116B8842A00C16121 /* AKAddressBook.m */,
+				C6C2066716E436BE0033C58A /* AKAddressBook.h */,
+				C6C2066816E436BE0033C58A /* AKAddressBook.m */,
 			);
 			path = AKContacts;
 			sourceTree = "<group>";
@@ -346,7 +346,6 @@
 				C66951DC16B702F800D030A2 /* AKContact.m in Sources */,
 				C66951DD16B702F800D030A2 /* AKContactsViewController.m in Sources */,
 				C66951E216B7049C00D030A2 /* AKRecord.m in Sources */,
-				C620080216B8842A00C16121 /* AKAddressBook.m in Sources */,
 				C620080E16B997A900C16121 /* AKContactAddressViewCell.m in Sources */,
 				C620080F16B997A900C16121 /* AKContactDetailViewCell.m in Sources */,
 				C620081016B997A900C16121 /* AKContactHeaderViewCell.m in Sources */,
@@ -355,6 +354,7 @@
 				C6C2066016E1828F0033C58A /* AKGroup.m in Sources */,
 				C6C2066316E18A810033C58A /* AKGroupsViewController.m in Sources */,
 				C6C2066616E39D790033C58A /* AKSource.m in Sources */,
+				C6C2066916E436BE0033C58A /* AKAddressBook.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
