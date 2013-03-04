@@ -65,6 +65,7 @@ static const int manyContacts = 20;
   [self setSearchBar: [[UISearchBar alloc] initWithFrame: CGRectMake(0.f, 0.f, 320.f, defaultCellHeight)]];
   [self.tableView setTableHeaderView: self.searchBar];
   [self.searchBar setDelegate: self];
+  [self.searchBar setBarStyle: UIBarStyleDefault];
   
   [self setView: [[UIView alloc] init]];
   [self.view addSubview: self.tableView];  
