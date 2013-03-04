@@ -148,13 +148,18 @@ static const float defaultCellHeight = 44.f;
   AKSource *source = [_appDelegate.akAddressBook.sources objectAtIndex: indexPath.section];
   AKGroup *group = [source.groups objectAtIndex: indexPath.row];
 
+  NSMutableArray *groupAggregateName = [[NSMutableArray alloc] initWithObjects: @"All", @"Contacts", nil];
+  if (source.recordID >= 0) [groupAggregateName insertObject: [source typeName] atIndex: 1];
+
+  NSString *groupName = (group.recordID < 0) ? [groupAggregateName componentsJoinedByString: @" "]: [group valueForProperty:kABGroupNameProperty];
+
   if (!group) return cell;
   [cell setTag: group.recordID];
   [cell setSelectionStyle: UITableViewCellSelectionStyleBlue];
 
   [cell setAccessoryType: UITableViewCellAccessoryDisclosureIndicator];
   [cell.textLabel setFont: [UIFont boldSystemFontOfSize: 20.f]];
-  [cell.textLabel setText: [group name]];
+  [cell.textLabel setText: groupName];
 
   return cell;
 }
