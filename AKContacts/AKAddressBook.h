@@ -32,6 +32,7 @@
 
 FOUNDATION_EXPORT NSString *const AddressBookDidInitializeNotification;
 FOUNDATION_EXPORT NSString *const AddressBookDidLoadNotification;
+FOUNDATION_EXPORT NSString *const AddressBookSearchDidFinishNotification;
 FOUNDATION_EXPORT const void *const IsOnMainQueueKey;
 FOUNDATION_EXPORT const BOOL ShowGroups;
 
