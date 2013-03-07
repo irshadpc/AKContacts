@@ -47,11 +47,8 @@
       NSAssert(super.recordRef, @"Failed to get person recordRef");
     };
 
-    if (dispatch_get_specific(IsOnMainQueueKey)) {
-      block();
-    } else {
-      dispatch_sync(dispatch_get_main_queue(), block);
-    }
+    if (dispatch_get_specific(IsOnMainQueueKey)) block();
+    else dispatch_sync(dispatch_get_main_queue(), block);
   }
   return  self;
 }
@@ -64,18 +61,14 @@
 		ret = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(super.recordRef)); // kABStringPropertyType
 	};
 
-  if (dispatch_get_specific(IsOnMainQueueKey)) {
-    block();
-  } else {
-    dispatch_sync(dispatch_get_main_queue(), block);
-  }
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
+
   return ret;
 }
 
 -(NSString *)searchName {
-  NSString *ret = [self name];
-  ret = [ret stringByFoldingWithOptions: NSDiacriticInsensitiveSearch locale: [NSLocale currentLocale]];
-  return [ret stringByReplacingOccurrencesOfString: @" " withString: @""];
+  return [self.name stringByFoldingWithOptions: NSDiacriticInsensitiveSearch locale: [NSLocale currentLocale]];
 }
 
 -(NSString *)displayNameByOrdering: (ABPersonSortOrdering)ordering {
@@ -200,11 +193,8 @@
     }
 	};
 
-  if (dispatch_get_specific(IsOnMainQueueKey)) {
-    block();
-  } else {
-    dispatch_sync(dispatch_get_main_queue(), block);
-  }
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
 
   return [[NSArray alloc] initWithArray: ret];
 }
@@ -235,11 +225,9 @@
       ret = (NSData *)CFBridgingRelease(ABPersonCopyImageDataWithFormat(super.recordRef, kABPersonImageFormatThumbnail));
     }
   };
-  if (dispatch_get_specific(IsOnMainQueueKey)) {
-    block();
-  } else {
-    dispatch_sync(dispatch_get_main_queue(), block);
-  }
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
+
   return ret;
 }
 
