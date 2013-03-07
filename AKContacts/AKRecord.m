@@ -82,11 +82,9 @@ NSString *const kLabel = @"Label";
 		  ret = ABRecordGetRecordType(_recordRef);
 	};
 
-  if (dispatch_get_specific(IsOnMainQueueKey)) {
-    block();
-  } else {
-    dispatch_sync(dispatch_get_main_queue(), block);
-  }
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
+
   return ret;
 }
 
@@ -98,11 +96,9 @@ NSString *const kLabel = @"Label";
     ret = (id)CFBridgingRelease(ABRecordCopyValue(_recordRef, property));
 	};
 
-  if (dispatch_get_specific(IsOnMainQueueKey)) {
-    block();
-  } else {
-    dispatch_sync(dispatch_get_main_queue(), block);
-  }
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
+
   return ret;
 }
 
@@ -118,11 +114,9 @@ NSString *const kLabel = @"Label";
     }
   };
 
-  if (dispatch_get_specific(IsOnMainQueueKey)) {
-    block();
-  } else {
-    dispatch_sync(dispatch_get_main_queue(), block);
-  }
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
+
   return ret;
 }
 
@@ -144,11 +138,9 @@ NSString *const kLabel = @"Label";
     }
   };
   
-  if (dispatch_get_specific(IsOnMainQueueKey)) {
-    block();
-  } else {
-    dispatch_sync(dispatch_get_main_queue(), block);
-  }
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
+
   return ret;
 }
 
@@ -167,11 +159,8 @@ NSString *const kLabel = @"Label";
     }
   };
 
-  if (dispatch_get_specific(IsOnMainQueueKey)) {
-    block();
-  } else {
-    dispatch_sync(dispatch_get_main_queue(), block);
-  }
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
 
   return ret;
 }
@@ -202,11 +191,9 @@ NSString *const kLabel = @"Label";
     }
   };
   
-  if (dispatch_get_specific(IsOnMainQueueKey)) {
-    block();
-  } else {
-    dispatch_sync(dispatch_get_main_queue(), block);
-  }
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
+
   return ret;
 }
 
