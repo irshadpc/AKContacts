@@ -51,11 +51,8 @@
         NSAssert(super.recordRef, @"Failed to get source recordRef");
       };
 
-      if (dispatch_get_specific(IsOnMainQueueKey)) {
-        block();
-      } else {
-        dispatch_sync(dispatch_get_main_queue(), block);
-      }
+      if (dispatch_get_specific(IsOnMainQueueKey)) block();
+      else dispatch_sync(dispatch_get_main_queue(), block);
     }
   }
   return  self;
