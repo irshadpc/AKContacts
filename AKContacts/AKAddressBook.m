@@ -36,6 +36,7 @@ NSString *const AKAddressBookQueueName = @"AKAddressBookQueue";
 
 NSString *const AddressBookDidInitializeNotification = @"AddressBookDidInitializeNotification";
 NSString *const AddressBookDidLoadNotification = @"AddressBookDidLoadNotification";
+NSString *const AddressBookSearchDidFinishNotification = @"AddressBookSearchDidFinishNotification";
 
 const BOOL ShowGroups = YES;
 
@@ -53,6 +54,8 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 @property (nonatomic, unsafe_unretained) AppDelegate *appDelegate;
 
 @property (nonatomic, assign, readonly) dispatch_queue_t ab_queue;
+
+@property (nonatomic, assign, readonly) dispatch_semaphore_t ab_semaphore;
 
 /*
  * ABAddressBookRegisterExternalChangeCallback tends to fire multiple times
@@ -72,6 +75,7 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 
 @synthesize appDelegate = _appDelegate;
 @synthesize ab_queue = _ab_queue;
+@synthesize ab_semaphore = _ab_semaphore;
 @synthesize dateAddressBookLoaded = _dateAddressBookLoaded;
 
 @synthesize addressBookRef = _addressBookRef;
@@ -102,6 +106,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     _ab_queue = dispatch_queue_create([AKAddressBookQueueName UTF8String], NULL);
 
+    _ab_semaphore = dispatch_semaphore_create(1);
+    
     _status = kAddressBookOffline;
 
     _sourceID = kSourceAggregate;
@@ -235,7 +241,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     dispatch_async(dispatch_get_main_queue(), ^{
       [[NSNotificationCenter defaultCenter] postNotificationName: AddressBookDidLoadNotification object: nil];
     });
-
   };
 
   dispatch_async(_ab_queue, block);
@@ -479,8 +484,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   }
 
   [self.keys addObject: UITableViewIndexSearch];
-  [self.keys addObjectsFromArray: [[self.allContactIdentifiers allKeys]
-                                sortedArrayUsingSelector: @selector(compare:)]];
+  [self.keys addObjectsFromArray: [[self.allContactIdentifiers allKeys] sortedArrayUsingSelector: @selector(compare:)]];
   // Little hack to move # to the end of the list
   if ([self.keys count] > 0) {
     [self.keys addObject: [self.keys objectAtIndex: 1]];
@@ -499,24 +503,36 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 }
 
 -(void)handleSearchForTerm: (NSString *)searchTerm {
-  NSMutableArray *sectionsToRemove = [[NSMutableArray alloc ]init];
-  [self resetSearch];
-  
-  for (NSString *key in self.keys) {
-    NSMutableArray *array = [self.contactIdentifiers valueForKey: key];
-    NSMutableArray *toRemove = [[NSMutableArray alloc] init];
-    for (NSNumber *identifier in array) {
-      NSString *name = [[self.contacts objectForKey: identifier] name];
 
-      if ([name rangeOfString: searchTerm options: NSCaseInsensitiveSearch].location == NSNotFound)
-        [toRemove addObject: identifier];
+  dispatch_block_t block = ^{
+
+    dispatch_semaphore_wait(self.ab_semaphore, DISPATCH_TIME_FOREVER);
+
+    NSMutableArray *sectionsToRemove = [[NSMutableArray alloc ]init];
+    [self resetSearch];
+
+    for (NSString *key in self.keys) {
+      NSMutableArray *array = [self.contactIdentifiers valueForKey: key];
+      NSMutableArray *toRemove = [[NSMutableArray alloc] init];
+      for (NSNumber *identifier in array) {
+        NSString *name = [[self.contacts objectForKey: identifier] searchName];
+        
+        if ([name rangeOfString: searchTerm options: NSCaseInsensitiveSearch].location == NSNotFound)
+          [toRemove addObject: identifier];
+      }
+      
+      if ([array count] == [toRemove count])
+        [sectionsToRemove addObject: key];
+      [array removeObjectsInArray: toRemove];
     }
-    
-    if ([array count] == [toRemove count])
-      [sectionsToRemove addObject: key];
-    [array removeObjectsInArray: toRemove];
-  }
-  [self.keys removeObjectsInArray: sectionsToRemove];
+    [self.keys removeObjectsInArray: sectionsToRemove];
+
+    dispatch_semaphore_signal(self.ab_semaphore);
+
+    [[NSNotificationCenter defaultCenter] postNotificationName: AddressBookSearchDidFinishNotification object: nil];
+  };
+
+  dispatch_async(self.ab_queue, block);
 }
 
 @end
