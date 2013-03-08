@@ -252,10 +252,12 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
   _sources = [[NSMutableArray alloc] init];
 
-  AKSource *aggregatorSource = [[AKSource alloc] initWithABRecordID: kSourceAggregate andAddressBookRef: _addressBookRef];
-  [_sources addObject: aggregatorSource];
-
   NSArray *sources = (NSArray *)CFBridgingRelease(ABAddressBookCopyArrayOfAllSources(addressBook));
+
+  if ([sources count] > 1) {
+    AKSource *aggregatorSource = [[AKSource alloc] initWithABRecordID: kSourceAggregate andAddressBookRef: _addressBookRef];
+    [_sources addObject: aggregatorSource];
+  }
 
   ABRecordRef source = ABAddressBookCopyDefaultSource(addressBook);
   ABRecordID defaultSourceID = ABRecordGetRecordID(source);
@@ -446,7 +448,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     }
   }
   
-  NSAssert(ret != nil, @"Source does not exist");
+  if (recordId >= 0)
+    NSAssert(ret != nil, @"Source does not exist");
 
   return ret;
 }
