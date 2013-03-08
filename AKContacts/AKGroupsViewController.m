@@ -145,11 +145,12 @@ static const float defaultCellHeight = 44.f;
   [cell.textLabel setTextColor: [UIColor blackColor]];
   [cell setSelectionStyle: UITableViewCellSelectionStyleNone];
 
+  NSInteger sourceCount = [_appDelegate.akAddressBook.sources count];
   AKSource *source = [_appDelegate.akAddressBook.sources objectAtIndex: indexPath.section];
   AKGroup *group = [source.groups objectAtIndex: indexPath.row];
 
   NSMutableArray *groupAggregateName = [[NSMutableArray alloc] initWithObjects: @"All", @"Contacts", nil];
-  if (source.recordID >= 0) [groupAggregateName insertObject: [source typeName] atIndex: 1];
+  if (source.recordID >= 0 && sourceCount > 1) [groupAggregateName insertObject: [source typeName] atIndex: 1];
 
   NSString *groupName = (group.recordID < 0) ? [groupAggregateName componentsJoinedByString: @" "]: [group valueForProperty:kABGroupNameProperty];
 
@@ -166,8 +167,9 @@ static const float defaultCellHeight = 44.f;
 
 -(NSString *)tableView:(UITableView *)tableView titleForHeaderInSection: (NSInteger)section {
   
+  NSInteger sourceCount = [_appDelegate.akAddressBook.sources count];
   AKSource *source = [[_appDelegate.akAddressBook sources] objectAtIndex: section];
-  return [source typeName];
+  return (sourceCount > 1) ? [source typeName] : nil;
 }
 
 /*
