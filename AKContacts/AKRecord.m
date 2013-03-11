@@ -61,7 +61,7 @@ NSString *const kLabel = @"Label";
 
 -(NSString *)description {
   NSString *type = nil;
-  switch ([self recordType ]) {
+  switch ([self recordType]) {
     case kABPersonType:
       type = @"Person";
       break;
@@ -90,6 +90,8 @@ NSString *const kLabel = @"Label";
 
 -(id)valueForProperty: (ABPropertyID)property {
 
+  if (self.recordRef == nil) return nil;
+  
   __block id ret;
 
   dispatch_block_t block = ^{
@@ -103,6 +105,8 @@ NSString *const kLabel = @"Label";
 }
 
 -(NSInteger)countForProperty: (ABPropertyID) property {
+  
+  if (self.recordRef == nil) return 0;
   
   __block NSInteger ret = 0;
   
@@ -122,6 +126,8 @@ NSString *const kLabel = @"Label";
 
 -(NSArray *)identifiersForProperty: (ABPropertyID) property {
 
+  if (self.recordRef == nil) return nil;
+  
   __block NSArray *ret = nil;
   
   dispatch_block_t block = ^{
@@ -145,6 +151,8 @@ NSString *const kLabel = @"Label";
 }
 
 -(id)valueForMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier {
+  
+  if (self.recordRef == nil) return nil;
   
   __block id ret = nil;
   
@@ -175,6 +183,8 @@ NSString *const kLabel = @"Label";
 }
 
 -(NSString *)labelForMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier {
+  
+  if (self.recordRef == nil) return nil;
   
   __block NSString *ret = nil;
   
