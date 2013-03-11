@@ -181,7 +181,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     if (elapsed < 5.0) return;
   }
 
-  if (_status != kAddressBookReloading) {
+  if (_status != kAddressBookLoading) {
     [self setDateAddressBookLoaded: [NSDate date]];
     [self loadAddressBook];
   }
@@ -199,7 +199,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     case kAddressBookOnline:
       // _addressBookRef needs a revert to recognize external changes
       ABAddressBookRevert(_addressBookRef);
-      [self setStatus: kAddressBookReloading];
+      [self setStatus: kAddressBookLoading];
       break;
   }
 
@@ -220,7 +220,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     [self loadSourcesWithABAddressBookRef: addressBook];
 
     [self loadGroupsWithABAddressBookRef: addressBook];
-
+    
     [self loadContactsWithABAddressBookRef: addressBook];
 
     CFRelease(addressBook);
@@ -235,7 +235,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       dispatch_async(dispatch_get_main_queue(), ^{
         [[NSNotificationCenter defaultCenter] postNotificationName: AddressBookDidInitializeNotification object: nil];
       });
-    } else if (self.status == kAddressBookReloading) {
+    } else if (self.status == kAddressBookLoading) {
       [self setStatus: kAddressBookOnline];
     }
     dispatch_async(dispatch_get_main_queue(), ^{

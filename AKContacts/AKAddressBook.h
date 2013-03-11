@@ -44,8 +44,8 @@ FOUNDATION_EXPORT const BOOL ShowGroups;
 typedef enum {
   kAddressBookOffline = 0,
   kAddressBookInitializing,
-  kAddressBookOnline,
-  kAddressBookReloading,
+  kAddressBookLoading,
+  kAddressBookOnline
 } AddressBookStatus;
 
 typedef enum {
