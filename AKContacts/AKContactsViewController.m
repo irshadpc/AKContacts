@@ -30,6 +30,7 @@
 #import "AKContact.h"
 #import "AKContactViewController.h"
 #import "AKAddressBook.h"
+#import "AKSource.h"
 #import "AppDelegate.h"
 
 static const float defaultCellHeight = 44.f;
@@ -41,6 +42,10 @@ static const int manyContacts = 20;
 @property (nonatomic, strong) UITableView *tableView;
 @property (nonatomic, strong) UISearchBar *searchBar;
 @property (nonatomic, strong) NSString *searchTerm;
+
+-(void)addButtonTouchUp: (id)sender;
+-(void)reloadTableViewData;
+-(void)toggleBackButton;
 
 @end
 
@@ -91,26 +96,26 @@ static const int manyContacts = 20;
                                                                              target: self
                                                                              action: @selector(addButtonTouchUp:)];
   [self.navigationItem setRightBarButtonItem: addButton];
-
-  [[NSNotificationCenter defaultCenter] addObserver: self
-                                           selector: @selector(reloadTableViewData)
-                                               name: AddressBookDidLoadNotification
-                                             object: nil];
-  [[NSNotificationCenter defaultCenter] addObserver: self
-                                           selector: @selector(reloadTableViewData)
-                                               name: AddressBookSearchDidFinishNotification
-                                             object: nil];
-  
 }
 
 -(void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
 
+  [self.appDelegate.akAddressBook addObserver: self forKeyPath: @"status" options: NSKeyValueObservingOptionNew context: nil];
+  
+  [[NSNotificationCenter defaultCenter] addObserver: self
+                                           selector: @selector(reloadTableViewData)
+                                               name: AddressBookSearchDidFinishNotification
+                                             object: nil];
+
+  [self toggleBackButton];
+  
   if ([self.searchTerm length] > 0) {
+
     [self.searchBar becomeFirstResponder];
-  }
-  else
-  {
+
+  } else {
+
     [self.tableView setTableHeaderView: ([_appDelegate.akAddressBook displayedContactsCount] > manyContacts) ? self.searchBar : nil];
 
     if (self.tableView.tableHeaderView && self.tableView.contentOffset.y <= self.searchBar.frame.size.height)
@@ -124,6 +129,9 @@ static const int manyContacts = 20;
 
 -(void)viewWillDisappear:(BOOL)animated {
   [super viewWillDisappear:animated];
+
+  [self.appDelegate.akAddressBook removeObserver: self forKeyPath: @"status"];
+  [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 
 -(void)viewDidDisappear:(BOOL)animated {
@@ -140,8 +148,39 @@ static const int manyContacts = 20;
   [self.navigationController presentViewController: navigationController animated: YES completion: ^{}];
 }
 
--(void)reloadTableViewData {
+-(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+  // This is not dispatched on main queue
 
+  if (object == self.appDelegate.akAddressBook && // Comparing the address
+      [keyPath isEqualToString: @"status"]) {
+    // Status property of AKAddressBook changed
+    [self reloadTableViewData];
+    [self toggleBackButton];
+  }
+}
+
+-(void)toggleBackButton {
+
+  dispatch_block_t block = ^{
+    NSInteger sourceCount = [[self.appDelegate.akAddressBook sources] count];
+    NSInteger groupCount = 0;
+    if (sourceCount == 1) {
+      AKSource *source = [self.appDelegate.akAddressBook.sources objectAtIndex: 0];
+      groupCount = [source.groups count];
+    }
+    
+    if (sourceCount > 1 || groupCount > 1)
+      [self.navigationItem setHidesBackButton: NO];
+    else
+      [self.navigationItem setHidesBackButton: YES];
+  };
+  
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_async(dispatch_get_main_queue(), block);
+}
+
+-(void)reloadTableViewData {
+  
   dispatch_block_t block = ^{
     if ([self.searchBar isFirstResponder] == NO) {
       [self.tableView setTableHeaderView: ([_appDelegate.akAddressBook displayedContactsCount] > manyContacts) ? self.searchBar : nil];
@@ -160,7 +199,7 @@ static const int manyContacts = 20;
 
 -(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
   
-  if (self.appDelegate.akAddressBook.status >= kAddressBookOnline)
+  if (self.appDelegate.akAddressBook.status == kAddressBookOnline)
     return ([self.appDelegate.akAddressBook displayedContactsCount] > 0) ? [self.appDelegate.akAddressBook.keys count] : 1;
   else
     return 1;
@@ -170,7 +209,7 @@ static const int manyContacts = 20;
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
   NSInteger ret = 8;
 
-  if (self.appDelegate.akAddressBook.status >= kAddressBookOnline) {
+  if (self.appDelegate.akAddressBook.status == kAddressBookOnline) {
     if ([self.appDelegate.akAddressBook displayedContactsCount] > 0) {
       if ([self.appDelegate.akAddressBook.keys count] > section) {
         NSString *key = [self.appDelegate.akAddressBook.keys objectAtIndex: section];
@@ -199,7 +238,7 @@ static const int manyContacts = 20;
   NSInteger section = [indexPath section];
   NSInteger row = [indexPath row];
 
-  if (self.appDelegate.akAddressBook.status >= kAddressBookOnline) {
+  if (self.appDelegate.akAddressBook.status == kAddressBookOnline) {
     if ([self.appDelegate.akAddressBook displayedContactsCount] == 0) {
       [cell setAccessoryView: nil];
 
@@ -243,7 +282,8 @@ static const int manyContacts = 20;
     if (row == 3) {
       [cell.textLabel setTextColor: [UIColor grayColor]];
       [cell.textLabel setTextAlignment: NSTextAlignmentCenter];
-      if (self.appDelegate.akAddressBook.status == kAddressBookInitializing) {
+      if (self.appDelegate.akAddressBook.status == kAddressBookInitializing ||
+          self.appDelegate.akAddressBook.status == kAddressBookLoading) {
         [cell.textLabel setText: NSLocalizedString(@"Loading address book...", @"")];
         UIActivityIndicatorView *activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle: UIActivityIndicatorViewStyleGray];
         [cell setAccessoryView: activity];
@@ -274,7 +314,8 @@ static const int manyContacts = 20;
 -(NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView {
 
   BOOL index = YES;
-  if ([self.searchBar isFirstResponder] ||
+  if ([self.appDelegate.akAddressBook status] != kAddressBookOnline ||
+      [self.searchBar isFirstResponder] ||
       [self.searchBar.text length] > 0 ||
       [self.appDelegate.akAddressBook displayedContactsCount] < manyContacts)
     index = NO;
@@ -425,7 +466,6 @@ static const int manyContacts = 20;
 }
 
 -(void)dealloc {
-  [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 
 @end
