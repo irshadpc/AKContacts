@@ -29,29 +29,39 @@
 
 #import "AKGroup.h"
 #import "AKAddressBook.h"
+#import "AppDelegate.h"
 
 @implementation AKGroup
 
 @synthesize memberIDs = _memberIDs;
 
--(id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef {
+-(id)initWithABRecordID: (ABRecordID) recordID {
   self = [super init];
   if (self) {
     super.recordID = recordID;
-    
-    if (recordID >= 0) { // Custom groups don't use the AddressBook database
-      dispatch_block_t block = ^{
-        super.recordRef =  ABAddressBookGetGroupWithRecordID(addressBookRef, recordID);
-        NSAssert(super.recordRef, @"Failed to get group recordRef");
-      };
-      
-      if (dispatch_get_specific(IsOnMainQueueKey)) block();
-      else dispatch_sync(dispatch_get_main_queue(), block);
-    }
 
     _memberIDs = [[NSMutableArray alloc] init];
   }
   return  self;
+}
+
+-(ABRecordRef)recordRef {
+
+  __block ABRecordRef ret;
+
+  dispatch_block_t block = ^{
+    if (super.recordRef == nil && super.recordID >= 0) {
+      AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+      ABAddressBookRef addressBookRef = [appDelegate.akAddressBook addressBookRef];
+      super.recordRef = ABAddressBookGetGroupWithRecordID(addressBookRef, super.recordID);
+    }
+    ret = super.recordRef;
+  };
+
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
+
+  return ret;
 }
 
 -(NSInteger)count {

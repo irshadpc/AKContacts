@@ -32,7 +32,7 @@
 
 @property (nonatomic, strong) NSMutableArray *memberIDs;
 
--(id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef;
+-(id)initWithABRecordID: (ABRecordID) recordID;
 /**
  * Return the member count of the group
  **/
