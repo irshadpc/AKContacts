@@ -77,7 +77,9 @@ NSString *const kLabel = @"Label";
 
 -(ABRecordType)recordType {
   __block ABRecordType ret;
-  
+
+  if (self.recordRef == nil && self.recordID < 0) return 0; // Lazy init of recordRef
+
   dispatch_block_t block = ^{
 		  ret = ABRecordGetRecordType(_recordRef);
 	};
@@ -90,8 +92,8 @@ NSString *const kLabel = @"Label";
 
 -(id)valueForProperty: (ABPropertyID)property {
 
-  if (self.recordRef == nil) return nil;
-  
+  if (self.recordRef == nil && self.recordID < 0) return nil; // Lazy init of recordRef
+
   __block id ret;
 
   dispatch_block_t block = ^{
@@ -106,7 +108,7 @@ NSString *const kLabel = @"Label";
 
 -(NSInteger)countForProperty: (ABPropertyID) property {
   
-  if (self.recordRef == nil) return 0;
+  if (self.recordRef == nil && self.recordID < 0) return 0; // Lazy init of recordRef
   
   __block NSInteger ret = 0;
   
@@ -126,7 +128,7 @@ NSString *const kLabel = @"Label";
 
 -(NSArray *)identifiersForProperty: (ABPropertyID) property {
 
-  if (self.recordRef == nil) return nil;
+  if (self.recordRef == nil && self.recordID < 0) return nil; // Lazy init of recordRef
   
   __block NSArray *ret = nil;
   
@@ -152,7 +154,7 @@ NSString *const kLabel = @"Label";
 
 -(id)valueForMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier {
   
-  if (self.recordRef == nil) return nil;
+  if (self.recordRef == nil && self.recordID < 0) return nil; // Lazy init of recordRef
   
   __block id ret = nil;
   
@@ -184,7 +186,7 @@ NSString *const kLabel = @"Label";
 
 -(NSString *)labelForMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier {
   
-  if (self.recordRef == nil) return nil;
+  if (self.recordRef == nil && self.recordID < 0) return nil; // Lazy init of recordRef
   
   __block NSString *ret = nil;
   
