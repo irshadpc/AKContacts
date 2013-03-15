@@ -255,7 +255,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   NSArray *sources = (NSArray *)CFBridgingRelease(ABAddressBookCopyArrayOfAllSources(addressBook));
 
   if ([sources count] > 1) {
-    AKSource *aggregatorSource = [[AKSource alloc] initWithABRecordID: kSourceAggregate andAddressBookRef: _addressBookRef];
+    AKSource *aggregatorSource = [[AKSource alloc] initWithABRecordID: kSourceAggregate];
     [_sources addObject: aggregatorSource];
   }
 
@@ -271,7 +271,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     ABSourceType type =  [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABSourceTypeProperty)) integerValue];
     if (type == kABSourceTypeExchangeGAL) continue; // No support for Exchange Global Address List, yet
     
-    AKSource *source = [[AKSource alloc] initWithABRecordID: recordID andAddressBookRef: _addressBookRef];
+    AKSource *source = [[AKSource alloc] initWithABRecordID: recordID];
     [source setIsDefault: (defaultSourceID == recordID) ? YES : NO];
 
     [_sources addObject: source];
@@ -289,7 +289,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   
   for (AKSource *source in _sources) {
 
-    AKGroup *aggregateGroup = [[AKGroup alloc] initWithABRecordID: kGroupAggregate andAddressBookRef: nil];
+    AKGroup *aggregateGroup = [[AKGroup alloc] initWithABRecordID: kGroupAggregate];
     [source.groups addObject: aggregateGroup];
 
     if (source.recordID < 0) {
@@ -307,7 +307,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABGroupNameProperty));
       NSLog(@"% 3d : %@", recordID, name);
 
-      AKGroup *group = [[AKGroup alloc] initWithABRecordID: recordID andAddressBookRef: _addressBookRef];
+      AKGroup *group = [[AKGroup alloc] initWithABRecordID: recordID];
       [source.groups addObject: group];
 
       NSArray *members = (NSArray *) CFBridgingRelease(ABGroupCopyArrayOfAllMembers(recordRef));
@@ -363,7 +363,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
       ABRecordID recordID = ABRecordGetRecordID(recordRef);
       NSNumber *contactID = [NSNumber numberWithInteger: recordID];
-      AKContact *contact = [[AKContact alloc] initWithABRecordID: recordID andAddressBookRef: _addressBookRef];
+      AKContact *contact = [[AKContact alloc] initWithABRecordID: recordID];
 
       /*
        NSArray *linkedContactIDs = [contact linkedContactIDs];
