@@ -37,20 +37,31 @@
 
 @implementation AKContact
 
--(id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef {
+-(id)initWithABRecordID: (ABRecordID) recordID {
   self = [super init];
   if (self) {
     super.recordID = recordID;
-
-    dispatch_block_t block = ^{
-      super.recordRef = ABAddressBookGetPersonWithRecordID(addressBookRef, recordID);
-      NSAssert(super.recordRef, @"Failed to get person recordRef");
-    };
-
-    if (dispatch_get_specific(IsOnMainQueueKey)) block();
-    else dispatch_sync(dispatch_get_main_queue(), block);
   }
   return  self;
+}
+
+-(ABRecordRef)recordRef {
+
+  __block ABRecordRef ret;
+
+  dispatch_block_t block = ^{
+    if (super.recordRef == nil) {
+      AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+      ABAddressBookRef addressBookRef = [appDelegate.akAddressBook addressBookRef];
+      super.recordRef = ABAddressBookGetPersonWithRecordID(addressBookRef, super.recordID);
+    }
+    ret = super.recordRef;
+  };
+
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
+
+  return ret;
 }
 
 -(NSString *)name {
@@ -58,7 +69,7 @@
   __block NSString *ret;
 
   dispatch_block_t block = ^{
-		ret = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(super.recordRef)); // kABStringPropertyType
+		ret = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName([self recordRef])); // kABStringPropertyType
 	};
 
   if (dispatch_get_specific(IsOnMainQueueKey)) block();
@@ -184,7 +195,7 @@
 
   dispatch_block_t block = ^{
 
-		NSArray *array = (NSArray *)CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople(super.recordRef));
+		NSArray *array = (NSArray *)CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople([self recordRef]));
 
     for (id obj in array) {
       ABRecordRef record = (__bridge ABRecordRef)obj;
@@ -221,8 +232,8 @@
   __block NSData *ret = nil;
   
   dispatch_block_t block = ^{
-    if (ABPersonHasImageData(super.recordRef)) {
-      ret = (NSData *)CFBridgingRelease(ABPersonCopyImageDataWithFormat(super.recordRef, kABPersonImageFormatThumbnail));
+    if (ABPersonHasImageData([self recordRef])) {
+      ret = (NSData *)CFBridgingRelease(ABPersonCopyImageDataWithFormat([self recordRef], kABPersonImageFormatThumbnail));
     }
   };
   if (dispatch_get_specific(IsOnMainQueueKey)) block();

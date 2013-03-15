@@ -31,10 +31,10 @@
 
 #import "AKRecord.h"
 
-@interface AKContact : AKRecord {
+@interface AKContact : AKRecord
 
-}
-
+-(id)initWithABRecordID: (ABRecordID) recordID;
+-(ABRecordRef)recordRef;
 /**
  * Return full name using system default naming convention
  * eg: first, last or last, first
