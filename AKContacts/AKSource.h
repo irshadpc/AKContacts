@@ -38,7 +38,7 @@
 @property (nonatomic, strong) NSMutableArray *groups;
 @property (nonatomic, assign) BOOL isDefault;
 
--(id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef;
+-(id)initWithABRecordID: (ABRecordID) recordID;
 -(NSString *)typeName;
 -(AKGroup *)groupForGroupId: (NSInteger)recordId;
 

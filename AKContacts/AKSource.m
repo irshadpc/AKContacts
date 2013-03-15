@@ -30,13 +30,20 @@
 #import "AKSource.h"
 #import "AKAddressBook.h"
 #import "AKGroup.h"
+#import "AppDelegate.h"
+
+@interface AKAddressBook ()
+
+-(ABRecordRef)recordRef;
+
+@end
 
 @implementation AKSource
 
 @synthesize groups = _groups;
 @synthesize isDefault = _isDefault;
 
--(id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef {
+-(id)initWithABRecordID: (ABRecordID) recordID {
   self = [super init];
   if (self) {
     super.recordID = recordID;
@@ -44,18 +51,27 @@
     _isDefault = NO;
     
     _groups = [[NSMutableArray alloc] init];
-
-    if (recordID >= 0) { // Custom sources don't use the AddressBook database
-      dispatch_block_t block = ^{
-        super.recordRef =  ABAddressBookGetSourceWithRecordID(addressBookRef, recordID);
-        NSAssert(super.recordRef, @"Failed to get source recordRef");
-      };
-
-      if (dispatch_get_specific(IsOnMainQueueKey)) block();
-      else dispatch_sync(dispatch_get_main_queue(), block);
-    }
   }
   return  self;
+}
+
+-(ABRecordRef)recordRef {
+
+  __block ABRecordRef ret;
+
+  dispatch_block_t block = ^{
+    if (super.recordRef == nil && super.recordID >= 0) {
+      AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+      ABAddressBookRef addressBookRef = [appDelegate.akAddressBook addressBookRef];
+      super.recordRef = ABAddressBookGetSourceWithRecordID(addressBookRef, super.recordID);
+    }
+    ret = super.recordRef;
+	};
+
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
+
+  return ret;
 }
 
 -(NSString *)typeName {
