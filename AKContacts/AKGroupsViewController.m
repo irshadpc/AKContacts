@@ -31,13 +31,11 @@
 #import "AKGroup.h"
 #import "AKSource.h"
 #import "AKAddressBook.h"
-#import "AppDelegate.h"
 
 static const float defaultCellHeight = 44.f;
 
 @interface AKGroupsViewController ()
 
-@property (nonatomic, unsafe_unretained) AppDelegate *appDelegate;
 @property (nonatomic, strong) UITableView *tableView;
 
 -(void)addButtonTouchUp: (id)seneder;
@@ -47,8 +45,6 @@ static const float defaultCellHeight = 44.f;
 @end
 
 @implementation AKGroupsViewController
-
-@synthesize appDelegate = _appDelegate;
 
 @synthesize tableView = _tableView;
 
@@ -77,21 +73,18 @@ static const float defaultCellHeight = 44.f;
   // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
   // self.navigationItem.rightBarButtonItem = self.editButtonItem;
   
-  [self setAppDelegate: (AppDelegate *)[[UIApplication sharedApplication] delegate]];
-  
   UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd
                                                                              target: self
                                                                              action: @selector(addButtonTouchUp:)];
   [self.navigationItem setRightBarButtonItem: addButton];
   
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AddressBookDidLoadNotification object: nil];
-  
 }
 
 -(void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
 
-  [self.appDelegate.akAddressBook addObserver: self forKeyPath: @"status" options: NSKeyValueObservingOptionNew context: nil];
+  [[AKAddressBook sharedInstance] addObserver: self forKeyPath: @"status" options: NSKeyValueObservingOptionNew context: nil];
 }
 
 -(void)viewDidAppear:(BOOL)animated {
@@ -101,7 +94,7 @@ static const float defaultCellHeight = 44.f;
 -(void)viewWillDisappear:(BOOL)animated {
   [super viewWillDisappear:animated];
 
-  [self.appDelegate.akAddressBook removeObserver: self forKeyPath: @"status"];
+  [[AKAddressBook sharedInstance] removeObserver: self forKeyPath: @"status"];
 }
 
 -(void)viewDidDisappear:(BOOL)animated {
@@ -135,7 +128,7 @@ static const float defaultCellHeight = 44.f;
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
   // This is not dispatched on main queue
   
-  if (object == self.appDelegate.akAddressBook && // Comparing the address
+  if (object == [AKAddressBook sharedInstance] && // Comparing the address
       [keyPath isEqualToString: @"status"]) {
     // Status property of AKAddressBook changed
     AKContactsViewController *contactsView = [[AKContactsViewController alloc] init];
@@ -167,8 +160,10 @@ static const float defaultCellHeight = 44.f;
   
   NSInteger ret = 0;
   
-  if (_appDelegate.akAddressBook.status >= kAddressBookOnline) {
-    ret = [[_appDelegate.akAddressBook sources] count];
+  AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+  
+  if (akAddressBook.status >= kAddressBookOnline) {
+    ret = [[akAddressBook sources] count];
   }
   
   return ret;
@@ -176,7 +171,7 @@ static const float defaultCellHeight = 44.f;
 
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
 
-  AKSource *source = [[_appDelegate.akAddressBook sources] objectAtIndex: section];
+  AKSource *source = [[[AKAddressBook sharedInstance] sources] objectAtIndex: section];
   return [[source groups] count];
 }
 
@@ -194,8 +189,10 @@ static const float defaultCellHeight = 44.f;
   [cell.textLabel setTextColor: [UIColor blackColor]];
   [cell setSelectionStyle: UITableViewCellSelectionStyleNone];
 
-  NSInteger sourceCount = [_appDelegate.akAddressBook.sources count];
-  AKSource *source = [_appDelegate.akAddressBook.sources objectAtIndex: indexPath.section];
+  AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+  
+  NSInteger sourceCount = [akAddressBook.sources count];
+  AKSource *source = [akAddressBook.sources objectAtIndex: indexPath.section];
   AKGroup *group = [source.groups objectAtIndex: indexPath.row];
 
   NSString *groupName = [group valueForProperty:kABGroupNameProperty];
@@ -217,15 +214,17 @@ static const float defaultCellHeight = 44.f;
 }
 
 -(NSString *)tableView:(UITableView *)tableView titleForHeaderInSection: (NSInteger)section {
-  
-  NSInteger sourceCount = [_appDelegate.akAddressBook.sources count];
-  AKSource *source = [[_appDelegate.akAddressBook sources] objectAtIndex: section];
+
+  AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+
+  NSInteger sourceCount = [akAddressBook.sources count];
+  AKSource *source = [[akAddressBook sources] objectAtIndex: section];
   return (sourceCount > 1) ? [source typeName] : nil;
 }
 
 - (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath {
   
-  AKSource *source = [[_appDelegate.akAddressBook sources] objectAtIndex: indexPath.section];
+  AKSource *source = [[[AKAddressBook sharedInstance] sources] objectAtIndex: indexPath.section];
   AKGroup *group = [source.groups objectAtIndex: indexPath.row];
   
   if (group.recordID == kGroupAggregate)
@@ -264,7 +263,7 @@ static const float defaultCellHeight = 44.f;
 // Override to support conditional rearranging of the table view.
 -(BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
 
-  AKSource *source = [[_appDelegate.akAddressBook sources] objectAtIndex: indexPath.section];
+  AKSource *source = [[[AKAddressBook sharedInstance] sources] objectAtIndex: indexPath.section];
   AKGroup *group = [source.groups objectAtIndex: indexPath.row];
 
   if (group.recordID == kGroupAggregate)
@@ -283,7 +282,7 @@ static const float defaultCellHeight = 44.f;
       row = [tableView numberOfRowsInSection: sourceIndexPath.section] - 1;
     }
   } else {
-    // AKSource *source = [[_appDelegate.akAddressBook sources] objectAtIndex: sourceIndexPath.section];
+    // AKSource *source = [[[AKAddressBook sharedInstance] sources] objectAtIndex: sourceIndexPath.section];
     // NSInteger groupCount = [[source groups] count];
     if (proposedDestinationIndexPath.row == 0)
       row = 1;
@@ -299,12 +298,14 @@ static const float defaultCellHeight = 44.f;
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 
-  AKSource *source = [_appDelegate.akAddressBook.sources objectAtIndex: indexPath.section];
+  AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+  
+  AKSource *source = [akAddressBook.sources objectAtIndex: indexPath.section];
   AKGroup *group = [source.groups objectAtIndex: indexPath.row];
 
-  [_appDelegate.akAddressBook setSourceID: [source recordID]];
-  [_appDelegate.akAddressBook setGroupID: [group recordID]];
-  [_appDelegate.akAddressBook resetSearch];
+  [akAddressBook setSourceID: [source recordID]];
+  [akAddressBook setGroupID: [group recordID]];
+  [akAddressBook resetSearch];
 
   AKContactsViewController *contactsView = [[AKContactsViewController alloc] init];
   [self.navigationController pushViewController: contactsView animated: YES];

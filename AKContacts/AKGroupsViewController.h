@@ -31,8 +31,6 @@
 #import <AddressBook/AddressBook.h>
 #import <AddressBookUI/AddressBookUI.h>
 
-@class AppDelegate;
-
 @interface AKGroupsViewController : UIViewController
 <UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate> {
   
