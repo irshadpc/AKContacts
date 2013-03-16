@@ -29,7 +29,6 @@
 
 #import "AKGroup.h"
 #import "AKAddressBook.h"
-#import "AppDelegate.h"
 
 @implementation AKGroup
 
@@ -51,8 +50,7 @@
 
   dispatch_block_t block = ^{
     if (super.recordRef == nil && super.recordID >= 0) {
-      AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-      ABAddressBookRef addressBookRef = [appDelegate.akAddressBook addressBookRef];
+      ABAddressBookRef addressBookRef = [[AKAddressBook sharedInstance] addressBookRef];
       super.recordRef = ABAddressBookGetGroupWithRecordID(addressBookRef, super.recordID);
     }
     ret = super.recordRef;
