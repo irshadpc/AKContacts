@@ -29,6 +29,7 @@
 #import "AKContactHeaderViewCell.h"
 #import "AKContact.h"
 #import "AKContactViewController.h"
+#import "AKAddressBook.h"
 
 #import <QuartzCore/QuartzCore.h> // Image Layer
 
@@ -78,6 +79,8 @@ static const int editModeItem = 8;
   for (UIView *subView in [self.contentView subviews]) {
     [subView removeFromSuperview];
   }
+  
+  AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
 
   if ([self.parent isEditing]) {
 
@@ -89,14 +92,14 @@ static const int editModeItem = 8;
     
     [textField setText: self.detailTextLabel.text];
     [self.contentView addSubview: textField];
-
+    
     if (row == 0) {
 
       [self setAbPropertyID: kABPersonLastNameProperty];
       CFStringRef placeholder = ABPersonCopyLocalizedPropertyName(kABPersonLastNameProperty);
       [textField setPlaceholder: (__bridge NSString *)placeholder];
       CFRelease(placeholder);
-      [textField setText: [self.parent.contact valueForProperty: kABPersonLastNameProperty]];
+      [textField setText: [contact valueForProperty: kABPersonLastNameProperty]];
 
       UIButton *button = [[UIButton alloc] initWithFrame: CGRectMake(-80.f, 0.f, 64.f, 64.f)];
       [self.contentView addSubview: button];
@@ -114,7 +117,7 @@ static const int editModeItem = 8;
     } else if (row == 1) {
       
       [self setAbPropertyID: kABPersonFirstNameProperty];
-      [textField setText: [self.parent.contact valueForProperty: kABPersonFirstNameProperty]];
+      [textField setText: [contact valueForProperty: kABPersonFirstNameProperty]];
       CFStringRef placeholder = ABPersonCopyLocalizedPropertyName(kABPersonFirstNameProperty);
       [textField setPlaceholder: (__bridge NSString *)placeholder];
       CFRelease(placeholder);
@@ -122,7 +125,7 @@ static const int editModeItem = 8;
     } else if (row == 2) {
 
       [self setAbPropertyID: kABPersonOrganizationProperty];
-      [textField setText: [self.parent.contact valueForProperty: kABPersonOrganizationProperty]];
+      [textField setText: [contact valueForProperty: kABPersonOrganizationProperty]];
       CFStringRef placeholder = ABPersonCopyLocalizedPropertyName(kABPersonOrganizationProperty);
       [textField setPlaceholder: (__bridge NSString *)placeholder];
       CFRelease(placeholder);
@@ -130,7 +133,7 @@ static const int editModeItem = 8;
     } else if (row == 3) {
       
       [self setAbPropertyID: kABPersonJobTitleProperty];
-      [textField setText: [self.parent.contact valueForProperty: kABPersonJobTitleProperty]];
+      [textField setText: [contact valueForProperty: kABPersonJobTitleProperty]];
       CFStringRef placeholder = ABPersonCopyLocalizedPropertyName(kABPersonJobTitleProperty);
       [textField setPlaceholder: (__bridge NSString *)placeholder];
       CFRelease(placeholder);
@@ -148,12 +151,12 @@ static const int editModeItem = 8;
     [contactImageView.layer setCornerRadius: 5.f];
     [contactImageView.layer setBorderColor: [[UIColor grayColor] CGColor]];
     [contactImageView.layer setBorderWidth: 1.f];
-    [contactImageView setImage: [self.parent.contact picture]];
+    [contactImageView setImage: [contact picture]];
     
     UILabel *contactNameLabel = [[UILabel alloc] initWithFrame: CGRectMake(80.f, 0.f, 210.f, 23.f)];
     [self.contentView addSubview: contactNameLabel];
     [contactNameLabel setBackgroundColor: [UIColor clearColor]];
-    [contactNameLabel setText: [self.parent.contact name]];
+    [contactNameLabel setText: [contact name]];
     [contactNameLabel setFont: [UIFont boldSystemFontOfSize: 18.f]];
     [contactNameLabel setTextColor: [UIColor blackColor]];
     
@@ -174,7 +177,7 @@ static const int editModeItem = 8;
                                           contactNameLabel.frame.size.height);
     }
     
-    NSString *contactDetails = [self.parent.contact displayDetails];
+    NSString *contactDetails = [contact displayDetails];
     if (contactDetails != nil) {
       UILabel *contactDetailsLabel = [[UILabel alloc] initWithFrame: CGRectMake(80.f, 36.f, 210.f, 21.f)];
       [contactDetailsLabel setText: contactDetails];
