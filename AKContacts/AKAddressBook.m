@@ -115,6 +115,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     _sourceID = kSourceAggregate;
     _groupID = kGroupAggregate;
+    
+    _contacts = [[NSMutableDictionary alloc] init];
 
     /*
      * The ABAddressBook API is not thread safe. ABAddressBook related calls are dispatched on the main queue.
@@ -343,7 +345,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   };
   
   NSMutableDictionary *tempContactIdentifiers = [[NSMutableDictionary alloc] init];
-  NSMutableDictionary *tempContacts = [[NSMutableDictionary alloc] init];
 
   NSString *sectionKeys = @"ABCDEFGHIJKLMNOPQRSTUVWXYZ#";
 
@@ -374,7 +375,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
       ABRecordID recordID = ABRecordGetRecordID(recordRef);
       NSNumber *contactID = [NSNumber numberWithInteger: recordID];
-      AKContact *contact = [[AKContact alloc] initWithABRecordID: recordID];
 
       /*
        NSArray *linkedContactIDs = [contact linkedContactIDs];
@@ -402,8 +402,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
         dictionaryKey = [[[[name substringToIndex: 1] decomposedStringWithCanonicalMapping] substringToIndex: 1] uppercaseString];
       }
 
-      [tempContacts setObject: contact forKey: contactID];
-
       // Put the recordID in the corresponding section of contactIdentifiers
       NSMutableArray *tArray = (NSMutableArray *)[tempContactIdentifiers objectForKey: dictionaryKey];
       if (!tArray) tArray = (NSMutableArray *)[tempContactIdentifiers objectForKey: @"#"];
@@ -415,7 +413,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       [tArray insertObject: contactID atIndex: index];
     }
 
-    [self setContacts: tempContacts];
     [self setAllContactIdentifiers: tempContactIdentifiers];
   }
 }
@@ -437,7 +434,10 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 }
 
 -(NSInteger)contactsCount {
-  return [[self.contacts allKeys] count];
+  
+  NSAssert(dispatch_get_specific(IsOnMainQueueKey) == NULL, @"Must not be dispatched on main queue");
+
+  return ABAddressBookGetPersonCount(self.addressBookRef);
 }
 
 -(NSInteger)displayedContactsCount {
@@ -466,7 +466,14 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 }
 
 -(AKContact *)contactForContactId: (NSInteger)recordId {
-  return [self.contacts objectForKey: [NSNumber numberWithInteger: recordId]];
+
+  NSNumber *contactID = [NSNumber numberWithInteger: recordId];
+  AKContact *ret = [self.contacts objectForKey: contactID];
+  if (ret == nil) {
+    ret = [[AKContact alloc] initWithABRecordID: recordId];
+    [self.contacts setObject: ret forKey: contactID];
+  }
+  return ret;
 }
 
 #pragma mark - Address Book Search
@@ -529,7 +536,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       NSMutableArray *array = [self.contactIdentifiers valueForKey: key];
       NSMutableArray *toRemove = [[NSMutableArray alloc] init];
       for (NSNumber *identifier in array) {
-        NSString *name = [[self.contacts objectForKey: identifier] searchName];
+        NSString *name = [[self contactForContactId: [identifier integerValue]] searchName];
         
         if ([name rangeOfString: searchTerm options: NSCaseInsensitiveSearch].location == NSNotFound)
           [toRemove addObject: identifier];
