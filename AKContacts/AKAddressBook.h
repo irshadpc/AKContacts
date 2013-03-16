@@ -36,7 +36,6 @@ FOUNDATION_EXPORT NSString *const AddressBookSearchDidFinishNotification;
 FOUNDATION_EXPORT const void *const IsOnMainQueueKey;
 FOUNDATION_EXPORT const BOOL ShowGroups;
 
-@class AppDelegate;
 @class AKContact;
 @class AKGroup;
 @class AKSource;
@@ -91,6 +90,7 @@ typedef enum {
 @property (assign, nonatomic) NSInteger sourceID;
 @property (assign, nonatomic) NSInteger groupID;
 
++(AKAddressBook *)sharedInstance;
 -(void)requestAddressBookAccess;
 -(AKSource *)defaultSource;
 -(NSInteger)contactsCount;

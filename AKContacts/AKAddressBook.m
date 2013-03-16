@@ -51,8 +51,6 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 
 @interface AKAddressBook ()
 
-@property (nonatomic, unsafe_unretained) AppDelegate *appDelegate;
-
 @property (nonatomic, assign, readonly) dispatch_queue_t ab_queue;
 
 @property (nonatomic, assign, readonly) dispatch_semaphore_t ab_semaphore;
@@ -73,7 +71,6 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 
 @implementation AKAddressBook
 
-@synthesize appDelegate = _appDelegate;
 @synthesize ab_queue = _ab_queue;
 @synthesize ab_semaphore = _ab_semaphore;
 @synthesize dateAddressBookLoaded = _dateAddressBookLoaded;
@@ -97,10 +94,16 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   }
 }
 
++(AKAddressBook *)sharedInstance {
+  static dispatch_once_t once;
+  static AKAddressBook *akAddressBook;
+  dispatch_once(&once, ^{ akAddressBook = [[self alloc] init]; });
+  return akAddressBook;
+}
+
 -(id)init {
   self = [super init];
   if (self) {
-    _appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
 
     _contactIdentifiers = nil;
 
@@ -185,7 +188,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     [self setDateAddressBookLoaded: [NSDate date]];
     [self loadAddressBook];
   }
-
 }
 
 -(void)loadAddressBook {
@@ -275,7 +277,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     [source setIsDefault: (defaultSourceID == recordID) ? YES : NO];
 
     [_sources addObject: source];
-
   }
 }
 
@@ -416,7 +417,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     [self setContacts: tempContacts];
     [self setAllContactIdentifiers: tempContactIdentifiers];
-    
   }
 }
 
@@ -432,7 +432,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   }
 
   NSAssert(ret != nil, @"No default source present");
-  
+
   return ret;
 }
 
