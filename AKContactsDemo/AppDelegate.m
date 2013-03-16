@@ -16,11 +16,10 @@
 {
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
 
-    self.akAddressBook = [[AKAddressBook alloc] init];
-    [self.akAddressBook requestAddressBookAccess];
+    [[AKAddressBook sharedInstance] requestAddressBookAccess];
 
     UIViewController *rootViewController = (ShowGroups == YES) ? [[AKGroupsViewController alloc] init] : [[AKContactsViewController alloc] init];
-  
+
     self.navigationController = [[UINavigationController alloc] initWithRootViewController: rootViewController];
     self.window.rootViewController = self.navigationController;
   
