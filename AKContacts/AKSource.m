@@ -30,7 +30,6 @@
 #import "AKSource.h"
 #import "AKAddressBook.h"
 #import "AKGroup.h"
-#import "AppDelegate.h"
 
 @interface AKAddressBook ()
 
@@ -61,8 +60,7 @@
 
   dispatch_block_t block = ^{
     if (super.recordRef == nil && super.recordID >= 0) {
-      AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-      ABAddressBookRef addressBookRef = [appDelegate.akAddressBook addressBookRef];
+      ABAddressBookRef addressBookRef = [[AKAddressBook sharedInstance] addressBookRef];
       super.recordRef = ABAddressBookGetSourceWithRecordID(addressBookRef, super.recordID);
     }
     ret = super.recordRef;
