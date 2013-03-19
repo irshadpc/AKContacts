@@ -41,5 +41,6 @@
 -(id)initWithABRecordID: (ABRecordID) recordID;
 -(NSString *)typeName;
 -(AKGroup *)groupForGroupId: (NSInteger)recordId;
+-(BOOL)hasEditableGroups;
 
 @end

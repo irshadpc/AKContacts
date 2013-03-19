@@ -122,4 +122,39 @@
   return ret;
 }
 
+-(BOOL)hasEditableGroups {
+  
+  if (super.recordID < 0) {
+    switch (super.recordID) {
+      case kSourceAggregate:
+        return NO;
+      default:
+        return NO;
+    }
+  }
+
+  NSInteger type = [(NSNumber *)[self valueForProperty: kABSourceTypeProperty] integerValue];
+  type = type & ~kABSourceTypeSearchableMask;
+
+  switch (type) {
+    case kABSourceTypeLocal:
+      return YES;
+
+    case kABSourceTypeExchange:
+      return NO;
+
+    case kABSourceTypeMobileMe:
+      return NO;
+
+    case kABSourceTypeLDAP:
+      return NO;
+
+    case kABSourceTypeCardDAV:
+      return YES;
+
+    default:
+      return NO;
+  }
+}
+
 @end
