@@ -105,15 +105,13 @@ static const float defaultCellHeight = 44.f;
 
   [super setEditing: editing animated: YES]; // Toggles Done button
   [self.tableView setEditing: editing animated:YES];
-  
+
   if (self.editing) {
     UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel target:self action:@selector(cancelButtonTouchUp:)];
     [self.navigationItem setLeftBarButtonItem: barButtonItem];
 
     barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target:self action:@selector(addButtonTouchUp:)];
     [self.navigationItem setRightBarButtonItem: barButtonItem];
-
-    
   } else {
     UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd target:self action:@selector(addButtonTouchUp:)];
     [self.navigationItem setRightBarButtonItem: barButtonItem];
@@ -121,6 +119,22 @@ static const float defaultCellHeight = 44.f;
     [self.navigationItem setLeftBarButtonItem: nil];
   }
 
+  NSInteger section = 0;
+  [self.tableView beginUpdates];
+  for (AKSource *source in [AKAddressBook sharedInstance].sources) {
+    if ([source hasEditableGroups] == YES) {
+      NSIndexPath *indexPath = [NSIndexPath indexPathForRow: [source.groups count] inSection: section];
+      if (self.editing == YES) {
+        [self.tableView insertRowsAtIndexPaths: [NSArray arrayWithObject: indexPath]
+                              withRowAnimation: UITableViewRowAnimationTop];
+      } else {
+        [self.tableView deleteRowsAtIndexPaths: [NSArray arrayWithObject: indexPath]
+                              withRowAnimation: UITableViewRowAnimationTop];
+      }
+    }
+    section += 1;
+  }
+  [self.tableView endUpdates];
 }
 
 #pragma mark - Key-Value Observing
@@ -172,7 +186,9 @@ static const float defaultCellHeight = 44.f;
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
 
   AKSource *source = [[[AKAddressBook sharedInstance] sources] objectAtIndex: section];
-  return [[source groups] count];
+  NSInteger ret = [[source groups] count];
+  if (self.editing && [source hasEditableGroups]) ret += 1;
+  return ret;
 }
 
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -190,25 +206,37 @@ static const float defaultCellHeight = 44.f;
   [cell setSelectionStyle: UITableViewCellSelectionStyleNone];
 
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
-  
+
   NSInteger sourceCount = [akAddressBook.sources count];
   AKSource *source = [akAddressBook.sources objectAtIndex: indexPath.section];
-  AKGroup *group = [source.groups objectAtIndex: indexPath.row];
 
-  NSString *groupName = [group valueForProperty:kABGroupNameProperty];
-  if (group.recordID == kGroupAggregate) {
-    NSMutableArray *groupAggregateName = [[NSMutableArray alloc] initWithObjects: @"All", @"Contacts", nil];
-    if (source.recordID >= 0 && sourceCount > 1) [groupAggregateName insertObject: [source typeName] atIndex: 1];
-    groupName = [groupAggregateName componentsJoinedByString: @" "];
+  NSString *text = nil;
+  NSInteger tag = -1;
+  
+  if (indexPath.row < [source.groups count]) {
+
+    AKGroup *group = [source.groups objectAtIndex: indexPath.row];
+    if (!group) return cell;
+
+    tag = group.recordID;
+    text = [group valueForProperty: kABGroupNameProperty];
+    if (group.recordID == kGroupAggregate) {
+      NSMutableArray *groupAggregateName = [[NSMutableArray alloc] initWithObjects: NSLocalizedString(@"All", @""),
+                                                                                    NSLocalizedString(@"Contacts", @""), nil];
+      if (source.recordID >= 0 && sourceCount > 1) [groupAggregateName insertObject: [source typeName] atIndex: 1];
+      text = [groupAggregateName componentsJoinedByString: @" "];
+    }
+  } else {
+    text = NSLocalizedString(@"Tap to Add New Group", @"");
+    [cell.textLabel setTextColor: [UIColor grayColor]];
   }
 
-  if (!group) return cell;
-  [cell setTag: group.recordID];
+  [cell setTag: tag];
   [cell setSelectionStyle: UITableViewCellSelectionStyleBlue];
 
   [cell setAccessoryType: UITableViewCellAccessoryDisclosureIndicator];
   [cell.textLabel setFont: [UIFont boldSystemFontOfSize: 20.f]];
-  [cell.textLabel setText: groupName];
+  [cell.textLabel setText: text];
 
   return cell;
 }
@@ -223,13 +251,16 @@ static const float defaultCellHeight = 44.f;
 }
 
 - (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath {
-  
+
   AKSource *source = [[[AKAddressBook sharedInstance] sources] objectAtIndex: indexPath.section];
+
+  if (indexPath.row == [source.groups count])
+    return UITableViewCellEditingStyleInsert;
+
   AKGroup *group = [source.groups objectAtIndex: indexPath.row];
-  
   if (group.recordID == kGroupAggregate)
     return UITableViewCellEditingStyleNone;
-  
+
   return UITableViewCellEditingStyleDelete;    
 }
 
@@ -264,8 +295,11 @@ static const float defaultCellHeight = 44.f;
 -(BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
 
   AKSource *source = [[[AKAddressBook sharedInstance] sources] objectAtIndex: indexPath.section];
-  AKGroup *group = [source.groups objectAtIndex: indexPath.row];
 
+  if (indexPath.row == [source.groups count])
+    return NO;
+
+  AKGroup *group = [source.groups objectAtIndex: indexPath.row];
   if (group.recordID == kGroupAggregate)
     return NO;
 
@@ -275,19 +309,20 @@ static const float defaultCellHeight = 44.f;
 #pragma mark - Table view delegate
 
 - (NSIndexPath *)tableView:(UITableView *)tableView targetIndexPathForMoveFromRowAtIndexPath:(NSIndexPath *)sourceIndexPath toProposedIndexPath:(NSIndexPath *)proposedDestinationIndexPath {
-  
+
   NSInteger row = 1;
   if (sourceIndexPath.section != proposedDestinationIndexPath.section) {
     if (sourceIndexPath.section < proposedDestinationIndexPath.section) {
-      row = [tableView numberOfRowsInSection: sourceIndexPath.section] - 1;
+      row = [tableView numberOfRowsInSection: sourceIndexPath.section] - 2;
     }
   } else {
-    // AKSource *source = [[[AKAddressBook sharedInstance] sources] objectAtIndex: sourceIndexPath.section];
-    // NSInteger groupCount = [[source groups] count];
-    if (proposedDestinationIndexPath.row == 0)
+    if (proposedDestinationIndexPath.row == 0) {
       row = 1;
-    else
+    } else if (proposedDestinationIndexPath.row == [tableView numberOfRowsInSection: sourceIndexPath.section] - 1) {
+      row = [tableView numberOfRowsInSection: sourceIndexPath.section] - 2;
+    } else {
       row = proposedDestinationIndexPath.row;
+    }
   }
   return [NSIndexPath indexPathForRow:row inSection: sourceIndexPath.section];
 }
