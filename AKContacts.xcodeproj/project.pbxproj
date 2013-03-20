@@ -12,6 +12,7 @@
 		C620081016B997A900C16121 /* AKContactHeaderViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C620080916B997A900C16121 /* AKContactHeaderViewCell.m */; };
 		C620081116B997A900C16121 /* AKContactSwitchViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C620080B16B997A900C16121 /* AKContactSwitchViewCell.m */; };
 		C620081216B997A900C16121 /* AKContactViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C620080D16B997A900C16121 /* AKContactViewController.m */; };
+		C620EA7D16F932640035CA1F /* AKGroupsViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C620EA7C16F932640035CA1F /* AKGroupsViewCell.m */; };
 		C669518C16B6FD7100D030A2 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C669518B16B6FD7100D030A2 /* UIKit.framework */; };
 		C669518E16B6FD7100D030A2 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C669518D16B6FD7100D030A2 /* Foundation.framework */; };
 		C669519016B6FD7100D030A2 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C669518F16B6FD7100D030A2 /* CoreGraphics.framework */; };
@@ -57,6 +58,8 @@
 		C620080B16B997A900C16121 /* AKContactSwitchViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactSwitchViewCell.m; sourceTree = "<group>"; };
 		C620080C16B997A900C16121 /* AKContactViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactViewController.h; sourceTree = "<group>"; };
 		C620080D16B997A900C16121 /* AKContactViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactViewController.m; sourceTree = "<group>"; };
+		C620EA7B16F932630035CA1F /* AKGroupsViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKGroupsViewCell.h; sourceTree = "<group>"; };
+		C620EA7C16F932640035CA1F /* AKGroupsViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKGroupsViewCell.m; sourceTree = "<group>"; };
 		C669518816B6FD7100D030A2 /* AKContacts.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AKContacts.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C669518B16B6FD7100D030A2 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		C669518D16B6FD7100D030A2 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -175,6 +178,8 @@
 				C66951D816B702F800D030A2 /* AKContactsViewController.m */,
 				C6C2066116E18A800033C58A /* AKGroupsViewController.h */,
 				C6C2066216E18A810033C58A /* AKGroupsViewController.m */,
+				C620EA7B16F932630035CA1F /* AKGroupsViewCell.h */,
+				C620EA7C16F932640035CA1F /* AKGroupsViewCell.m */,
 				C66951E016B7049C00D030A2 /* AKRecord.h */,
 				C66951E116B7049C00D030A2 /* AKRecord.m */,
 				C6C2066416E39D750033C58A /* AKSource.h */,
@@ -355,6 +360,7 @@
 				C6C2066316E18A810033C58A /* AKGroupsViewController.m in Sources */,
 				C6C2066616E39D790033C58A /* AKSource.m in Sources */,
 				C6C2066916E436BE0033C58A /* AKAddressBook.m in Sources */,
+				C620EA7D16F932640035CA1F /* AKGroupsViewCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
