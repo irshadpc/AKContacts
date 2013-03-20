@@ -27,6 +27,7 @@
 //
 
 #import "AKGroupsViewController.h"
+#import "AKGroupsViewCell.h"
 #import "AKContactsViewController.h"
 #import "AKGroup.h"
 #import "AKSource.h"
@@ -54,7 +55,7 @@ static const float defaultCellHeight = 44.f;
 
   CGFloat navBarHeight = ([self.navigationController isNavigationBarHidden]) ? 0.f :
   self.navigationController.navigationBar.frame.size.height;
-  
+
   [self setTableView: [[UITableView alloc] initWithFrame: CGRectMake(0.f, 0.f, 320.f, 460.f - navBarHeight)
                                                    style: UITableViewStyleGrouped]];
   [self.tableView setDataSource: self];
@@ -104,7 +105,7 @@ static const float defaultCellHeight = 44.f;
 - (void)setEditing:(BOOL)editing animated:(BOOL)animate {
 
   [super setEditing: editing animated: YES]; // Toggles Done button
-  [self.tableView setEditing: editing animated:YES];
+  [self.tableView setEditing: editing animated: YES];
 
   if (self.editing) {
     UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel target:self action:@selector(cancelButtonTouchUp:)];
@@ -194,51 +195,16 @@ static const float defaultCellHeight = 44.f;
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
   static NSString *CellIdentifier = @"Cell";
 
-  UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+  AKGroupsViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
   if (cell == nil) {
-    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
+    cell = [[AKGroupsViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
   }
 
-  [cell.textLabel setText: nil];
-  [cell setTag: NSNotFound];
-  [cell.textLabel setTextAlignment: NSTextAlignmentLeft];
-  [cell.textLabel setTextColor: [UIColor blackColor]];
-  [cell setSelectionStyle: UITableViewCellSelectionStyleNone];
+  [cell setParent: self];
 
-  AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+  [cell configureCellAtIndexPath: indexPath];
 
-  NSInteger sourceCount = [akAddressBook.sources count];
-  AKSource *source = [akAddressBook.sources objectAtIndex: indexPath.section];
-
-  NSString *text = nil;
-  NSInteger tag = -1;
-  
-  if (indexPath.row < [source.groups count]) {
-
-    AKGroup *group = [source.groups objectAtIndex: indexPath.row];
-    if (!group) return cell;
-
-    tag = group.recordID;
-    text = [group valueForProperty: kABGroupNameProperty];
-    if (group.recordID == kGroupAggregate) {
-      NSMutableArray *groupAggregateName = [[NSMutableArray alloc] initWithObjects: NSLocalizedString(@"All", @""),
-                                                                                    NSLocalizedString(@"Contacts", @""), nil];
-      if (source.recordID >= 0 && sourceCount > 1) [groupAggregateName insertObject: [source typeName] atIndex: 1];
-      text = [groupAggregateName componentsJoinedByString: @" "];
-    }
-  } else {
-    text = NSLocalizedString(@"Tap to Add New Group", @"");
-    [cell.textLabel setTextColor: [UIColor grayColor]];
-  }
-
-  [cell setTag: tag];
-  [cell setSelectionStyle: UITableViewCellSelectionStyleBlue];
-
-  [cell setAccessoryType: UITableViewCellAccessoryDisclosureIndicator];
-  [cell.textLabel setFont: [UIFont boldSystemFontOfSize: 20.f]];
-  [cell.textLabel setText: text];
-
-  return cell;
+  return (UITableViewCell *)cell;
 }
 
 -(NSString *)tableView:(UITableView *)tableView titleForHeaderInSection: (NSInteger)section {

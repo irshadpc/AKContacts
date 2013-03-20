@@ -32,8 +32,6 @@
 #import <AddressBookUI/AddressBookUI.h>
 
 @interface AKGroupsViewController : UIViewController
-<UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate> {
-  
-}
+<UITableViewDataSource, UITableViewDelegate>
 
 @end
