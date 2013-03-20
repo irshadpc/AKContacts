@@ -242,7 +242,7 @@ static const int manyContacts = 20;
     if ([akAddressBook displayedContactsCount] == 0) {
       [cell setAccessoryView: nil];
 
-      [cell.textLabel setFont:[UIFont boldSystemFontOfSize: 17.f]];
+      [cell.textLabel setFont:[UIFont boldSystemFontOfSize: 20.f]];
       [cell.textLabel setTextAlignment: NSTextAlignmentCenter];
       [cell.textLabel setTextColor: [UIColor lightGrayColor]];
       if ([self.searchBar isFirstResponder]) {
@@ -269,10 +269,10 @@ static const int manyContacts = 20;
       
       [cell setAccessoryView: nil];
       if (![contact name]) {
-        cell.textLabel.font = [UIFont italicSystemFontOfSize: 20];
+        cell.textLabel.font = [UIFont italicSystemFontOfSize: 20.f];
         cell.textLabel.text = NSLocalizedString(@"No Name", @"");
       } else {
-        cell.textLabel.font = [UIFont boldSystemFontOfSize: 20];
+        cell.textLabel.font = [UIFont boldSystemFontOfSize: 20.f];
         cell.textLabel.text = [contact name];
       }
     }
