@@ -40,6 +40,8 @@ NSString *const AddressBookSearchDidFinishNotification = @"AddressBookSearchDidF
 
 const BOOL ShowGroups = YES;
 
+static const NSTimeInterval UnusedContactsReleaseTime = 600;
+
 /**
  * This key is set for the main_queue to tell if we are on the main queue
  * From the docs:  
@@ -55,7 +57,10 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 
 @property (nonatomic, assign, readonly) dispatch_semaphore_t ab_semaphore;
 
-/*
+@property (nonatomic, assign) dispatch_source_t ab_timer;
+@property (nonatomic, assign) BOOL ab_timer_suspended;
+
+/**
  * ABAddressBookRegisterExternalChangeCallback tends to fire multiple times
  * for a single change, so we store the last date when the addressbook
  * is reloaded and skip callbacks that fire too close to this date
@@ -67,12 +72,22 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 -(void)loadGroupsWithABAddressBookRef: (ABAddressBookRef)addressBook;
 -(void)loadContactsWithABAddressBookRef: (ABAddressBookRef)addressBook;
 
+/**
+ * Unused AKContacts are released from the contacts dictionary
+ * after being unused for at least UnusedContactsReleaseTime seconds
+ */
+-(void)releaseUnusedContacts;
+-(void)resume_ab_timer;
+-(void)suspend_ab_timer;
+
 @end
 
 @implementation AKAddressBook
 
 @synthesize ab_queue = _ab_queue;
 @synthesize ab_semaphore = _ab_semaphore;
+@synthesize ab_timer = _ab_timer;
+@synthesize ab_timer_suspended = _ab_timer_suspended;
 @synthesize dateAddressBookLoaded = _dateAddressBookLoaded;
 
 @synthesize addressBookRef = _addressBookRef;
@@ -110,12 +125,22 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     _ab_queue = dispatch_queue_create([AKAddressBookQueueName UTF8String], NULL);
 
     _ab_semaphore = dispatch_semaphore_create(1);
-    
+
+    _ab_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, _ab_queue);
+
+    _ab_timer_suspended = YES;
+
+    dispatch_source_set_event_handler(_ab_timer, ^{
+      [self releaseUnusedContacts];
+      [self suspend_ab_timer];
+      [self resume_ab_timer];
+    });
+
     _status = kAddressBookOffline;
 
     _sourceID = kSourceAggregate;
     _groupID = kGroupAggregate;
-    
+
     _contacts = [[NSMutableDictionary alloc] init];
 
     /*
@@ -212,6 +237,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
    */
   dispatch_block_t block = ^{
 
+    [self suspend_ab_timer];
+    
     CFErrorRef error = NULL;
     ABAddressBookRef addressBook = SYSTEM_VERSION_LESS_THAN(@"6.0") ?
                                     ABAddressBookCreate() :
@@ -245,6 +272,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     dispatch_async(dispatch_get_main_queue(), ^{
       [[NSNotificationCenter defaultCenter] postNotificationName: AddressBookDidLoadNotification object: nil];
     });
+    [self resume_ab_timer];
   };
 
   dispatch_async(_ab_queue, block);
@@ -474,6 +502,46 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     [self.contacts setObject: ret forKey: contactID];
   }
   return ret;
+}
+
+-(void)releaseUnusedContacts {
+
+  NSMutableArray *staleIDs = [[NSMutableArray alloc] init];
+
+  for (NSNumber *contactID in [self.contacts allKeys]) {
+
+    AKContact *contact = [self.contacts objectForKey: contactID];
+    NSDate *age = [contact age];
+
+    NSTimeInterval elapsed = fabs([age timeIntervalSinceNow]);
+    if (elapsed > 60) {
+      [staleIDs addObject: contactID];
+    }
+  }
+
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self.contacts removeObjectsForKeys: staleIDs];
+    ABAddressBookRevert(_addressBookRef);
+  });
+}
+
+-(void)resume_ab_timer {
+
+  if (self.ab_timer_suspended == YES) {
+    dispatch_source_set_timer(self.ab_timer,
+                              dispatch_time(DISPATCH_TIME_NOW, UnusedContactsReleaseTime * NSEC_PER_SEC),
+                              DISPATCH_TIME_FOREVER, 0ull);
+    dispatch_resume(self.ab_timer);
+    self.ab_timer_suspended = NO;
+  }
+}
+
+-(void)suspend_ab_timer {
+
+  if (self.ab_timer_suspended == NO) {
+    dispatch_suspend(self.ab_timer);
+    self.ab_timer_suspended = YES;
+  }
 }
 
 #pragma mark - Address Book Search
