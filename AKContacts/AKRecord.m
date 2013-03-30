@@ -50,6 +50,7 @@ NSString *const kLabel = @"Label";
 
 @synthesize recordRef = _recordRef;
 @synthesize recordID = _recordID;
+@synthesize age = _age;
 
 -(id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef {
   self = [super init];

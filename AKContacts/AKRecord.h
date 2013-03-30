@@ -35,6 +35,7 @@
 
 @property (assign, nonatomic) ABRecordRef recordRef;
 @property (assign, nonatomic) ABRecordID recordID;
+@property (strong, nonatomic) NSDate *age;
 
 -(id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef;
 -(NSString *)description;
