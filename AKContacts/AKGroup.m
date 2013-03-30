@@ -33,6 +33,7 @@
 @implementation AKGroup
 
 @synthesize memberIDs = _memberIDs;
+@synthesize provisoryName = _provisoryName;
 
 -(id)initWithABRecordID: (ABRecordID) recordID {
   self = [super init];

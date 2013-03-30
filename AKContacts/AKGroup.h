@@ -30,7 +30,15 @@
 
 @interface AKGroup : AKRecord
 
+/**
+ * List of contactIDs the group contains
+ **/
 @property (nonatomic, strong) NSMutableArray *memberIDs;
+/**
+ * Temporary storage for new group name 
+ * before storing in AB database
+ **/
+@property (nonatomic, strong) NSString *provisoryName;
 
 -(id)initWithABRecordID: (ABRecordID) recordID;
 /**
