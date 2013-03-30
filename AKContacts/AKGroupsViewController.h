@@ -31,7 +31,9 @@
 #import <AddressBook/AddressBook.h>
 #import <AddressBookUI/AddressBookUI.h>
 
-@interface AKGroupsViewController : UIViewController
-<UITableViewDataSource, UITableViewDelegate>
+FOUNDATION_EXPORT const int createGroupTag;
+FOUNDATION_EXPORT const int deleteGroupTag;
+
+@interface AKGroupsViewController : UIViewController <UITableViewDataSource, UITableViewDelegate>
 
 @end

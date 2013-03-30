@@ -33,6 +33,9 @@
 #import "AKSource.h"
 #import "AKAddressBook.h"
 
+const int createGroupTag = -128;
+const int deleteGroupTag = -256;
+
 static const float defaultCellHeight = 44.f;
 
 @interface AKGroupsViewController ()
@@ -67,18 +70,12 @@ static const float defaultCellHeight = 44.f;
 
 -(void)viewDidLoad {
   [super viewDidLoad];
-  
-  // Uncomment the following line to preserve selection between presentations.
-  // self.clearsSelectionOnViewWillAppear = NO;
-  
-  // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-  // self.navigationItem.rightBarButtonItem = self.editButtonItem;
-  
+
   UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd
                                                                              target: self
                                                                              action: @selector(addButtonTouchUp:)];
   [self.navigationItem setRightBarButtonItem: addButton];
-  
+
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AddressBookDidLoadNotification object: nil];
 }
 
@@ -106,17 +103,23 @@ static const float defaultCellHeight = 44.f;
 
   [super setEditing: editing animated: YES]; // Toggles Done button
   [self.tableView setEditing: editing animated: YES];
+  [self.view endEditing: YES]; // Resign first responders
 
   if (self.editing) {
-    UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel target:self action:@selector(cancelButtonTouchUp:)];
+    UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel
+                                                                                   target: self
+                                                                                   action: @selector(cancelButtonTouchUp:)];
     [self.navigationItem setLeftBarButtonItem: barButtonItem];
 
-    barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target:self action:@selector(addButtonTouchUp:)];
+    barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone
+                                                                  target: self
+                                                                  action: @selector(addButtonTouchUp:)];
     [self.navigationItem setRightBarButtonItem: barButtonItem];
   } else {
-    UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd target:self action:@selector(addButtonTouchUp:)];
+    UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd
+                                                                                   target: self
+                                                                                   action: @selector(addButtonTouchUp:)];
     [self.navigationItem setRightBarButtonItem: barButtonItem];
-
     [self.navigationItem setLeftBarButtonItem: nil];
   }
 
@@ -124,11 +127,22 @@ static const float defaultCellHeight = 44.f;
   [self.tableView beginUpdates];
   for (AKSource *source in [AKAddressBook sharedInstance].sources) {
     if ([source hasEditableGroups] == YES) {
-      NSIndexPath *indexPath = [NSIndexPath indexPathForRow: [source.groups count] inSection: section];
+      NSInteger rows = [self.tableView numberOfRowsInSection: section];      
+      NSIndexPath *indexPath = [NSIndexPath indexPathForRow: rows inSection: section];
       if (self.editing == YES) {
         [self.tableView insertRowsAtIndexPaths: [NSArray arrayWithObject: indexPath]
                               withRowAnimation: UITableViewRowAnimationTop];
       } else {
+        
+        NSInteger groups = 0;
+        for (AKGroup *group in source.groups) {
+          if (group.recordID == deleteGroupTag ||
+              group.recordID == createGroupTag)
+            continue;
+          groups += 1;
+        }
+        indexPath = [NSIndexPath indexPathForRow: groups inSection: section];
+
         [self.tableView deleteRowsAtIndexPaths: [NSArray arrayWithObject: indexPath]
                               withRowAnimation: UITableViewRowAnimationTop];
       }
@@ -155,12 +169,95 @@ static const float defaultCellHeight = 44.f;
 
 -(void)addButtonTouchUp: (id)sender {
 
+  [[UIApplication sharedApplication] sendAction: @selector(resignFirstResponder) to: nil from: nil forEvent: nil];
+
+  [self.tableView beginUpdates];
   [self setEditing: !self.editing animated: YES];
+  
+  if (self.editing == NO) {
+
+    AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+
+    for (AKSource *source in addressBook.sources) {
+      
+      NSMutableArray *groupsToRemove = [[NSMutableArray alloc] init];
+      
+      for (AKGroup *group in source.groups) {
+
+        if (group.recordID == createGroupTag) {
+
+          CFErrorRef error = NULL;
+          ABRecordRef record = ABGroupCreateInSource(source.recordRef);
+          ABRecordSetValue(record, kABGroupNameProperty, (__bridge CFTypeRef)(group.provisoryName), &error);
+          if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+
+          ABAddressBookAddRecord(addressBook.addressBookRef, record, &error);
+          if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+
+          ABAddressBookSave(addressBook.addressBookRef, &error);
+          if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+
+          [group setProvisoryName: nil];
+
+          ABRecordID recordID = ABRecordGetRecordID(record);
+
+          [group setRecordID: recordID];
+
+          NSInteger row = [source.groups count] - [groupsToRemove count] - 1;
+
+          NSIndexPath *indexPath = [NSIndexPath indexPathForRow: row inSection: [addressBook.sources indexOfObject: source]];
+          [self.tableView insertRowsAtIndexPaths: [NSArray arrayWithObject: indexPath]
+                                withRowAnimation: UITableViewRowAnimationTop];
+
+        } else if (group.provisoryName != nil) {
+
+          CFErrorRef error = NULL;
+          ABRecordSetValue(group.recordRef, kABGroupNameProperty, (__bridge CFTypeRef)(group.provisoryName), &error);
+          if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+
+          ABAddressBookSave(addressBook.addressBookRef, &error);
+          if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+
+        } else if (group.recordID == deleteGroupTag) {
+
+          [groupsToRemove addObject: group];
+          CFErrorRef error = NULL;
+          ABAddressBookRemoveRecord(addressBook.addressBookRef, group.recordRef, &error);
+          if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+
+          ABAddressBookSave(addressBook.addressBookRef, &error);
+          if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+        }
+      }
+      [source.groups removeObjectsInArray: groupsToRemove];
+    }
+  }
+  
+  [self.tableView endUpdates];
 }
 
 -(void)cancelButtonTouchUp: (id)sender {
 
+  AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+
+  [self.tableView beginUpdates];
   [self setEditing: NO animated: YES];
+
+  NSMutableArray *indexPaths = [[NSMutableArray alloc] init];
+
+  for (AKSource *source in addressBook.sources) {
+    for (AKGroup *group in source.groups) {
+      if (group.recordID == deleteGroupTag) {
+        [group setRecordID: ABRecordGetRecordID(group.recordRef)];
+
+        [indexPaths addObject: [NSIndexPath indexPathForRow: [source.groups indexOfObject: group]
+                                                  inSection: [addressBook.sources indexOfObject: source]]];
+      }
+    }
+  }
+
+  [self.tableView insertRowsAtIndexPaths: indexPaths withRowAnimation: UITableViewRowAnimationAutomatic];
+  [self.tableView endUpdates];
 }
 
 -(void)reloadTableViewData {
@@ -187,7 +284,14 @@ static const float defaultCellHeight = 44.f;
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
 
   AKSource *source = [[[AKAddressBook sharedInstance] sources] objectAtIndex: section];
-  NSInteger ret = [[source groups] count];
+  NSInteger ret = 0;
+  
+  for (AKGroup *group in source.groups) {
+    if (group.recordID == createGroupTag || group.recordID == deleteGroupTag)
+      continue;
+    ret += 1;
+  }
+
   if (self.editing && [source hasEditableGroups]) ret += 1;
   return ret;
 }
@@ -227,7 +331,7 @@ static const float defaultCellHeight = 44.f;
   if (group.recordID == kGroupAggregate)
     return UITableViewCellEditingStyleNone;
 
-  return UITableViewCellEditingStyleDelete;    
+  return UITableViewCellEditingStyleDelete;
 }
 
 /*
@@ -238,18 +342,33 @@ static const float defaultCellHeight = 44.f;
  }
  */
 
-/*
- // Override to support editing the table view.
- -(void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
- if (editingStyle == UITableViewCellEditingStyleDelete) {
- // Delete the row from the data source
- [tableView deleteRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationFade];
- }
- else if (editingStyle == UITableViewCellEditingStyleInsert) {
- // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
- }
- }
- */
+
+// Override to support editing the table view.
+-(void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
+  if (editingStyle == UITableViewCellEditingStyleDelete) {
+
+    AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+    AKSource *source = [[addressBook sources] objectAtIndex: indexPath.section];
+
+    NSInteger groupID = [tableView cellForRowAtIndexPath: indexPath].tag;
+
+    NSInteger row = 0;
+    for (AKGroup *group in source.groups) {
+      if (group.recordID == deleteGroupTag) {
+        continue;
+      } else if (group.recordID == groupID) {
+        [group setRecordID: deleteGroupTag];
+        break;
+      }
+      row += 1;
+    }
+
+    indexPath = [NSIndexPath indexPathForRow: row inSection: indexPath.section];
+    
+    [tableView deleteRowsAtIndexPaths: [NSArray arrayWithObject:indexPath] withRowAnimation: UITableViewRowAnimationFade];
+  }
+}
+
 
 
 // Override to support rearranging the table view.
@@ -300,7 +419,7 @@ static const float defaultCellHeight = 44.f;
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
-  
+
   AKSource *source = [akAddressBook.sources objectAtIndex: indexPath.section];
   AKGroup *group = [source.groups objectAtIndex: indexPath.row];
 
@@ -310,7 +429,7 @@ static const float defaultCellHeight = 44.f;
 
   AKContactsViewController *contactsView = [[AKContactsViewController alloc] init];
   [self.navigationController pushViewController: contactsView animated: YES];
-  
+
   [tableView deselectRowAtIndexPath: indexPath animated: YES];
 }
 
