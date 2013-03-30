@@ -116,9 +116,6 @@
       break;
     }
   }
-  
-  NSAssert(ret != nil, @"Group does not exist");
-  
   return ret;
 }
 
