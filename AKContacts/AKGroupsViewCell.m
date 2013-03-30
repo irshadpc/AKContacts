@@ -12,11 +12,10 @@
 #import "AKGroupsViewController.h"
 #import "AKSource.h"
 
-static const int newGroupTag = 2^10;
-
 @interface AKGroupsViewCell ()
 
 @property (nonatomic, strong) UITextField *textField;
+@property (nonatomic, strong) NSIndexPath *indexPath;
 
 @end
 
@@ -24,6 +23,7 @@ static const int newGroupTag = 2^10;
 
 @synthesize parent = _parent;
 @synthesize textField = _textField;
+@synthesize indexPath = _indexPath;
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
@@ -50,6 +50,7 @@ static const int newGroupTag = 2^10;
 
 -(void)configureCellAtIndexPath: (NSIndexPath *)indexPath {
 
+  [self setIndexPath: indexPath];
   [self.textLabel setText: nil];
   [self setTag: NSNotFound];
   [self.textLabel setTextAlignment: NSTextAlignmentLeft];
@@ -62,13 +63,21 @@ static const int newGroupTag = 2^10;
   AKSource *source = [akAddressBook.sources objectAtIndex: indexPath.section];
 
   NSString *text = nil;
-  NSString *placeholder = nil;
-  NSInteger tag = newGroupTag;
+  NSString *placeholder = NSLocalizedString(@"New Group", @"");;
+  NSInteger tag = createGroupTag;
 
   if (indexPath.row < [source.groups count]) {
 
     AKGroup *group = [source.groups objectAtIndex: indexPath.row];
-
+    if (group.recordID == deleteGroupTag) {
+      for (uint64_t i = indexPath.row; i < [source.groups count]; ++i) {
+        if (group.recordID != deleteGroupTag) {
+          group = [source.groups objectAtIndex: i];
+          break;
+        }
+      }
+    }
+    
     tag = group.recordID;
     text = [group valueForProperty: kABGroupNameProperty];
     if (group.recordID == kGroupAggregate) {
@@ -78,8 +87,6 @@ static const int newGroupTag = 2^10;
       text = [groupAggregateName componentsJoinedByString: @" "];
     }
     placeholder = text;
-  } else {
-    placeholder = NSLocalizedString(@"New Group", @"");
   }
 
   [self setTag: tag];
@@ -112,9 +119,25 @@ static const int newGroupTag = 2^10;
 -(void)textFieldDidEndEditing:(UITextField *)textField {
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
-  
-  if (textField.tag != newGroupTag && textField.text.length == 0)
+
+  if (textField.tag != createGroupTag && textField.text.length == 0) {
     [textField setText: textField.placeholder];
+  } else if (textField.text.length > 0) {
+    AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+    AKSource *source = [akAddressBook.sources objectAtIndex: self.indexPath.section];
+
+    if (textField.tag == createGroupTag) {
+      AKGroup *group = [source groupForGroupId: createGroupTag];
+      if (group == nil) {
+        group = [[AKGroup alloc] initWithABRecordID: createGroupTag];
+        [source.groups addObject: group];
+      }
+      [group setProvisoryName: textField.text];
+    } else {
+      AKGroup *group = [source.groups objectAtIndex: self.indexPath.row];
+      [group setProvisoryName: textField.text];
+    }
+  }
 }
 
 -(BOOL)textFieldShouldReturn:(UITextField *)textField {
