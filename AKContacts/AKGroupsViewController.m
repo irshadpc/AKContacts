@@ -81,8 +81,6 @@ static const float defaultCellHeight = 44.f;
 
 -(void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
-
-  [[AKAddressBook sharedInstance] addObserver: self forKeyPath: @"status" options: NSKeyValueObservingOptionNew context: nil];
 }
 
 -(void)viewDidAppear:(BOOL)animated {
@@ -91,8 +89,6 @@ static const float defaultCellHeight = 44.f;
 
 -(void)viewWillDisappear:(BOOL)animated {
   [super viewWillDisappear:animated];
-
-  [[AKAddressBook sharedInstance] removeObserver: self forKeyPath: @"status"];
 }
 
 -(void)viewDidDisappear:(BOOL)animated {
@@ -150,19 +146,6 @@ static const float defaultCellHeight = 44.f;
     section += 1;
   }
   [self.tableView endUpdates];
-}
-
-#pragma mark - Key-Value Observing
-
--(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-  // This is not dispatched on main queue
-  
-  if (object == [AKAddressBook sharedInstance] && // Comparing the address
-      [keyPath isEqualToString: @"status"]) {
-    // Status property of AKAddressBook changed
-    AKContactsViewController *contactsView = [[AKContactsViewController alloc] init];
-    [self.navigationController pushViewController: contactsView animated: NO];
-  }
 }
 
 #pragma mark - Custom methods
