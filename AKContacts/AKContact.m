@@ -54,6 +54,7 @@
       super.recordRef = ABAddressBookGetPersonWithRecordID(addressBookRef, super.recordID);
     }
     ret = super.recordRef;
+    super.age = [NSDate date];
   };
 
   if (dispatch_get_specific(IsOnMainQueueKey)) block();
