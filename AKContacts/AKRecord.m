@@ -106,6 +106,19 @@ NSString *const kLabel = @"Label";
   return ret;
 }
 
+-(void)setValue: (id)value forProperty: (ABPropertyID)property {
+
+  if (self.recordID < 0) return; // Lazy init of recordRef
+
+  dispatch_block_t block = ^{
+    CFErrorRef error = NULL;
+    ABRecordSetValue(self.recordRef, property, (__bridge CFTypeRef)(value), &error);
+	};
+  
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
+}
+
 -(NSInteger)countForProperty: (ABPropertyID) property {
   
   if (self.recordRef == nil && self.recordID < 0) return 0; // Lazy init of recordRef

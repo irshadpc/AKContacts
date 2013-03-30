@@ -47,6 +47,10 @@
  * Return type can be NSString, NSDate
  **/
 -(id)valueForProperty: (ABPropertyID)property;
+/**
+ * Set a value corresponding to an ABPropertyID.
+ **/
+-(void)setValue: (id)value forProperty: (ABPropertyID)property;
 
 /**
  * Return the number of elements in an ABMultiValue type
