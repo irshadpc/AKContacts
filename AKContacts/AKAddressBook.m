@@ -73,7 +73,7 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 -(void)loadContactsWithABAddressBookRef: (ABAddressBookRef)addressBook;
 
 /**
- * Unused AKContacts are released from the contacts dictionary
+ * AKContacts are released from the contacts dictionary
  * after being unused for at least UnusedContactsReleaseTime seconds
  */
 -(void)releaseUnusedContacts;
@@ -355,6 +355,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
         }
       }
     }
+
+    [source revertGroupsOrder];
   }
 }
 
