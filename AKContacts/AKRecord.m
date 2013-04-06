@@ -79,7 +79,7 @@ NSString *const kLabel = @"Label";
 -(ABRecordType)recordType {
   __block ABRecordType ret;
 
-  if (self.recordRef == nil && self.recordID < 0) return 0; // Lazy init of recordRef
+  if (self.recordRef == nil && self.recordID < 0) return kABGroupType; // Lazy init of recordRef
 
   dispatch_block_t block = ^{
 		  ret = ABRecordGetRecordType(_recordRef);
