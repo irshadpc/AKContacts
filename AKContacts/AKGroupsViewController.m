@@ -162,9 +162,9 @@ static const float defaultCellHeight = 44.f;
     AKAddressBook *addressBook = [AKAddressBook sharedInstance];
 
     for (AKSource *source in addressBook.sources) {
-      
+
       NSMutableArray *groupsToRemove = [[NSMutableArray alloc] init];
-      
+
       for (AKGroup *group in source.groups) {
 
         if (group.recordID == createGroupTag) {
@@ -213,6 +213,8 @@ static const float defaultCellHeight = 44.f;
         }
       }
       [source.groups removeObjectsInArray: groupsToRemove];
+
+      [source commitGroupsOrder];
     }
   }
   
@@ -237,8 +239,10 @@ static const float defaultCellHeight = 44.f;
                                                   inSection: [addressBook.sources indexOfObject: source]]];
       }
     }
-  }
 
+    [source revertGroupsOrder];
+  }
+  
   [self.tableView insertRowsAtIndexPaths: indexPaths withRowAnimation: UITableViewRowAnimationAutomatic];
   [self.tableView endUpdates];
 }
@@ -352,11 +356,12 @@ static const float defaultCellHeight = 44.f;
   }
 }
 
-
-
 // Override to support rearranging the table view.
 -(void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
 
+  AKSource *source = [[[AKAddressBook sharedInstance] sources] objectAtIndex: fromIndexPath.section];
+
+  [source.groups exchangeObjectAtIndex: fromIndexPath.row withObjectAtIndex: toIndexPath.row];
 }
 
 // Override to support conditional rearranging of the table view.
