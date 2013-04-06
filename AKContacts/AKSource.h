@@ -42,5 +42,7 @@
 -(NSString *)typeName;
 -(AKGroup *)groupForGroupId: (NSInteger)recordId;
 -(BOOL)hasEditableGroups;
+-(void)commitGroupsOrder;
+-(void)revertGroupsOrder;
 
 @end

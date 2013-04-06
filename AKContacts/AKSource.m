@@ -154,4 +154,39 @@
   }
 }
 
+-(void)commitGroupsOrder {
+
+  NSMutableArray *groupsOrder = [[NSMutableArray alloc] init];
+
+  for (AKGroup *group in self.groups) {
+    [groupsOrder addObject: [NSNumber numberWithInteger: group.recordID]];
+  }
+
+  [[NSUserDefaults standardUserDefaults] setObject: [NSArray arrayWithArray: groupsOrder]
+                                            forKey: DefaultsKeyGroups];
+  [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+-(void)revertGroupsOrder {
+  
+  NSArray *order = [[NSUserDefaults standardUserDefaults] arrayForKey: DefaultsKeyGroups];
+  if (order != nil) {
+    [self.groups sortUsingComparator: ^NSComparisonResult(id obj1, id obj2) {
+      NSNumber *groupID1 = [NSNumber numberWithInteger: [(AKGroup *)obj1 recordID]];
+      NSNumber *groupID2 = [NSNumber numberWithInteger: [(AKGroup *)obj2 recordID]];
+
+      NSInteger index1 = [order indexOfObject: groupID1];
+      NSInteger index2 = [order indexOfObject: groupID2];
+
+      if (index1 < index2) {
+        return NSOrderedAscending;
+      } else if (index1 > index2) {
+        return NSOrderedDescending;
+      } else {
+        return NSOrderedSame;
+      }
+    }];
+  }
+}
+
 @end
