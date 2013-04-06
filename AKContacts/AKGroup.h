@@ -28,6 +28,8 @@
 
 #import "AKRecord.h"
 
+FOUNDATION_EXPORT NSString *const DefaultsKeyGroups;
+
 @interface AKGroup : AKRecord
 
 /**

@@ -30,6 +30,8 @@
 #import "AKGroup.h"
 #import "AKAddressBook.h"
 
+NSString *const DefaultsKeyGroups = @"Groups";
+
 @implementation AKGroup
 
 @synthesize memberIDs = _memberIDs;
