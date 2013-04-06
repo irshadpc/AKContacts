@@ -31,6 +31,8 @@
 #import "AKAddressBook.h"
 #import "AKGroup.h"
 
+NSString *const DefaultsKeySources = @"Sources";
+
 @interface AKAddressBook ()
 
 -(ABRecordRef)recordRef;
@@ -162,14 +164,18 @@
     [groupsOrder addObject: [NSNumber numberWithInteger: group.recordID]];
   }
 
-  [[NSUserDefaults standardUserDefaults] setObject: [NSArray arrayWithArray: groupsOrder]
-                                            forKey: DefaultsKeyGroups];
-  [[NSUserDefaults standardUserDefaults] synchronize];
+  NSMutableDictionary *sources = [[[NSUserDefaults standardUserDefaults] objectForKey: DefaultsKeySources] mutableCopy];
+  if (sources == nil) sources = [[NSMutableDictionary alloc] init];
+  [sources setObject: groupsOrder forKey: DefaultsKeyGroups];
+
+  [[NSUserDefaults standardUserDefaults] setObject: [NSDictionary dictionaryWithDictionary: sources]
+                                            forKey: DefaultsKeySources];
 }
 
 -(void)revertGroupsOrder {
   
-  NSArray *order = [[NSUserDefaults standardUserDefaults] arrayForKey: DefaultsKeyGroups];
+  NSDictionary *sources = [[NSUserDefaults standardUserDefaults] dictionaryForKey: DefaultsKeySources];
+  NSArray *order = [sources objectForKey: DefaultsKeyGroups];
   if (order != nil) {
     [self.groups sortUsingComparator: ^NSComparisonResult(id obj1, id obj2) {
       NSNumber *groupID1 = [NSNumber numberWithInteger: [(AKGroup *)obj1 recordID]];
