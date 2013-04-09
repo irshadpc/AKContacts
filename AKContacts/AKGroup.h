@@ -30,6 +30,9 @@
 
 FOUNDATION_EXPORT NSString *const DefaultsKeyGroups;
 
+FOUNDATION_EXPORT const int createGroupTag;
+FOUNDATION_EXPORT const int deleteGroupTag;
+
 @interface AKGroup : AKRecord
 
 /**

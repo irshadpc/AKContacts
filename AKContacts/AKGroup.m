@@ -32,6 +32,9 @@
 
 NSString *const DefaultsKeyGroups = @"Groups";
 
+const int createGroupTag = -128;
+const int deleteGroupTag = -256;
+
 @implementation AKGroup
 
 @synthesize memberIDs = _memberIDs;
