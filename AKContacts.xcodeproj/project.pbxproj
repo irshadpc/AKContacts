@@ -121,7 +121,7 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		C620080316B9972A00C16121 /* AKContactViewController */ = {
+		C620080316B9972A00C16121 /* Contact */ = {
 			isa = PBXGroup;
 			children = (
 				C620080816B997A900C16121 /* AKContactHeaderViewCell.h */,
@@ -135,7 +135,7 @@
 				C620080C16B997A900C16121 /* AKContactViewController.h */,
 				C620080D16B997A900C16121 /* AKContactViewController.m */,
 			);
-			name = AKContactViewController;
+			name = Contact;
 			sourceTree = "<group>";
 		};
 		C669517F16B6FD7100D030A2 = {
@@ -173,21 +173,9 @@
 		C669519116B6FD7100D030A2 /* AKContacts */ = {
 			isa = PBXGroup;
 			children = (
-				C620080316B9972A00C16121 /* AKContactViewController */,
-				C66951D716B702F800D030A2 /* AKContactsViewController.h */,
-				C66951D816B702F800D030A2 /* AKContactsViewController.m */,
-				C6C2066116E18A800033C58A /* AKGroupsViewController.h */,
-				C6C2066216E18A810033C58A /* AKGroupsViewController.m */,
-				C620EA7B16F932630035CA1F /* AKGroupsViewCell.h */,
-				C620EA7C16F932640035CA1F /* AKGroupsViewCell.m */,
-				C66951E016B7049C00D030A2 /* AKRecord.h */,
-				C66951E116B7049C00D030A2 /* AKRecord.m */,
-				C6C2066416E39D750033C58A /* AKSource.h */,
-				C6C2066516E39D760033C58A /* AKSource.m */,
-				C6C2065E16E1828D0033C58A /* AKGroup.h */,
-				C6C2065F16E1828F0033C58A /* AKGroup.m */,
-				C66951D516B702F800D030A2 /* AKContact.h */,
-				C66951D616B702F800D030A2 /* AKContact.m */,
+				C682DEDD1714E38D00CC4A70 /* DataSources */,
+				C682DEDB1714B52F00CC4A70 /* Groups */,
+				C682DEDC1714B54000CC4A70 /* Contacts */,
 				C6C2066716E436BE0033C58A /* AKAddressBook.h */,
 				C6C2066816E436BE0033C58A /* AKAddressBook.m */,
 			);
@@ -235,6 +223,42 @@
 				C66951CA16B6FFA400D030A2 /* main.m */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		C682DEDB1714B52F00CC4A70 /* Groups */ = {
+			isa = PBXGroup;
+			children = (
+				C6C2066116E18A800033C58A /* AKGroupsViewController.h */,
+				C6C2066216E18A810033C58A /* AKGroupsViewController.m */,
+				C620EA7B16F932630035CA1F /* AKGroupsViewCell.h */,
+				C620EA7C16F932640035CA1F /* AKGroupsViewCell.m */,
+			);
+			name = Groups;
+			sourceTree = "<group>";
+		};
+		C682DEDC1714B54000CC4A70 /* Contacts */ = {
+			isa = PBXGroup;
+			children = (
+				C620080316B9972A00C16121 /* Contact */,
+				C66951D716B702F800D030A2 /* AKContactsViewController.h */,
+				C66951D816B702F800D030A2 /* AKContactsViewController.m */,
+			);
+			name = Contacts;
+			sourceTree = "<group>";
+		};
+		C682DEDD1714E38D00CC4A70 /* DataSources */ = {
+			isa = PBXGroup;
+			children = (
+				C66951E016B7049C00D030A2 /* AKRecord.h */,
+				C66951E116B7049C00D030A2 /* AKRecord.m */,
+				C6C2066416E39D750033C58A /* AKSource.h */,
+				C6C2066516E39D760033C58A /* AKSource.m */,
+				C6C2065E16E1828D0033C58A /* AKGroup.h */,
+				C6C2065F16E1828F0033C58A /* AKGroup.m */,
+				C66951D516B702F800D030A2 /* AKContact.h */,
+				C66951D616B702F800D030A2 /* AKContact.m */,
+			);
+			name = DataSources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
