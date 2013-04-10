@@ -33,9 +33,6 @@
 #import "AKSource.h"
 #import "AKAddressBook.h"
 
-const int createGroupTag = -128;
-const int deleteGroupTag = -256;
-
 static const float defaultCellHeight = 44.f;
 
 @interface AKGroupsViewController ()
@@ -228,22 +225,22 @@ static const float defaultCellHeight = 44.f;
   [self.tableView beginUpdates];
   [self setEditing: NO animated: YES];
 
-  NSMutableArray *indexPaths = [[NSMutableArray alloc] init];
+  NSMutableArray *insertIndexes = [[NSMutableArray alloc] init];
+
+  NSMutableArray *reloadIndexes = [[NSMutableArray alloc] init];
 
   for (AKSource *source in addressBook.sources) {
-    for (AKGroup *group in source.groups) {
-      if (group.recordID == deleteGroupTag) {
-        [group setRecordID: ABRecordGetRecordID(group.recordRef)];
 
-        [indexPaths addObject: [NSIndexPath indexPathForRow: [source.groups indexOfObject: group]
-                                                  inSection: [addressBook.sources indexOfObject: source]]];
-      }
-    }
-
+    [insertIndexes addObjectsFromArray: [source indexPathsOfDeletedGroups]];
+    [reloadIndexes addObjectsFromArray: [source indexPathsOfGroupsOutOfPosition]];
+    // 1. Revert deleted groups
+    [source revertDeletedGroups];
+    // 2. Revert group order
     [source revertGroupsOrder];
   }
-  
-  [self.tableView insertRowsAtIndexPaths: indexPaths withRowAnimation: UITableViewRowAnimationAutomatic];
+
+  [self.tableView reloadRowsAtIndexPaths: reloadIndexes withRowAnimation: UITableViewRowAnimationAutomatic];
+  [self.tableView insertRowsAtIndexPaths: insertIndexes withRowAnimation: UITableViewRowAnimationAutomatic];
   [self.tableView endUpdates];
 }
 
