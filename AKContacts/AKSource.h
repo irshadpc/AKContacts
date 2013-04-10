@@ -41,10 +41,41 @@ FOUNDATION_EXPORT NSString *const DefaultsKeySources;
 @property (nonatomic, assign) BOOL isDefault;
 
 -(id)initWithABRecordID: (ABRecordID) recordID;
+/**
+ * Return type of source
+ */
 -(NSString *)typeName;
+/**
+ * Return AKGroup object for a given recordId
+ */
 -(AKGroup *)groupForGroupId: (NSInteger)recordId;
+/**
+ * Return true if the source supports
+ * group editing
+ */
 -(BOOL)hasEditableGroups;
+/**
+ * Commit current order of groups
+ * to NSUserDefauls
+ */
 -(void)commitGroupsOrder;
+/**
+ * Revert order of groups to the order
+ * currently saved in NSUserDefauls
+ */
 -(void)revertGroupsOrder;
+/**
+ * Unmark any groups marked for removal
+ */
+-(void)revertDeletedGroups;
+/**
+ * Return the indexPaths of groups that are
+ * currently out of their position
+ */
+-(NSArray *)indexPathsOfGroupsOutOfPosition;
+/**
+ * Return the indexPaths of deleted groups
+ */
+-(NSArray *)indexPathsOfDeletedGroups;
 
 @end
