@@ -513,7 +513,7 @@
 					"\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\"",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "AKContacts/AKContacts-Prefix.pch";
+				GCC_PREFIX_HEADER = "AKContactsDemo/AKContacts-Prefix.pch";
 				INFOPLIST_FILE = "AKContactsTests/AKContactsTests-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUNDLE_LOADER)";
@@ -530,7 +530,7 @@
 					"\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\"",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "AKContacts/AKContacts-Prefix.pch";
+				GCC_PREFIX_HEADER = "AKContactsDemo/AKContacts-Prefix.pch";
 				INFOPLIST_FILE = "AKContactsTests/AKContactsTests-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUNDLE_LOADER)";
