@@ -153,7 +153,7 @@ NSString *const kLabel = @"Label";
       NSMutableArray *identifiers = [[NSMutableArray alloc] initWithCapacity: count];
       for (NSInteger i = 0; i < count; ++i) {
         NSInteger identifier = (NSInteger)ABMultiValueGetIdentifierAtIndex(multiValueRecord, i);
-        [identifiers addObject: [NSNumber numberWithUnsignedInt: identifier]];
+        [identifiers addObject: [NSNumber numberWithInteger: identifier]];
       }
       ret = [identifiers copy];
       CFRelease(multiValueRecord);
