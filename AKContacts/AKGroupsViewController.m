@@ -158,63 +158,17 @@ static const float defaultCellHeight = 44.f;
 
     AKAddressBook *addressBook = [AKAddressBook sharedInstance];
 
+    NSMutableArray *insertIndexes = [[NSMutableArray alloc] init];
+
     for (AKSource *source in addressBook.sources) {
 
-      NSMutableArray *groupsToRemove = [[NSMutableArray alloc] init];
-
-      for (AKGroup *group in source.groups) {
-
-        if (group.recordID == createGroupTag) {
-
-          CFErrorRef error = NULL;
-          ABRecordRef record = ABGroupCreateInSource(source.recordRef);
-          ABRecordSetValue(record, kABGroupNameProperty, (__bridge CFTypeRef)(group.provisoryName), &error);
-          if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-
-          ABAddressBookAddRecord(addressBook.addressBookRef, record, &error);
-          if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-
-          ABAddressBookSave(addressBook.addressBookRef, &error);
-          if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-
-          [group setProvisoryName: nil];
-
-          ABRecordID recordID = ABRecordGetRecordID(record);
-
-          [group setRecordID: recordID];
-
-          NSInteger row = [source.groups count] - [groupsToRemove count] - 1;
-
-          NSIndexPath *indexPath = [NSIndexPath indexPathForRow: row inSection: [addressBook.sources indexOfObject: source]];
-          [self.tableView insertRowsAtIndexPaths: [NSArray arrayWithObject: indexPath]
-                                withRowAnimation: UITableViewRowAnimationTop];
-
-        } else if (group.provisoryName != nil) {
-
-          CFErrorRef error = NULL;
-          ABRecordSetValue(group.recordRef, kABGroupNameProperty, (__bridge CFTypeRef)(group.provisoryName), &error);
-          if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-
-          ABAddressBookSave(addressBook.addressBookRef, &error);
-          if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-
-        } else if (group.recordID == deleteGroupTag) {
-
-          [groupsToRemove addObject: group];
-          CFErrorRef error = NULL;
-          ABAddressBookRemoveRecord(addressBook.addressBookRef, group.recordRef, &error);
-          if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-
-          ABAddressBookSave(addressBook.addressBookRef, &error);
-          if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-        }
-      }
-      [source.groups removeObjectsInArray: groupsToRemove];
-
-      [source commitGroupsOrder];
+      [insertIndexes addObjectsFromArray: [source indexPathsOfCreatedGroups]];
+      
+      [source commitGroups];
     }
+    [self.tableView insertRowsAtIndexPaths: insertIndexes withRowAnimation: UITableViewRowAnimationAutomatic];
   }
-  
+
   [self.tableView endUpdates];
 }
 
