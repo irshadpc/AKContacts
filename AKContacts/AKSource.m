@@ -176,14 +176,15 @@ NSString *const DefaultsKeySources = @"Sources";
       
       ABAddressBookAddRecord(addressBook.addressBookRef, record, &error);
       if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-      
+
       ABAddressBookSave(addressBook.addressBookRef, &error);
       if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
       
       [group setProvisoryName: nil];
       
       ABRecordID recordID = ABRecordGetRecordID(record);
-      
+      CFRelease(record);
+
       [group setRecordID: recordID];
 
     } else if (group.provisoryName != nil) {
