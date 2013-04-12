@@ -187,10 +187,8 @@ static const float defaultCellHeight = 44.f;
 
     [insertIndexes addObjectsFromArray: [source indexPathsOfDeletedGroups]];
     [reloadIndexes addObjectsFromArray: [source indexPathsOfGroupsOutOfPosition]];
-    // 1. Revert deleted groups
-    [source revertDeletedGroups];
-    // 2. Revert group order
-    [source revertGroupsOrder];
+
+    [source revertGroups];
   }
 
   [self.tableView reloadRowsAtIndexPaths: reloadIndexes withRowAnimation: UITableViewRowAnimationAutomatic];
