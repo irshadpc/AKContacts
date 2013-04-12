@@ -55,24 +55,27 @@ FOUNDATION_EXPORT NSString *const DefaultsKeySources;
  */
 -(BOOL)hasEditableGroups;
 /**
- * Commit current order of groups
- * to NSUserDefauls
+ * Commit changes to groups
  */
--(void)commitGroupsOrder;
+-(void)commitGroups;
+/**
+ * Revert changes to groups
+ */
+-(void)revertGroups;
 /**
  * Revert order of groups to the order
  * currently saved in NSUserDefauls
  */
 -(void)revertGroupsOrder;
 /**
- * Unmark any groups marked for removal
- */
--(void)revertDeletedGroups;
-/**
  * Return the indexPaths of groups that are
  * currently out of their position
  */
 -(NSArray *)indexPathsOfGroupsOutOfPosition;
+/**
+ * Return the indexPaths of created groups
+ */
+-(NSArray *)indexPathsOfCreatedGroups;
 /**
  * Return the indexPaths of deleted groups
  */
