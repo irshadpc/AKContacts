@@ -40,45 +40,45 @@ FOUNDATION_EXPORT NSString *const DefaultsKeySources;
 @property (nonatomic, strong) NSMutableArray *groups;
 @property (nonatomic, assign) BOOL isDefault;
 
--(id)initWithABRecordID: (ABRecordID) recordID;
+- (id)initWithABRecordID: (ABRecordID) recordID;
 /**
  * Return type of source
  */
--(NSString *)typeName;
+- (NSString *)typeName;
 /**
  * Return AKGroup object for a given recordId
  */
--(AKGroup *)groupForGroupId: (NSInteger)recordId;
+- (AKGroup *)groupForGroupId: (NSInteger)recordId;
 /**
  * Return true if the source supports
  * group editing
  */
--(BOOL)hasEditableGroups;
+- (BOOL)hasEditableGroups;
 /**
  * Commit changes to groups
  */
--(void)commitGroups;
+- (void)commitGroups;
 /**
  * Revert changes to groups
  */
--(void)revertGroups;
+- (void)revertGroups;
 /**
  * Revert order of groups to the order
  * currently saved in NSUserDefauls
  */
--(void)revertGroupsOrder;
+- (void)revertGroupsOrder;
 /**
  * Return the indexPaths of groups that are
  * currently out of their position
  */
--(NSArray *)indexPathsOfGroupsOutOfPosition;
+- (NSArray *)indexPathsOfGroupsOutOfPosition;
 /**
  * Return the indexPaths of created groups
  */
--(NSArray *)indexPathsOfCreatedGroups;
+- (NSArray *)indexPathsOfCreatedGroups;
 /**
  * Return the indexPaths of deleted groups
  */
--(NSArray *)indexPathsOfDeletedGroups;
+- (NSArray *)indexPathsOfDeletedGroups;
 
 @end
