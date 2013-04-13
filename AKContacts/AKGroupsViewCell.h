@@ -14,6 +14,6 @@
 
 @property (nonatomic, strong) AKGroupsViewController *parent;
 
--(void)configureCellAtIndexPath: (NSIndexPath *)indexPath;
+- (void)configureCellAtIndexPath: (NSIndexPath *)indexPath;
 
 @end

@@ -28,8 +28,8 @@
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-    if (self) {
- 
+    if (self)
+    {
       UITextField *textField = [[UITextField alloc] initWithFrame: CGRectZero];
       [textField setContentVerticalAlignment: UIControlContentVerticalAlignmentCenter];
       [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
@@ -48,8 +48,8 @@
     // Configure the view for the selected state
 }
 
--(void)configureCellAtIndexPath: (NSIndexPath *)indexPath {
-
+- (void)configureCellAtIndexPath: (NSIndexPath *)indexPath
+{
   [self setIndexPath: indexPath];
   [self.textLabel setText: nil];
   [self setTag: NSNotFound];
@@ -66,12 +66,14 @@
   NSString *placeholder = NSLocalizedString(@"New Group", @"");;
   NSInteger tag = createGroupTag;
 
-  if (indexPath.row < [source.groups count]) {
-
+  if (indexPath.row < [source.groups count])
+  {
     AKGroup *group = [source.groups objectAtIndex: indexPath.row];
     if (group.recordID == deleteGroupTag) {
-      for (uint64_t i = indexPath.row; i < [source.groups count]; ++i) {
-        if (group.recordID != deleteGroupTag) {
+      for (uint64_t i = indexPath.row; i < [source.groups count]; ++i)
+      {
+        if (group.recordID != deleteGroupTag)
+        {
           group = [source.groups objectAtIndex: i];
           break;
         }
@@ -80,7 +82,8 @@
     
     tag = group.recordID;
     text = [group valueForProperty: kABGroupNameProperty];
-    if (group.recordID == kGroupAggregate) {
+    if (group.recordID == kGroupAggregate)
+    {
       NSMutableArray *groupAggregateName = [[NSMutableArray alloc] initWithObjects: NSLocalizedString(@"All", @""),
                                             NSLocalizedString(@"Contacts", @""), nil];
       if (source.recordID >= 0 && sourceCount > 1) [groupAggregateName insertObject: [source typeName] atIndex: 1];
@@ -99,7 +102,8 @@
   [self.textField setText: text];
 }
 
--(void)layoutSubviews {
+- (void)layoutSubviews
+{
   [super layoutSubviews];
 
   CGRect frame = CGRectMake(self.contentView.bounds.origin.x + 10.f,
@@ -112,38 +116,47 @@
 
 #pragma mark - UITextField delegate
 
--(void)textFieldDidBeginEditing:(UITextField *)textField {
+- (void)textFieldDidBeginEditing:(UITextField *)textField
+{
   [self.parent setFirstResponder: textField];
 }
 
--(void)textFieldDidEndEditing:(UITextField *)textField {
-
+- (void)textFieldDidEndEditing:(UITextField *)textField
+{
   [self.parent setFirstResponder: nil];
 
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
 
-  if (textField.tag != createGroupTag && textField.text.length == 0) {
+  if (textField.tag != createGroupTag && textField.text.length == 0)
+  {
     [textField setText: textField.placeholder];
-  } else if (textField.text.length > 0) {
+  }
+  else if (textField.text.length > 0)
+  {
     AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
     AKSource *source = [akAddressBook.sources objectAtIndex: self.indexPath.section];
 
-    if (textField.tag == createGroupTag) {
+    if (textField.tag == createGroupTag)
+    {
       AKGroup *group = [source groupForGroupId: createGroupTag];
-      if (group == nil) {
+      if (group == nil)
+      {
         group = [[AKGroup alloc] initWithABRecordID: createGroupTag];
         [source.groups addObject: group];
       }
       [group setProvisoryName: textField.text];
-    } else {
+    }
+    else
+    {
       AKGroup *group = [source.groups objectAtIndex: self.indexPath.row];
       [group setProvisoryName: textField.text];
     }
   }
 }
 
--(BOOL)textFieldShouldReturn:(UITextField *)textField {
+- (BOOL)textFieldShouldReturn:(UITextField *)textField
+{
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
   return YES;
