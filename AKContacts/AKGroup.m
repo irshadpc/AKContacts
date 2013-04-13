@@ -40,22 +40,24 @@ const int deleteGroupTag = -256;
 @synthesize memberIDs = _memberIDs;
 @synthesize provisoryName = _provisoryName;
 
--(id)initWithABRecordID: (ABRecordID) recordID {
+- (id)initWithABRecordID: (ABRecordID) recordID
+{
   self = [super init];
-  if (self) {
+  if (self)
+  {
     super.recordID = recordID;
-
     _memberIDs = [[NSMutableArray alloc] init];
   }
   return  self;
 }
 
--(ABRecordRef)recordRef {
-
+- (ABRecordRef)recordRef
+{
   __block ABRecordRef ret;
 
   dispatch_block_t block = ^{
-    if (super.recordRef == nil && super.recordID >= 0) {
+    if (super.recordRef == nil && super.recordID >= 0)
+    {
       ABAddressBookRef addressBookRef = [[AKAddressBook sharedInstance] addressBookRef];
       super.recordRef = ABAddressBookGetGroupWithRecordID(addressBookRef, super.recordID);
     }
@@ -68,7 +70,8 @@ const int deleteGroupTag = -256;
   return ret;
 }
 
--(NSInteger)count {
+- (NSInteger)count
+{
   return [_memberIDs count];
 }
 

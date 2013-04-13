@@ -45,10 +45,10 @@ FOUNDATION_EXPORT const int deleteGroupTag;
  **/
 @property (nonatomic, strong) NSString *provisoryName;
 
--(id)initWithABRecordID: (ABRecordID) recordID;
+- (id)initWithABRecordID: (ABRecordID) recordID;
 /**
  * Return the member count of the group
  **/
--(NSInteger)count;
+- (NSInteger)count;
 
 @end
