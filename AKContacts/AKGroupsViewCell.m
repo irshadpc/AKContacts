@@ -113,10 +113,13 @@
 #pragma mark - UITextField delegate
 
 -(void)textFieldDidBeginEditing:(UITextField *)textField {
-  
+  [self.parent setFirstResponder: textField];
 }
 
 -(void)textFieldDidEndEditing:(UITextField *)textField {
+
+  [self.parent setFirstResponder: nil];
+
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
 
