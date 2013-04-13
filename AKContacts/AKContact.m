@@ -36,20 +36,23 @@
 
 @implementation AKContact
 
--(id)initWithABRecordID: (ABRecordID) recordID {
+- (id)initWithABRecordID: (ABRecordID) recordID
+{
   self = [super init];
-  if (self) {
+  if (self)
+  {
     super.recordID = recordID;
   }
   return  self;
 }
 
--(ABRecordRef)recordRef {
-
+- (ABRecordRef)recordRef
+{
   __block ABRecordRef ret;
 
   dispatch_block_t block = ^{
-    if (super.recordRef == nil) {
+    if (super.recordRef == nil)
+    {
       ABAddressBookRef addressBookRef = [[AKAddressBook sharedInstance] addressBookRef];
       super.recordRef = ABAddressBookGetPersonWithRecordID(addressBookRef, super.recordID);
     }
@@ -63,8 +66,8 @@
   return ret;
 }
 
--(NSString *)name {
-
+- (NSString *)name
+{
   __block NSString *ret;
 
   dispatch_block_t block = ^{
@@ -77,17 +80,18 @@
   return ret;
 }
 
--(NSString *)searchName {
+- (NSString *)searchName
+{
   return [self.name stringByFoldingWithOptions: NSDiacriticInsensitiveSearch locale: [NSLocale currentLocale]];
 }
 
--(NSString *)displayNameByOrdering: (ABPersonSortOrdering)ordering {
-
+- (NSString *)displayNameByOrdering: (ABPersonSortOrdering)ordering
+{
   NSString *ret = nil;
   NSInteger kind = [(NSNumber *)[self valueForProperty: kABPersonKindProperty] integerValue];
 
-  if (kind == [(NSNumber *)kABPersonKindPerson integerValue]) {
-
+  if (kind == [(NSNumber *)kABPersonKindPerson integerValue])
+  {
     NSMutableArray *array = [[NSMutableArray alloc] init];
     NSString *prefix = [self valueForProperty: kABPersonPrefixProperty];
     if (prefix) [array addObject: prefix];
@@ -96,79 +100,82 @@
     NSString *first = [self valueForProperty: kABPersonFirstNameProperty];
     NSString *middle = [self valueForProperty: kABPersonMiddleNameProperty];
 
-    if (ordering == kABPersonSortByFirstName) {
-
+    if (ordering == kABPersonSortByFirstName)
+    {
       if (first) [array addObject: first];
       if (middle) [array addObject: middle];
       if (last) [array addObject: last];
       
-    } else {
-      
+    }
+    else
+    {
       if (last) [array addObject: last];
       if (first) [array addObject: first];
       if (middle) [array addObject: middle];
-      
     }
 
     NSString *suffix = [self valueForProperty: kABPersonSuffixProperty];
     if (suffix) [array addObject: suffix];
 
     ret = [array componentsJoinedByString: @" "];
-
-  } else if (kind == [(NSNumber *)kABPersonKindOrganization integerValue]) {
+  }
+  else if (kind == [(NSNumber *)kABPersonKindOrganization integerValue])
+  {
     ret = [self valueForProperty: kABPersonOrganizationProperty];
   }
   return ret;
 }
 
--(NSString *)phoneticNameByOrdering: (ABPersonSortOrdering)ordering {
-
+- (NSString *)phoneticNameByOrdering: (ABPersonSortOrdering)ordering
+{
   NSString *ret = nil;
   NSInteger kind = [(NSNumber *)[self valueForProperty: kABPersonKindProperty] integerValue];
 
-  if (kind == [(NSNumber *)kABPersonKindPerson integerValue]) {
-
+  if (kind == [(NSNumber *)kABPersonKindPerson integerValue])
+  {
     NSMutableArray *array = [[NSMutableArray alloc] init];
 
     NSString *last = [self valueForProperty: kABPersonLastNamePhoneticProperty];
     NSString *middle = [self valueForProperty: kABPersonMiddleNamePhoneticProperty];
     NSString *first = [self valueForProperty: kABPersonFirstNamePhoneticProperty];
 
-    if (ordering == kABPersonSortByFirstName) {
-
+    if (ordering == kABPersonSortByFirstName)
+    {
       if (first) [array addObject: first];
       if (middle) [array addObject: middle];
       if (last) [array addObject: last];
-
-    } else {
-
+    }
+    else
+    {
       if (last) [array addObject: last];
       if (first) [array addObject: first];
       if (middle) [array addObject: middle];
-
     }
 
     ret = [array componentsJoinedByString: @" "];
 
-  } else if (kind == [(NSNumber *)kABPersonKindOrganization integerValue]) {
+  }
+  else if (kind == [(NSNumber *)kABPersonKindOrganization integerValue])
+  {
     ret = [self valueForProperty: kABPersonOrganizationProperty];
   }
   return ret;
 }
 
--(NSString *)displayDetails {
-  
+- (NSString *)displayDetails
+{
   NSString *ret = nil;
   NSInteger kind = [(NSNumber *)[self valueForProperty: kABPersonKindProperty] integerValue];
   
-  if (kind == [(NSNumber *)kABPersonKindOrganization integerValue]) {
-    
+  if (kind == [(NSNumber *)kABPersonKindOrganization integerValue])
+  {
     ret = [self valueForProperty: kABPersonDepartmentProperty];
 
-  } else if (kind == [(NSNumber *)kABPersonKindPerson integerValue]) {
-
+  }
+  else if (kind == [(NSNumber *)kABPersonKindPerson integerValue])
+  {
     NSMutableArray *array = [[NSMutableArray alloc] init];
-    
+
     NSString *phonetic = [self phoneticNameByOrdering: ABPersonGetSortOrdering()];
     if (phonetic) [array addObject: phonetic];
 
@@ -184,19 +191,19 @@
     ret = [array componentsJoinedByString: @" "];
     
   }
-
   return ret;
 }
 
--(NSArray *)linkedContactIDs {
-
+- (NSArray *)linkedContactIDs
+{
   __block NSMutableArray *ret = [[NSMutableArray alloc] init];
 
   dispatch_block_t block = ^{
 
 		NSArray *array = (NSArray *)CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople([self recordRef]));
 
-    for (id obj in array) {
+    for (id obj in array)
+    {
       ABRecordRef record = (__bridge ABRecordRef)obj;
       ABRecordID recordID = ABRecordGetRecordID(record);
       [ret addObject: [NSNumber numberWithInteger: recordID]];
@@ -209,15 +216,16 @@
   return [[NSArray alloc] initWithArray: ret];
 }
 
--(NSString *)dictionaryKey {
+- (NSString *)dictionaryKey
+{
   return [self dictionaryKeyBySortOrdering: ABPersonGetSortOrdering()];
 }
 
--(NSString *)dictionaryKeyBySortOrdering: (ABPersonSortOrdering)ordering {
-
+- (NSString *)dictionaryKeyBySortOrdering: (ABPersonSortOrdering)ordering
+{
   NSString *ret = @"#";
-  if ([[self displayNameByOrdering: ordering] length] > 0) {
-
+  if ([[self displayNameByOrdering: ordering] length] > 0)
+  {
     NSString *key = [[[[[self displayNameByOrdering: ordering] substringToIndex: 1]
                                  decomposedStringWithCanonicalMapping] substringToIndex: 1] uppercaseString];
     if (isalpha([key characterAtIndex: 0]))
@@ -226,12 +234,13 @@
   return ret;
 }
 
--(NSData*)pictureData{
-
+- (NSData*)pictureData
+{
   __block NSData *ret = nil;
   
   dispatch_block_t block = ^{
-    if (ABPersonHasImageData([self recordRef])) {
+    if (ABPersonHasImageData([self recordRef]))
+    {
       ret = (NSData *)CFBridgingRelease(ABPersonCopyImageDataWithFormat([self recordRef], kABPersonImageFormatThumbnail));
     }
   };
@@ -241,20 +250,24 @@
   return ret;
 }
 
--(UIImage *)picture {
-  
+- (UIImage *)picture
+{
   UIImage *ret = nil;
   NSData *data = [self pictureData];
-  if (data) {
+  if (data)
+  {
     ret = [UIImage imageWithData: [self pictureData]];
-  } else {
+  }
+  else
+  {
     NSInteger kind = [(NSNumber *)[self valueForProperty: kABPersonKindProperty] integerValue];
     ret = [UIImage imageNamed: (kind == [(NSNumber *)kABPersonKindOrganization integerValue]) ? @"Company.png" : @"Contact"];
   }
   return ret;
 }
 
--(NSComparisonResult)compareByName:(AKContact *)otherContact {
+- (NSComparisonResult)compareByName:(AKContact *)otherContact
+{
   return [self.name localizedCaseInsensitiveCompare: otherContact.name];
 }
 

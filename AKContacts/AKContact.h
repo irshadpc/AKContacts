@@ -33,32 +33,32 @@
 
 @interface AKContact : AKRecord
 
--(id)initWithABRecordID: (ABRecordID) recordID;
--(ABRecordRef)recordRef;
+- (id)initWithABRecordID: (ABRecordID) recordID;
+- (ABRecordRef)recordRef;
 /**
  * Return full name using system default naming convention
  * eg: first, last or last, first
  **/
--(NSString *)name;
+- (NSString *)name;
 
 /**
  * Return displayName sans diacritics and whitespace
  **/
--(NSString *)searchName;
--(NSString *)displayNameByOrdering: (ABPersonSortOrdering)ordering;
--(NSString *)phoneticNameByOrdering: (ABPersonSortOrdering)ordering;
--(NSString *)displayDetails;
--(NSArray *)linkedContactIDs;
+- (NSString *)searchName;
+- (NSString *)displayNameByOrdering: (ABPersonSortOrdering)ordering;
+- (NSString *)phoneticNameByOrdering: (ABPersonSortOrdering)ordering;
+- (NSString *)displayDetails;
+- (NSArray *)linkedContactIDs;
 
 /**
  * Return the lookup alphabet letter for the name of the contact
  **/
--(NSString *)dictionaryKey;
--(NSString *)dictionaryKeyBySortOrdering: (ABPersonSortOrdering)ordering;
+- (NSString *)dictionaryKey;
+- (NSString *)dictionaryKeyBySortOrdering: (ABPersonSortOrdering)ordering;
 
--(NSData*)pictureData;
--(UIImage *)picture;
+- (NSData*)pictureData;
+- (UIImage *)picture;
 
--(NSComparisonResult)compareByName:(AKContact *)otherContact;
+- (NSComparisonResult)compareByName:(AKContact *)otherContact;
 
 @end
