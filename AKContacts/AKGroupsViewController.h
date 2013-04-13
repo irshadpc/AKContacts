@@ -36,4 +36,9 @@ FOUNDATION_EXPORT const int deleteGroupTag;
 
 @interface AKGroupsViewController : UIViewController <UITableViewDataSource, UITableViewDelegate>
 
+/**
+ * UITextField currently being edited
+ */
+@property (nonatomic, strong) UITextField *firstResponder;
+
 @end

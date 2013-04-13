@@ -38,16 +38,37 @@ static const float defaultCellHeight = 44.f;
 @interface AKGroupsViewController ()
 
 @property (nonatomic, strong) UITableView *tableView;
+@property (nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer;
 
--(void)addButtonTouchUp: (id)seneder;
--(void)cancelButtonTouchUp: (id)sender;
+/**
+ * Touch handler of edit button
+ */
+-(void)addButtonTouchUpInside: (id)sender;
+/**
+ * Touch handler of edit cancel button
+ */
+-(void)cancelButtonTouchUpInside: (id)sender;
+/**
+ * Touch gesture recognizer handler attached to tableView in edit mode
+ */
+-(void)tableViewTouchUpInside: (id)sender;
+/**
+ * Reload contents of tableView
+ */
 -(void)reloadTableViewData;
+/**
+ * Keyboard notification handlers
+ */
+-(void)keyboardDidShow: (NSNotification *)notification;
+-(void)keyboardWillHide: (NSNotification *)notification;
 
 @end
 
 @implementation AKGroupsViewController
 
 @synthesize tableView = _tableView;
+@synthesize tapGestureRecognizer = _tapGestureRecognizer;
+@synthesize firstResponder = _firstResponder;
 
 #pragma mark - View lifecycle
 
@@ -70,7 +91,7 @@ static const float defaultCellHeight = 44.f;
 
   UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd
                                                                              target: self
-                                                                             action: @selector(addButtonTouchUp:)];
+                                                                             action: @selector(addButtonTouchUpInside:)];
   [self.navigationItem setRightBarButtonItem: addButton];
 
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AddressBookDidLoadNotification object: nil];
@@ -78,6 +99,11 @@ static const float defaultCellHeight = 44.f;
 
 -(void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
+  
+  [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardDidShow:)
+                                               name: UIKeyboardDidShowNotification object:nil];
+  [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillHide:)
+                                               name: UIKeyboardWillHideNotification object:nil];
 }
 
 -(void)viewDidAppear:(BOOL)animated {
@@ -86,6 +112,9 @@ static const float defaultCellHeight = 44.f;
 
 -(void)viewWillDisappear:(BOOL)animated {
   [super viewWillDisappear:animated];
+  
+  [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardDidShowNotification object: nil];
+  [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillHideNotification object: nil];
 }
 
 -(void)viewDidDisappear:(BOOL)animated {
@@ -101,17 +130,17 @@ static const float defaultCellHeight = 44.f;
   if (self.editing) {
     UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel
                                                                                    target: self
-                                                                                   action: @selector(cancelButtonTouchUp:)];
+                                                                                   action: @selector(cancelButtonTouchUpInside:)];
     [self.navigationItem setLeftBarButtonItem: barButtonItem];
 
     barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone
                                                                   target: self
-                                                                  action: @selector(addButtonTouchUp:)];
+                                                                  action: @selector(addButtonTouchUpInside:)];
     [self.navigationItem setRightBarButtonItem: barButtonItem];
   } else {
     UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd
                                                                                    target: self
-                                                                                   action: @selector(addButtonTouchUp:)];
+                                                                                   action: @selector(addButtonTouchUpInside:)];
     [self.navigationItem setRightBarButtonItem: barButtonItem];
     [self.navigationItem setLeftBarButtonItem: nil];
   }
@@ -147,7 +176,7 @@ static const float defaultCellHeight = 44.f;
 
 #pragma mark - Custom methods
 
--(void)addButtonTouchUp: (id)sender {
+-(void)addButtonTouchUpInside: (id)sender {
 
   [[UIApplication sharedApplication] sendAction: @selector(resignFirstResponder) to: nil from: nil forEvent: nil];
 
@@ -172,7 +201,7 @@ static const float defaultCellHeight = 44.f;
   [self.tableView endUpdates];
 }
 
--(void)cancelButtonTouchUp: (id)sender {
+-(void)cancelButtonTouchUpInside: (id)sender {
 
   AKAddressBook *addressBook = [AKAddressBook sharedInstance];
 
@@ -196,10 +225,54 @@ static const float defaultCellHeight = 44.f;
   [self.tableView endUpdates];
 }
 
+-(void)tableViewTouchUpInside: (id)sender {
+  [self.firstResponder resignFirstResponder];
+}
+
 -(void)reloadTableViewData {
   dispatch_async(dispatch_get_main_queue(), ^(void){
     [_tableView reloadData];
   });
+}
+
+-(void)keyboardDidShow: (NSNotification *)notification {
+
+  UITapGestureRecognizer *recognizer = [[UITapGestureRecognizer alloc] initWithTarget: self
+                                                                               action: @selector(tableViewTouchUpInside:)];
+  [recognizer setCancelsTouchesInView: NO];
+  [self.tableView addGestureRecognizer: recognizer];
+  [self setTapGestureRecognizer: recognizer];
+
+  NSDictionary* info = [notification userInfo];
+  CGSize kbSize = [[info objectForKey: UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
+
+  UIEdgeInsets contentInsets = UIEdgeInsetsMake(0.f, 0.f, kbSize.height, 0.f);
+  [self.tableView setContentInset: contentInsets];
+  [self.tableView setScrollIndicatorInsets: contentInsets];
+
+  CGRect textFieldFrame = self.firstResponder.frame;
+  CGFloat textFieldOrigin = self.firstResponder.superview.superview.frame.origin.y;
+  CGFloat textFieldBottom = textFieldOrigin + textFieldFrame.size.height;
+  CGRect visibleFrame = self.view.frame;
+  visibleFrame.size.height -= kbSize.height;
+
+  CGFloat keyboardTop = visibleFrame.size.height;
+  CGPoint point = CGPointMake(textFieldFrame.origin.x, textFieldBottom);
+
+  if (CGRectContainsPoint(visibleFrame, point) == NO) {
+    CGFloat posY = fabs(textFieldBottom - keyboardTop) + 10.f;
+    CGPoint scrollPoint = CGPointMake(0.f, posY);
+    [self.tableView setContentOffset: scrollPoint animated: YES];
+  }
+}
+
+-(void)keyboardWillHide: (NSNotification *)notification {
+
+  [self.tableView removeGestureRecognizer: self.tapGestureRecognizer];
+
+  UIEdgeInsets contentInsets = UIEdgeInsetsZero;
+  [self.tableView setContentInset: contentInsets];
+  [self.tableView setScrollIndicatorInsets: contentInsets];
 }
 
 #pragma mark - Table view data source
