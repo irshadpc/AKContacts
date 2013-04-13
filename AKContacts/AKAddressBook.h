@@ -90,15 +90,15 @@ typedef enum {
 @property (assign, nonatomic) NSInteger sourceID;
 @property (assign, nonatomic) NSInteger groupID;
 
-+(AKAddressBook *)sharedInstance;
--(void)requestAddressBookAccess;
--(AKSource *)defaultSource;
--(NSInteger)contactsCount;
--(NSInteger)displayedContactsCount;
--(AKSource *)sourceForSourceId: (NSInteger)recordId;
--(AKContact *)contactForContactId: (NSInteger)recordId;
--(void)resetSearch;
++ (AKAddressBook *)sharedInstance;
+- (void)requestAddressBookAccess;
+- (AKSource *)defaultSource;
+- (NSInteger)contactsCount;
+- (NSInteger)displayedContactsCount;
+- (AKSource *)sourceForSourceId: (NSInteger)recordId;
+- (AKContact *)contactForContactId: (NSInteger)recordId;
+- (void)resetSearch;
 
--(void)handleSearchForTerm:(NSString *)searchTerm;
+- (void)handleSearchForTerm:(NSString *)searchTerm;
 
 @end
