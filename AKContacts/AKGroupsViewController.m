@@ -35,7 +35,7 @@
 
 static const float defaultCellHeight = 44.f;
 
-@interface AKGroupsViewController ()
+@interface AKGroupsViewController () <UITableViewDataSource, UITableViewDelegate>
 
 @property (nonatomic, strong) UITableView *tableView;
 @property (nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer;
@@ -72,8 +72,8 @@ static const float defaultCellHeight = 44.f;
 
 #pragma mark - View lifecycle
 
-- (void)loadView {
-
+- (void)loadView
+{
   CGFloat navBarHeight = ([self.navigationController isNavigationBarHidden]) ? 0.f :
   self.navigationController.navigationBar.frame.size.height;
 
@@ -86,7 +86,8 @@ static const float defaultCellHeight = 44.f;
   [self.view addSubview: self.tableView];
 }
 
--(void)viewDidLoad {
+- (void)viewDidLoad
+{
   [super viewDidLoad];
 
   UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd
@@ -97,7 +98,8 @@ static const float defaultCellHeight = 44.f;
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AddressBookDidLoadNotification object: nil];
 }
 
--(void)viewWillAppear:(BOOL)animated {
+- (void)viewWillAppear:(BOOL)animated
+{
   [super viewWillAppear:animated];
   
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardDidShow:)
@@ -106,28 +108,32 @@ static const float defaultCellHeight = 44.f;
                                                name: UIKeyboardWillHideNotification object:nil];
 }
 
--(void)viewDidAppear:(BOOL)animated {
+- (void)viewDidAppear:(BOOL)animated
+{
   [super viewDidAppear:animated];
 }
 
--(void)viewWillDisappear:(BOOL)animated {
+- (void)viewWillDisappear:(BOOL)animated
+{
   [super viewWillDisappear:animated];
   
   [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardDidShowNotification object: nil];
   [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillHideNotification object: nil];
 }
 
--(void)viewDidDisappear:(BOOL)animated {
+- (void)viewDidDisappear:(BOOL)animated
+{
   [super viewDidDisappear:animated];
 }
 
-- (void)setEditing:(BOOL)editing animated:(BOOL)animate {
-
+- (void)setEditing:(BOOL)editing animated:(BOOL)animate
+{
   [super setEditing: editing animated: YES]; // Toggles Done button
   [self.tableView setEditing: editing animated: YES];
   [self.view endEditing: YES]; // Resign first responders
 
-  if (self.editing) {
+  if (self.editing)
+  {
     UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel
                                                                                    target: self
                                                                                    action: @selector(cancelButtonTouchUpInside:)];
@@ -137,7 +143,9 @@ static const float defaultCellHeight = 44.f;
                                                                   target: self
                                                                   action: @selector(addButtonTouchUpInside:)];
     [self.navigationItem setRightBarButtonItem: barButtonItem];
-  } else {
+  }
+  else
+  {
     UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd
                                                                                    target: self
                                                                                    action: @selector(addButtonTouchUpInside:)];
@@ -147,17 +155,22 @@ static const float defaultCellHeight = 44.f;
 
   NSInteger section = 0;
   [self.tableView beginUpdates];
-  for (AKSource *source in [AKAddressBook sharedInstance].sources) {
-    if ([source hasEditableGroups] == YES) {
+  for (AKSource *source in [AKAddressBook sharedInstance].sources)
+  {
+    if ([source hasEditableGroups] == YES)
+    {
       NSInteger rows = [self.tableView numberOfRowsInSection: section];      
       NSIndexPath *indexPath = [NSIndexPath indexPathForRow: rows inSection: section];
-      if (self.editing == YES) {
+      if (self.editing == YES)
+      {
         [self.tableView insertRowsAtIndexPaths: [NSArray arrayWithObject: indexPath]
                               withRowAnimation: UITableViewRowAnimationTop];
-      } else {
-        
+      }
+      else
+      {
         NSInteger groups = 0;
-        for (AKGroup *group in source.groups) {
+        for (AKGroup *group in source.groups)
+        {
           if (group.recordID == deleteGroupTag ||
               group.recordID == createGroupTag)
             continue;
@@ -176,33 +189,32 @@ static const float defaultCellHeight = 44.f;
 
 #pragma mark - Custom methods
 
--(void)addButtonTouchUpInside: (id)sender {
-
+- (void)addButtonTouchUpInside: (id)sender
+{
   [[UIApplication sharedApplication] sendAction: @selector(resignFirstResponder) to: nil from: nil forEvent: nil];
 
   [self.tableView beginUpdates];
   [self setEditing: !self.editing animated: YES];
   
-  if (self.editing == NO) {
-
+  if (self.editing == NO)
+  {
     AKAddressBook *addressBook = [AKAddressBook sharedInstance];
 
     NSMutableArray *insertIndexes = [[NSMutableArray alloc] init];
 
-    for (AKSource *source in addressBook.sources) {
-
+    for (AKSource *source in addressBook.sources)
+    {
       [insertIndexes addObjectsFromArray: [source indexPathsOfCreatedGroups]];
       
       [source commitGroups];
     }
     [self.tableView insertRowsAtIndexPaths: insertIndexes withRowAnimation: UITableViewRowAnimationAutomatic];
   }
-
   [self.tableView endUpdates];
 }
 
--(void)cancelButtonTouchUpInside: (id)sender {
-
+- (void)cancelButtonTouchUpInside: (id)sender
+{
   AKAddressBook *addressBook = [AKAddressBook sharedInstance];
 
   [self.tableView beginUpdates];
@@ -212,8 +224,8 @@ static const float defaultCellHeight = 44.f;
 
   NSMutableArray *reloadIndexes = [[NSMutableArray alloc] init];
 
-  for (AKSource *source in addressBook.sources) {
-
+  for (AKSource *source in addressBook.sources)
+  {
     [insertIndexes addObjectsFromArray: [source indexPathsOfDeletedGroups]];
     [reloadIndexes addObjectsFromArray: [source indexPathsOfGroupsOutOfPosition]];
 
@@ -225,18 +237,20 @@ static const float defaultCellHeight = 44.f;
   [self.tableView endUpdates];
 }
 
--(void)tableViewTouchUpInside: (id)sender {
+- (void)tableViewTouchUpInside: (id)sender
+{
   [self.firstResponder resignFirstResponder];
 }
 
--(void)reloadTableViewData {
+- (void)reloadTableViewData
+{
   dispatch_async(dispatch_get_main_queue(), ^(void){
     [_tableView reloadData];
   });
 }
 
--(void)keyboardDidShow: (NSNotification *)notification {
-
+- (void)keyboardDidShow: (NSNotification *)notification
+{
   UITapGestureRecognizer *recognizer = [[UITapGestureRecognizer alloc] initWithTarget: self
                                                                                action: @selector(tableViewTouchUpInside:)];
   [recognizer setCancelsTouchesInView: NO];
@@ -259,15 +273,16 @@ static const float defaultCellHeight = 44.f;
   CGFloat keyboardTop = visibleFrame.size.height;
   CGPoint point = CGPointMake(textFieldFrame.origin.x, textFieldBottom);
 
-  if (CGRectContainsPoint(visibleFrame, point) == NO) {
+  if (CGRectContainsPoint(visibleFrame, point) == NO)
+  {
     CGFloat posY = fabs(textFieldBottom - keyboardTop) + 10.f;
     CGPoint scrollPoint = CGPointMake(0.f, posY);
     [self.tableView setContentOffset: scrollPoint animated: YES];
   }
 }
 
--(void)keyboardWillHide: (NSNotification *)notification {
-
+- (void)keyboardWillHide: (NSNotification *)notification
+{
   [self.tableView removeGestureRecognizer: self.tapGestureRecognizer];
 
   UIEdgeInsets contentInsets = UIEdgeInsetsZero;
@@ -277,35 +292,37 @@ static const float defaultCellHeight = 44.f;
 
 #pragma mark - Table view data source
 
--(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-  
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
   NSInteger ret = 0;
   
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
   
-  if (akAddressBook.status >= kAddressBookOnline) {
+  if (akAddressBook.status >= kAddressBookOnline)
+  {
     ret = [[akAddressBook sources] count];
   }
   
   return ret;
 }
 
--(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
   AKSource *source = [[[AKAddressBook sharedInstance] sources] objectAtIndex: section];
   NSInteger ret = 0;
   
-  for (AKGroup *group in source.groups) {
+  for (AKGroup *group in source.groups)
+  {
     if (group.recordID == createGroupTag || group.recordID == deleteGroupTag)
       continue;
     ret += 1;
   }
-
   if (self.editing && [source hasEditableGroups]) ret += 1;
   return ret;
 }
 
--(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
   static NSString *CellIdentifier = @"Cell";
 
   AKGroupsViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
@@ -320,8 +337,8 @@ static const float defaultCellHeight = 44.f;
   return (UITableViewCell *)cell;
 }
 
--(NSString *)tableView:(UITableView *)tableView titleForHeaderInSection: (NSInteger)section {
-
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection: (NSInteger)section
+{
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
 
   NSInteger sourceCount = [akAddressBook.sources count];
@@ -343,29 +360,24 @@ static const float defaultCellHeight = 44.f;
   return UITableViewCellEditingStyleDelete;
 }
 
-/*
- // Override to support conditional editing of the table view.
- -(BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
- // Return NO if you do not want the specified item to be editable.
- return YES;
- }
- */
-
-
-// Override to support editing the table view.
--(void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
-  if (editingStyle == UITableViewCellEditingStyleDelete) {
-
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath
+{
+  if (editingStyle == UITableViewCellEditingStyleDelete)
+  {
     AKAddressBook *addressBook = [AKAddressBook sharedInstance];
     AKSource *source = [[addressBook sources] objectAtIndex: indexPath.section];
 
     NSInteger groupID = [tableView cellForRowAtIndexPath: indexPath].tag;
 
     NSInteger row = 0;
-    for (AKGroup *group in source.groups) {
-      if (group.recordID == deleteGroupTag) {
+    for (AKGroup *group in source.groups)
+    {
+      if (group.recordID == deleteGroupTag)
+      {
         continue;
-      } else if (group.recordID == groupID) {
+      }
+      else if (group.recordID == groupID)
+      {
         [group setRecordID: deleteGroupTag];
         break;
       }
@@ -378,17 +390,15 @@ static const float defaultCellHeight = 44.f;
   }
 }
 
-// Override to support rearranging the table view.
--(void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
-
+- (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath
+{
   AKSource *source = [[[AKAddressBook sharedInstance] sources] objectAtIndex: fromIndexPath.section];
 
   [source.groups exchangeObjectAtIndex: fromIndexPath.row withObjectAtIndex: toIndexPath.row];
 }
 
-// Override to support conditional rearranging of the table view.
--(BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
-
+- (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath
+{
   AKSource *source = [[[AKAddressBook sharedInstance] sources] objectAtIndex: indexPath.section];
 
   if (indexPath.row == [source.groups count])
@@ -403,31 +413,41 @@ static const float defaultCellHeight = 44.f;
 
 #pragma mark - Table view delegate
 
-- (NSIndexPath *)tableView:(UITableView *)tableView targetIndexPathForMoveFromRowAtIndexPath:(NSIndexPath *)sourceIndexPath toProposedIndexPath:(NSIndexPath *)proposedDestinationIndexPath {
-
+- (NSIndexPath *)tableView:(UITableView *)tableView targetIndexPathForMoveFromRowAtIndexPath:(NSIndexPath *)sourceIndexPath toProposedIndexPath:(NSIndexPath *)proposedDestinationIndexPath
+{
   NSInteger row = 1;
-  if (sourceIndexPath.section != proposedDestinationIndexPath.section) {
-    if (sourceIndexPath.section < proposedDestinationIndexPath.section) {
+  if (sourceIndexPath.section != proposedDestinationIndexPath.section)
+  {
+    if (sourceIndexPath.section < proposedDestinationIndexPath.section)
+    {
       row = [tableView numberOfRowsInSection: sourceIndexPath.section] - 2;
     }
-  } else {
-    if (proposedDestinationIndexPath.row == 0) {
+  }
+  else
+  {
+    if (proposedDestinationIndexPath.row == 0)
+    {
       row = 1;
-    } else if (proposedDestinationIndexPath.row == [tableView numberOfRowsInSection: sourceIndexPath.section] - 1) {
+    }
+    else if (proposedDestinationIndexPath.row == [tableView numberOfRowsInSection: sourceIndexPath.section] - 1)
+    {
       row = [tableView numberOfRowsInSection: sourceIndexPath.section] - 2;
-    } else {
+    }
+    else
+    {
       row = proposedDestinationIndexPath.row;
     }
   }
   return [NSIndexPath indexPathForRow:row inSection: sourceIndexPath.section];
 }
 
--(NSIndexPath *)tableView: (UITableView *)tableView willSelectRowAtIndexPath: (NSIndexPath *)indexPath {
+- (NSIndexPath *)tableView: (UITableView *)tableView willSelectRowAtIndexPath: (NSIndexPath *)indexPath
+{
   return indexPath;
 }
 
--(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
 
   AKSource *source = [akAddressBook.sources objectAtIndex: indexPath.section];
@@ -445,14 +465,16 @@ static const float defaultCellHeight = 44.f;
 
 #pragma mark - Memory management
 
--(void)didReceiveMemoryWarning {
+- (void)didReceiveMemoryWarning
+{
   // Releases the view if it doesn't have a superview.
   [super didReceiveMemoryWarning];
   
   // Release any cached data, images, etc that aren't in use.
 }
 
--(void)dealloc {
+- (void)dealloc
+{
   [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 

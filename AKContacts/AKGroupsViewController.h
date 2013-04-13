@@ -34,7 +34,7 @@
 FOUNDATION_EXPORT const int createGroupTag;
 FOUNDATION_EXPORT const int deleteGroupTag;
 
-@interface AKGroupsViewController : UIViewController <UITableViewDataSource, UITableViewDelegate>
+@interface AKGroupsViewController : UIViewController
 
 /**
  * UITextField currently being edited
