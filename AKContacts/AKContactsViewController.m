@@ -32,18 +32,25 @@
 #import "AKAddressBook.h"
 #import "AKSource.h"
 
+#import <AddressBook/AddressBook.h>
+#import <AddressBookUI/AddressBookUI.h>
+
 static const float defaultCellHeight = 44.f;
 static const int manyContacts = 20;
 
-@interface AKContactsViewController ()
+@interface AKContactsViewController () <UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate, AKContactViewControllerDelegate>
 
 @property (nonatomic, strong) UITableView *tableView;
 @property (nonatomic, strong) UISearchBar *searchBar;
 @property (nonatomic, strong) NSString *searchTerm;
 
--(void)addButtonTouchUp: (id)sender;
--(void)reloadTableViewData;
--(void)toggleBackButton;
+- (void)addButtonTouchUp: (id)sender;
+- (void)reloadTableViewData;
+- (void)toggleBackButton;
+/**
+ * AKContactViewControllerDelegate
+ */
+- (void)modalViewDidDismissedWithContactID: (NSInteger)contactID;
 
 @end
 
@@ -56,8 +63,8 @@ static const int manyContacts = 20;
 
 #pragma mark - View lifecycle
 
-- (void)loadView {
-
+- (void)loadView
+{
   CGFloat navBarHeight = ([self.navigationController isNavigationBarHidden]) ? 0.f :
   self.navigationController.navigationBar.frame.size.height;
 
@@ -77,7 +84,8 @@ static const int manyContacts = 20;
   [self setSearchTerm: nil];
 }
 
--(void)viewDidLoad {
+-(void)viewDidLoad
+{
   [super viewDidLoad];
   
   // Uncomment the following line to preserve selection between presentations.
@@ -92,7 +100,8 @@ static const int manyContacts = 20;
   [self.navigationItem setRightBarButtonItem: addButton];
 }
 
--(void)viewWillAppear:(BOOL)animated {
+- (void)viewWillAppear:(BOOL)animated
+{
   [super viewWillAppear:animated];
 
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
@@ -105,13 +114,13 @@ static const int manyContacts = 20;
                                              object: nil];
 
   [self toggleBackButton];
-  
-  if ([self.searchTerm length] > 0) {
 
+  if ([self.searchTerm length] > 0)
+  {
     [self.searchBar becomeFirstResponder];
-
-  } else {
-
+  }
+  else
+  {
     [self.tableView setTableHeaderView: ([akAddressBook displayedContactsCount] > manyContacts) ? self.searchBar : nil];
 
     if (self.tableView.tableHeaderView && self.tableView.contentOffset.y <= self.searchBar.frame.size.height)
@@ -119,48 +128,67 @@ static const int manyContacts = 20;
   }
 }
 
--(void)viewDidAppear:(BOOL)animated {
+- (void)viewDidAppear:(BOOL)animated
+{
   [super viewDidAppear:animated];
 }
 
--(void)viewWillDisappear:(BOOL)animated {
+- (void)viewWillDisappear:(BOOL)animated
+{
   [super viewWillDisappear:animated];
 
   [[AKAddressBook sharedInstance] removeObserver: self forKeyPath: @"status"];
   [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 
--(void)viewDidDisappear:(BOOL)animated {
+- (void)viewDidDisappear:(BOOL)animated
+{
   [super viewDidDisappear:animated];
+}
+
+#pragma mark - AKContactViewController delegate
+
+- (void)modalViewDidDismissedWithContactID: (NSInteger)contactID
+{
+  [[AKAddressBook sharedInstance] resetSearch];
+  [self reloadTableViewData];
+  AKContactViewController *contactView = [[AKContactViewController alloc] initWithContactID: contactID];
+  [self.navigationController pushViewController: contactView animated: NO];
 }
 
 #pragma mark - Custom methods
 
--(void)addButtonTouchUp: (id)sender {
-
-  AKContactViewController *contactView = [[AKContactViewController alloc] initWithContactID: -1];
+- (void)addButtonTouchUp: (id)sender
+{
+  AKContactViewController *contactView = [[AKContactViewController alloc] initWithContactID: tagNewContact];
+  [contactView setDelegate: self];
   UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: contactView];
-
-  [self.navigationController presentViewController: navigationController animated: YES completion: ^{}];
+  
+  if ([self.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
+    [self.navigationController presentViewController: navigationController animated: YES completion: nil];
+  else
+    [self.navigationController presentModalViewController: navigationController animated: YES];
 }
 
--(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
   // This is not dispatched on main queue
 
   if (object == [AKAddressBook sharedInstance] && // Comparing the address
-      [keyPath isEqualToString: @"status"]) {
+      [keyPath isEqualToString: @"status"])
+  {
     // Status property of AKAddressBook changed
     [self reloadTableViewData];
     [self toggleBackButton];
   }
 }
 
--(void)toggleBackButton {
-
+- (void)toggleBackButton
+{
   dispatch_block_t block = ^{
     NSInteger sourceCount = [[[AKAddressBook sharedInstance] sources] count];
     NSInteger groupCount = 0;
-    if (sourceCount == 1) {
+    if (sourceCount == 1)
+    {
       AKSource *source = [[[AKAddressBook sharedInstance] sources] objectAtIndex: 0];
       groupCount = [source.groups count];
     }
@@ -170,15 +198,16 @@ static const int manyContacts = 20;
     else
       [self.navigationItem setHidesBackButton: YES];
   };
-  
+
   if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_async(dispatch_get_main_queue(), block);
 }
 
--(void)reloadTableViewData {
-  
+- (void)reloadTableViewData
+{
   dispatch_block_t block = ^{
-    if ([self.searchBar isFirstResponder] == NO) {
+    if ([self.searchBar isFirstResponder] == NO)
+    {
       [self.tableView setTableHeaderView: ([[AKAddressBook sharedInstance] displayedContactsCount] > manyContacts) ? self.searchBar : nil];
 
       if (self.tableView.tableHeaderView && self.tableView.contentOffset.y <= self.searchBar.frame.size.height)
@@ -193,8 +222,8 @@ static const int manyContacts = 20;
 
 #pragma mark - Table view data source
 
--(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-  
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
   if ([AKAddressBook sharedInstance].status == kAddressBookOnline)
     return ([[AKAddressBook sharedInstance] displayedContactsCount] > 0) ? [[AKAddressBook sharedInstance].keys count] : 1;
   else
@@ -202,14 +231,18 @@ static const int manyContacts = 20;
   
 }
 
--(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
   NSInteger ret = 8;
 
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
-  
-  if (akAddressBook.status == kAddressBookOnline) {
-    if ([akAddressBook displayedContactsCount] > 0) {
-      if ([akAddressBook.keys count] > section) {
+
+  if (akAddressBook.status == kAddressBookOnline)
+  {
+    if ([akAddressBook displayedContactsCount] > 0)
+    {
+      if ([akAddressBook.keys count] > section)
+      {
         NSString *key = [akAddressBook.keys objectAtIndex: section];
         NSArray *nameSection = [akAddressBook.contactIdentifiers objectForKey: key];
         ret = [nameSection count];
@@ -219,11 +252,13 @@ static const int manyContacts = 20;
   return ret;
 }
  
--(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
   static NSString *CellIdentifier = @"Cell";
   
   UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
-  if (cell == nil) {
+  if (cell == nil)
+  {
     cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
   }
 
@@ -238,23 +273,32 @@ static const int manyContacts = 20;
 
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
   
-  if (akAddressBook.status == kAddressBookOnline) {
-    if ([akAddressBook displayedContactsCount] == 0) {
+  if (akAddressBook.status == kAddressBookOnline)
+  {
+    if ([akAddressBook displayedContactsCount] == 0)
+    {
       [cell setAccessoryView: nil];
 
       [cell.textLabel setFont:[UIFont boldSystemFontOfSize: 20.f]];
       [cell.textLabel setTextAlignment: NSTextAlignmentCenter];
       [cell.textLabel setTextColor: [UIColor lightGrayColor]];
-      if ([self.searchBar isFirstResponder]) {
-        if (row == 2) {
+      if ([self.searchBar isFirstResponder])
+      {
+        if (row == 2)
+        {
           [cell.textLabel setText: NSLocalizedString(@"No Results", @"")];
         }
-      } else {
-        if (row == 3) {
+      }
+      else
+      {
+        if (row == 3)
+        {
           [cell.textLabel setText: NSLocalizedString(@"No Contacts", @"")];
         }
       }
-    } else {
+    }
+    else
+    {
       NSString *key = nil;
       if ([akAddressBook.keys count] > section)
         key = [akAddressBook.keys objectAtIndex: section];
@@ -268,27 +312,36 @@ static const int manyContacts = 20;
       [cell setSelectionStyle: UITableViewCellSelectionStyleBlue];
       
       [cell setAccessoryView: nil];
-      if (![contact name]) {
+      if (![contact name])
+      {
         cell.textLabel.font = [UIFont italicSystemFontOfSize: 20.f];
         cell.textLabel.text = NSLocalizedString(@"No Name", @"");
-      } else {
+      }
+      else
+      {
         cell.textLabel.font = [UIFont boldSystemFontOfSize: 20.f];
         cell.textLabel.text = [contact name];
       }
     }
-  } else {
+  }
+  else
+  {
     [cell setAccessoryView: nil];
 
-    if (row == 3) {
+    if (row == 3)
+    {
       [cell.textLabel setTextColor: [UIColor grayColor]];
       [cell.textLabel setTextAlignment: NSTextAlignmentCenter];
       if (akAddressBook.status == kAddressBookInitializing ||
-          akAddressBook.status == kAddressBookLoading) {
+          akAddressBook.status == kAddressBookLoading)
+      {
         [cell.textLabel setText: NSLocalizedString(@"Loading address book...", @"")];
         UIActivityIndicatorView *activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle: UIActivityIndicatorViewStyleGray];
         [cell setAccessoryView: activity];
         [activity startAnimating];
-      } else if (akAddressBook.status == kAddressBookOffline) {
+      }
+      else if (akAddressBook.status == kAddressBookOffline)
+      {
         [cell.textLabel setText: NSLocalizedString(@"No Contacts", @"")];
       }
     }
@@ -297,14 +350,15 @@ static const int manyContacts = 20;
   return cell;
 }
 
--(NSString *)tableView:(UITableView *)tableView titleForHeaderInSection: (NSInteger)section {
-  
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection: (NSInteger)section
+{
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
   NSString *ret = @"";  
   if ([akAddressBook.keys count] == 0) return ret;
   
   NSString *key = nil;
-  if ([akAddressBook.keys count] > section) {
+  if ([akAddressBook.keys count] > section)
+  {
     key = [akAddressBook.keys objectAtIndex: section];
     NSArray *nameSection = [akAddressBook.contactIdentifiers objectForKey: key];
     if ([nameSection count] > 0) ret = key;
@@ -312,8 +366,8 @@ static const int manyContacts = 20;
   return ret;
 }
 
--(NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView {
-
+- (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView
+{
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
   BOOL index = YES;
   if ([akAddressBook status] != kAddressBookOnline ||
@@ -325,18 +379,22 @@ static const int manyContacts = 20;
   return (index) ? [akAddressBook keys] : nil;
 }
 
--(NSInteger)tableView:(UITableView *)tableView sectionForSectionIndexTitle:(NSString *)title atIndex:(NSInteger)index { 
-  
+- (NSInteger)tableView:(UITableView *)tableView sectionForSectionIndexTitle:(NSString *)title atIndex:(NSInteger)index
+{
   NSInteger ret = NSNotFound;
   
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
   
-  if ([akAddressBook.keys count] > index) {
+  if ([akAddressBook.keys count] > index)
+  {
     NSString *key = [akAddressBook.keys objectAtIndex: index];
-    if (key == UITableViewIndexSearch) {
+    if (key == UITableViewIndexSearch)
+    {
       [tableView setContentOffset: CGPointZero animated:NO];
       ret = NSNotFound;
-    } else {
+    }
+    else
+    {
       ret = index; 
     }
   }
@@ -345,7 +403,7 @@ static const int manyContacts = 20;
 
 /*
  // Override to support conditional editing of the table view.
- -(BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
+ - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
  // Return NO if you do not want the specified item to be editable.
  return YES;
  }
@@ -353,7 +411,7 @@ static const int manyContacts = 20;
 
 /*
  // Override to support editing the table view.
- -(void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
+ - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
  if (editingStyle == UITableViewCellEditingStyleDelete) {
  // Delete the row from the data source
  [tableView deleteRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationFade];
@@ -366,13 +424,13 @@ static const int manyContacts = 20;
 
 /*
  // Override to support rearranging the table view.
- -(void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
+ - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
  }
  */
 
 /*
  // Override to support conditional rearranging of the table view.
- -(BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
+ - (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
  // Return NO if you do not want the item to be re-orderable.
  return YES;
  }
@@ -380,14 +438,14 @@ static const int manyContacts = 20;
 
 #pragma mark - Table view delegate
 
--(NSIndexPath *)tableView: (UITableView *)tableView willSelectRowAtIndexPath: (NSIndexPath *)indexPath {
-
+- (NSIndexPath *)tableView: (UITableView *)tableView willSelectRowAtIndexPath: (NSIndexPath *)indexPath
+{
 //  [self.searchBar resignFirstResponder];
   return indexPath;
 }
 
--(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
   UITableViewCell *cell = [tableView cellForRowAtIndexPath: indexPath];
 
   AKContactViewController *contactView = [[AKContactViewController alloc ] initWithContactID: cell.tag];
@@ -396,10 +454,12 @@ static const int manyContacts = 20;
   [tableView deselectRowAtIndexPath: indexPath animated: YES];
 }
 
-- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-  
-  if ([self.searchTerm length] > 0) {
-    if (self.tableView.contentOffset.y >= self.searchBar.frame.size.height) {
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView
+{
+  if ([self.searchTerm length] > 0)
+  {
+    if (self.tableView.contentOffset.y >= self.searchBar.frame.size.height)
+    {
       [self.searchBar resignFirstResponder];
     }
   }
@@ -407,13 +467,14 @@ static const int manyContacts = 20;
 
 #pragma mark - Search Bar delegate
 
--(void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar {
-
+- (void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar
+{
 	[searchBar becomeFirstResponder];
 	[searchBar setShowsCancelButton: YES animated: YES];
   [self.tableView reloadSectionIndexTitles]; // To hide index
   
-  if (self.tableView.contentOffset.y >= self.searchBar.frame.size.height) {
+  if (self.tableView.contentOffset.y >= self.searchBar.frame.size.height)
+  {
     [UIView animateWithDuration: .3f
                           delay: .0f
                         options: UIViewAnimationOptionAllowUserInteraction
@@ -424,20 +485,20 @@ static const int manyContacts = 20;
   }
 }
 
--(void)searchBarTextDidEndEditing:(UISearchBar *)searchBar {
-
+- (void)searchBarTextDidEndEditing:(UISearchBar *)searchBar
+{
 	[searchBar resignFirstResponder];
 	[searchBar setShowsCancelButton: NO animated: YES];
   [self.tableView reloadSectionIndexTitles]; // To show index
 }
 
--(void)searchBarSearchButtonClicked:(UISearchBar *)searchBar {
-
+- (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar
+{
   [[AKAddressBook sharedInstance] handleSearchForTerm: searchBar.text];
 }
 
--(void)searchBar: (UISearchBar *)searchBar textDidChange: (NSString *)searchTerm {
-  
+- (void)searchBar: (UISearchBar *)searchBar textDidChange: (NSString *)searchTerm
+{
   if ([searchTerm length] == 0)
   {
     [self setSearchTerm: nil];
@@ -451,8 +512,8 @@ static const int manyContacts = 20;
   }
 }
 
--(void)searchBarCancelButtonClicked:(UISearchBar *)searchBar {
-  
+- (void)searchBarCancelButtonClicked:(UISearchBar *)searchBar
+{
   [self setSearchTerm: nil];
   [searchBar setText: nil];
   [searchBar resignFirstResponder];
@@ -462,14 +523,16 @@ static const int manyContacts = 20;
 
 #pragma mark - Memory management
 
--(void)didReceiveMemoryWarning {
+- (void)didReceiveMemoryWarning
+{
   // Releases the view if it doesn't have a superview.
   [super didReceiveMemoryWarning];
   
   // Release any cached data, images, etc that aren't in use.
 }
 
--(void)dealloc {
+- (void)dealloc
+{
 }
 
 @end
