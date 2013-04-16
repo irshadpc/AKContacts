@@ -38,6 +38,7 @@ static const int editModeItem = 8;
 @interface AKContactHeaderViewCell ()
 
 @property (nonatomic, assign) ABPropertyID abPropertyID;
+@property (nonatomic, strong) UITextField *textField;
 
 @end
 
@@ -84,13 +85,15 @@ static const int editModeItem = 8;
 
   if ([self.parent isEditing]) {
 
-    UITextField *textField = [[UITextField alloc] initWithFrame: CGRectMake(5.f, 12.f, 210.f, 19.f)];
+    UITextField *textField = [[UITextField alloc] initWithFrame: CGRectZero];
     [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
+    [textField setContentVerticalAlignment: UIControlContentVerticalAlignmentCenter];
     [textField setFont: [UIFont boldSystemFontOfSize: 15.f]];
     [textField setDelegate: self];
     [textField setTag: editModeItem];
-    
     [textField setText: self.detailTextLabel.text];
+
+    [self setTextField: textField];
     [self.contentView addSubview: textField];
     
     if (row == 0) {
@@ -201,6 +204,12 @@ static const int editModeItem = 8;
 
   if (self.parent.isEditing) {
 
+    CGRect frame = CGRectMake(self.contentView.bounds.origin.x + 10.f,
+                              self.contentView.bounds.origin.y,
+                              self.contentView.bounds.size.width - 20.f,
+                              self.contentView.bounds.size.height);
+    [self.textField setFrame: frame];
+
     [self.backgroundView setHidden: NO]; // Show background in edit mode
     [self.parent.tableView setSeparatorStyle: UITableViewCellSeparatorStyleSingleLine];
 
@@ -217,25 +226,33 @@ static const int editModeItem = 8;
 
 #pragma masrk - UITextField delegate
 
--(void)textFieldDidBeginEditing:(UITextField *)textField {
+- (void)textFieldDidBeginEditing:(UITextField *)textField
+{
   
 }
 
--(void)textFieldDidEndEditing:(UITextField *)textField {
+- (void)textFieldDidEndEditing:(UITextField *)textField
+{
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
   
-  // Update ABContact here
-  if (self.abPropertyID == kABPersonLastNameProperty) {
-    
-  } else if (self.abPropertyID == kABPersonFirstNameProperty) {
-    
-  } else if (self.abPropertyID == kABPersonOrganizationProperty) {
-  
+  AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
+  if (self.abPropertyID == kABPersonLastNameProperty)
+  {
+    [contact setValue: textField.text forProperty: kABPersonLastNameProperty];
+  }
+  else if (self.abPropertyID == kABPersonFirstNameProperty)
+  {
+    [contact setValue: textField.text forProperty: kABPersonFirstNameProperty];
+  }
+  else if (self.abPropertyID == kABPersonOrganizationProperty)
+  {
+    [contact setValue: textField.text forProperty: kABPersonOrganizationProperty];
   }
 }
 
--(BOOL)textFieldShouldReturn:(UITextField *)textField {
+- (BOOL)textFieldShouldReturn:(UITextField *)textField
+{
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
   return YES;
