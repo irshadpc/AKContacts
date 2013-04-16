@@ -303,7 +303,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 }
 
 - (void)loadSourcesWithABAddressBookRef: (ABAddressBookRef)addressBook 
-{  
+{
   NSAssert(dispatch_get_specific(IsOnMainQueueKey) == NULL, @"Must not be dispatched on main queue");
 
   _sources = [[NSMutableArray alloc] init];
@@ -389,16 +389,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 {
   NSAssert(dispatch_get_specific(IsOnMainQueueKey) == NULL, @"Must not be dispatched on main queue");
 
-  NSComparator comparator = ^(id obj1, id obj2) {
-    ABRecordRef recordRef_1 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj1 integerValue]);
-    ABRecordRef recordRef_2 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj2 integerValue]);
-
-    NSString *name_1 = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef_1));
-    NSString *name_2 = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef_2));
-
-    return (NSComparisonResult)[name_1 compare: name_2];
-  };
-  
   NSMutableDictionary *tempContactIdentifiers = [[NSMutableDictionary alloc] init];
 
   NSString *sectionKeys = @"ABCDEFGHIJKLMNOPQRSTUVWXYZ#";
@@ -448,32 +438,48 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
       if ([aggregateGroup.memberIDs indexOfObject: contactID] == NSNotFound)
         [aggregateGroup.memberIDs addObject: contactID];
-      
-      NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef));
-      
-      NSLog(@"% 3d : %@", recordID, name);
-            
-      NSString *dictionaryKey = @"#";
-      if ([name length] > 0) 
-      {
-        dictionaryKey = [[[[name substringToIndex: 1] decomposedStringWithCanonicalMapping] substringToIndex: 1] uppercaseString];
-      }
 
-      // Put the recordID in the corresponding section of contactIdentifiers
-      NSMutableArray *tArray = (NSMutableArray *)[tempContactIdentifiers objectForKey: dictionaryKey];
-      if (!tArray) tArray = (NSMutableArray *)[tempContactIdentifiers objectForKey: @"#"];
-      // Sort alphabetically
-      NSUInteger index = [tArray indexOfObject: contactID
-                                 inSortedRange: (NSRange){0, [tArray count]}
-                                       options: NSBinarySearchingInsertionIndex
-                               usingComparator: comparator];
-      [tArray insertObject: contactID atIndex: index];
+      [self insertRecordID: recordID inDictionary: tempContactIdentifiers withAddressBookRef: addressBook];
     }
     [self setAllContactIdentifiers: tempContactIdentifiers];
   }
 }
 
-- (AKSource *)defaultSource 
+- (void)insertRecordID: (ABRecordID)recordID inDictionary: (NSMutableDictionary *)dictionary withAddressBookRef: (ABAddressBookRef)addressBook
+{
+  NSComparator comparator = ^(id obj1, id obj2) {
+    ABRecordRef recordRef_1 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj1 integerValue]);
+    ABRecordRef recordRef_2 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj2 integerValue]);
+  
+    NSString *name_1 = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef_1));
+    NSString *name_2 = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef_2));
+      
+    return (NSComparisonResult)[name_1 compare: name_2];
+  };
+  ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBook, recordID);
+
+  NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef));
+  
+  NSLog(@"% 3d : %@", recordID, name);
+  
+  NSString *dictionaryKey = @"#";
+  if ([name length] > 0)
+  {
+    dictionaryKey = [[[[name substringToIndex: 1] decomposedStringWithCanonicalMapping] substringToIndex: 1] uppercaseString];
+  }
+
+  // Put the recordID in the corresponding section of contactIdentifiers
+  NSMutableArray *tArray = (NSMutableArray *)[dictionary objectForKey: dictionaryKey];
+  if (!tArray) tArray = (NSMutableArray *)[dictionary objectForKey: @"#"];
+  // Sort alphabetically
+  NSUInteger index = [tArray indexOfObject: [NSNumber numberWithInteger: recordID]
+                             inSortedRange: (NSRange){0, [tArray count]}
+                                   options: NSBinarySearchingInsertionIndex
+                           usingComparator: comparator];
+  [tArray insertObject: [NSNumber numberWithInteger: recordID] atIndex: index];
+}
+
+- (AKSource *)defaultSource
 {
   AKSource *ret = nil;
 
@@ -531,7 +537,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 {
   NSNumber *contactID = [NSNumber numberWithInteger: recordId];
   AKContact *ret = [self.contacts objectForKey: contactID];
-  if (ret == nil) 
+  if (ret == nil)
   {
     ret = [[AKContact alloc] initWithABRecordID: recordId];
     [self.contacts setObject: ret forKey: contactID];
