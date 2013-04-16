@@ -30,12 +30,21 @@
 
 @class AKContact;
 
+@protocol AKContactViewControllerDelegate <NSObject>
+@required
+/**
+ *
+ */
+- (void)modalViewDidDismissedWithContactID: (NSInteger)contactID;
+@end
+
 @interface AKContactViewController : UIViewController <UITableViewDataSource, UITableViewDelegate> {
   
 }
 
 @property (nonatomic, strong) UITableView *tableView;
 @property (nonatomic, assign) NSInteger contactID;
+@property (nonatomic, unsafe_unretained) id <AKContactViewControllerDelegate> delegate;
 
 -(id)initWithContactID: (NSInteger)contactID;
 

@@ -62,7 +62,9 @@ static const float defaultCellHeight = 44.f;
 
 @synthesize tableView = _tableView;
 @synthesize contactID = _contactID;
+@synthesize delegate = _delegate;
 @synthesize sections = _sections;
+@synthesize sectionIdentifiers = _sectionIdentifiers;
 
 -(id)initWithContactID: (NSInteger)contactID {
   self = [self init];
@@ -88,7 +90,7 @@ static const float defaultCellHeight = 44.f;
   [self.sections addObject: [NSNumber numberWithInteger: kSectionNote]];
   [self setSectionIdentifiers: [self.sections copy]];
 
-  if (self.contactID < 0) {
+  if (self.contactID == tagNewContact) {
     [self setEditing: YES animated: NO];
   } else {
     NSMutableArray *sectionsToRemove = [[NSMutableArray alloc] init];
@@ -376,6 +378,23 @@ static const float defaultCellHeight = 44.f;
 
   } else {
     [self.navigationItem setLeftBarButtonItem: nil];
+    
+    if (self.contactID == tagNewContact)
+    {
+      [self.view endEditing: YES]; // Resign first responders
+      AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.contactID];
+      [contact commit];
+
+      if ([self.delegate respondsToSelector: @selector(modalViewDidDismissedWithContactID:)])
+        [self.delegate modalViewDidDismissedWithContactID: contact.recordID];
+
+      if ([self respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
+        [self dismissViewControllerAnimated: YES completion: nil];
+      else
+        [self dismissModalViewControllerAnimated: YES];
+
+      return;
+    }
   }
 
   NSMutableIndexSet *reloadSet = [[NSMutableIndexSet alloc] init];
@@ -432,12 +451,21 @@ static const float defaultCellHeight = 44.f;
   [self.tableView deleteSections: deleteSet withRowAnimation: UITableViewRowAnimationAutomatic];
   [self.tableView insertSections: insertSet withRowAnimation: UITableViewRowAnimationAutomatic];
   [self.tableView endUpdates];
-
-//    [self.parentViewController dismissViewControllerAnimated: YES completion:^{}];
 }
 
 - (void)cancelButtonTouchUp: (id)sender {
-  [self setEditing: NO animated: YES];
+  if (self.contactID == tagNewContact)
+  {
+    [[AKAddressBook sharedInstance].contacts removeObjectForKey: [NSNumber numberWithInteger: tagNewContact]];
+    if ([self.navigationController respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
+      [self.navigationController dismissViewControllerAnimated: YES completion: nil];
+    else
+      [self.navigationController dismissModalViewControllerAnimated: YES];
+  }
+  else
+  {
+    [self setEditing: NO animated: YES];
+  }
 }
 
 #pragma mark - Table View Cells
