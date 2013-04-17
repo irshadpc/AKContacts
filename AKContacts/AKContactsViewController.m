@@ -50,7 +50,8 @@ static const int manyContacts = 20;
 /**
  * AKContactViewControllerDelegate
  */
-- (void)modalViewDidDismissedWithContactID: (NSInteger)contactID;
+- (void)modalViewDidDismissWithContactID: (NSInteger)contactID;
+- (void)recordDidRemoveWithContactID: (NSInteger)contactID;
 
 @end
 
@@ -148,12 +149,18 @@ static const int manyContacts = 20;
 
 #pragma mark - AKContactViewController delegate
 
-- (void)modalViewDidDismissedWithContactID: (NSInteger)contactID
+- (void)modalViewDidDismissWithContactID: (NSInteger)contactID
 {
   [[AKAddressBook sharedInstance] resetSearch];
   [self reloadTableViewData];
   AKContactViewController *contactView = [[AKContactViewController alloc] initWithContactID: contactID];
   [self.navigationController pushViewController: contactView animated: NO];
+}
+
+- (void)recordDidRemoveWithContactID: (NSInteger)contactID
+{
+  [[AKAddressBook sharedInstance] resetSearch];
+  [self reloadTableViewData];  
 }
 
 #pragma mark - Custom methods
@@ -449,6 +456,7 @@ static const int manyContacts = 20;
   UITableViewCell *cell = [tableView cellForRowAtIndexPath: indexPath];
 
   AKContactViewController *contactView = [[AKContactViewController alloc ] initWithContactID: cell.tag];
+  [contactView setDelegate: self];
   [self.navigationController pushViewController: contactView animated: YES];
 
   [tableView deselectRowAtIndexPath: indexPath animated: YES];
