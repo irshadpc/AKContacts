@@ -31,6 +31,8 @@
 
 #import "AKRecord.h"
 
+FOUNDATION_EXPORT const int tagNewContact;
+
 @interface AKContact : AKRecord
 
 - (id)initWithABRecordID: (ABRecordID) recordID;
@@ -60,5 +62,7 @@
 - (UIImage *)picture;
 
 - (NSComparisonResult)compareByName:(AKContact *)otherContact;
+
+- (void)commit;
 
 @end

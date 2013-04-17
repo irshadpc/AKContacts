@@ -28,11 +28,13 @@
 
 #import "AKContact.h"
 #import "AKAddressBook.h"
+#import "AKSource.h"
+
+const int tagNewContact = -368;
 
 @interface AKContact ()
 
 @end
-
 
 @implementation AKContact
 
@@ -53,8 +55,18 @@
   dispatch_block_t block = ^{
     if (super.recordRef == nil)
     {
-      ABAddressBookRef addressBookRef = [[AKAddressBook sharedInstance] addressBookRef];
-      super.recordRef = ABAddressBookGetPersonWithRecordID(addressBookRef, super.recordID);
+      if (self.recordID != tagNewContact)
+      {
+        ABAddressBookRef addressBookRef = [[AKAddressBook sharedInstance] addressBookRef];
+        super.recordRef = ABAddressBookGetPersonWithRecordID(addressBookRef, super.recordID);
+      }
+      else
+      {
+        AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+        AKSource *source = [addressBook sourceForSourceId: addressBook.sourceID];
+        super.recordRef = ABPersonCreateInSource(source.recordRef);
+        super.recordRefNeedsRelease = YES;
+      }
     }
     ret = super.recordRef;
     super.age = [NSDate date];
@@ -269,6 +281,27 @@
 - (NSComparisonResult)compareByName:(AKContact *)otherContact
 {
   return [self.name localizedCaseInsensitiveCompare: otherContact.name];
+}
+
+- (void)commit
+{
+  ABAddressBookRef addressBookRef = [AKAddressBook sharedInstance].addressBookRef;
+
+  CFErrorRef error = NULL;
+  ABAddressBookAddRecord(addressBookRef, self.recordRef, &error);
+  if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+
+  ABAddressBookSave(addressBookRef, &error);
+  if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+
+  super.recordID = ABRecordGetRecordID(self.recordRef);
+
+  AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+
+  [addressBook.contacts setObject: self forKey: [NSNumber numberWithInteger: self.recordID]];
+  [addressBook.contacts removeObjectForKey: [NSNumber numberWithInteger: tagNewContact]];
+
+  [addressBook insertRecordID: self.recordID inDictionary: [addressBook allContactIdentifiers] withAddressBookRef: addressBookRef];
 }
 
 @end
