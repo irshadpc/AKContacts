@@ -31,6 +31,7 @@
 #import "AKContactDetailViewCell.h"
 #import "AKContactAddressViewCell.h"
 #import "AKContactSwitchViewCell.h"
+#import "AKContactDeleteButtonViewCell.h"
 #import "AKContact.h"
 #import "AKAddressBook.h"
 
@@ -47,6 +48,7 @@ typedef NS_ENUM(NSInteger, Identifier) {
   kSectionInstantMessage,
   kSectionNote,
   kSectionButton,
+  kSectionDeleteButton,
 };
 
 static const float defaultCellHeight = 44.f;
@@ -88,6 +90,7 @@ static const float defaultCellHeight = 44.f;
   [self.sections addObject: [NSNumber numberWithInteger: kSectionSocialProfile]];
   [self.sections addObject: [NSNumber numberWithInteger: kSectionInstantMessage]];
   [self.sections addObject: [NSNumber numberWithInteger: kSectionNote]];
+  [self.sections addObject: [NSNumber numberWithInteger: kSectionDeleteButton]];
   [self setSectionIdentifiers: [self.sections copy]];
 
   if (self.contactID == tagNewContact) {
@@ -150,14 +153,18 @@ static const float defaultCellHeight = 44.f;
       return [contact countForProperty: kABPersonInstantMessageProperty];
     case kSectionNote:
       return ([contact valueForProperty: kABPersonNoteProperty]) ? 1 : 0;
+    case kSectionDeleteButton:
+      return 0;
     // If custom section does not default to having one element add case here
     default:
       return 1;
   }
 }
 
--(BOOL)isSectionEditable: (NSInteger)section {
-  switch (section) {
+-(BOOL)isSectionEditable: (NSInteger)section
+{
+  switch (section)
+  {
     case kSectionSwitch:
       return NO;
     default:
@@ -165,9 +172,10 @@ static const float defaultCellHeight = 44.f;
   }
 }
 
--(NSInteger)insertIndexForSection: (NSInteger)section {
-
-  for (NSInteger i = 0; i < [self.sections count]; ++i) {
+-(NSInteger)insertIndexForSection: (NSInteger)section
+{
+  for (NSInteger i = 0; i < [self.sections count]; ++i)
+  {
     NSInteger aSection = [[self.sections objectAtIndex: i] integerValue];
     if (section < aSection)
       return i;
@@ -177,21 +185,27 @@ static const float defaultCellHeight = 44.f;
 
 #pragma mark - Table View
 
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
   return [self.sections count];
 }
 
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
   NSInteger ret = 0;
 
   section = [[self.sections objectAtIndex: section] integerValue];
-  
-  if (section == kSectionHeader) {
+
+  if (section == kSectionHeader)
+  {
     ret = (self.editing) ? 3 : 1;
   } else if (section == kSectionBirthday ||
-             section == kSectionNote) {
+             section == kSectionNote)
+  {
     ret = 1;
-  } else {
+  }
+  else
+  {
     ret = [self numberOfElementsInSection: section];
     if (self.editing) ret += 1;
   }
@@ -199,13 +213,14 @@ static const float defaultCellHeight = 44.f;
   return ret;
 }
 
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
   NSInteger section = [[self.sections objectAtIndex: indexPath.section] integerValue];
 
   AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.contactID];
   
-  switch (section) {
+  switch (section)
+  {
     case kSectionHeader:
       return  (self.editing) ? defaultCellHeight : (defaultCellHeight + 30.f);
 
@@ -215,20 +230,20 @@ static const float defaultCellHeight = 44.f;
     case kSectionNote:
       return ([contact valueForProperty: kABPersonNoteProperty]) ?
         [[contact valueForProperty: kABPersonNoteProperty] sizeWithFont: [UIFont systemFontOfSize: [UIFont systemFontSize]]
-                                                           constrainedToSize: CGSizeMake(210.f, 120.f)
-                                                               lineBreakMode: NSLineBreakByWordWrapping].height + 25.f : defaultCellHeight;
+                                                      constrainedToSize: CGSizeMake(210.f, 120.f)
+                                                          lineBreakMode: NSLineBreakByWordWrapping].height + 25.f : defaultCellHeight;
 
     default:
       return defaultCellHeight;
   }
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
   NSInteger section = [[self.sections objectAtIndex: indexPath.section] integerValue];
 
-  switch (section) {
-
+  switch (section)
+  {
     case kSectionHeader:
       return [self headerCellViewAtRow: indexPath.row];
 
@@ -252,7 +267,7 @@ static const float defaultCellHeight = 44.f;
 
     case kSectionSocialProfile:
       return [self detailCellViewForProperty: kABPersonSocialProfileProperty atRow: indexPath.row];
-      
+
     case kSectionInstantMessage:
       return [self detailCellViewForProperty: kABPersonInstantMessageProperty atRow: indexPath.row];
 
@@ -261,7 +276,10 @@ static const float defaultCellHeight = 44.f;
 
     case kSectionSwitch:
       return [self switchCellViewAtRow: indexPath.row];
-      
+
+    case kSectionDeleteButton:
+      return [self deleteButtonCellViewAtRow: indexPath.row];
+
     default:
       return nil;
   }
@@ -273,23 +291,25 @@ static const float defaultCellHeight = 44.f;
 
   switch (section) {
     case kSectionHeader:
+    case kSectionDeleteButton:
       return NO;
     default:
       return YES;
   }
 }
 
-- (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath {
-
+- (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath
+{
   NSInteger section = [[self.sections objectAtIndex: indexPath.section] integerValue];
 
   AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.contactID];
-  
-  switch (section) {
+
+  switch (section)
+  {
     case kSectionBirthday:
     case kSectionNote:
       return UITableViewCellEditingStyleDelete;
-      
+
     case kSectionPhone:
       return (indexPath.row < [contact countForProperty: kABPersonPhoneProperty]) ? UITableViewCellEditingStyleDelete : UITableViewCellEditingStyleNone;
 
@@ -367,16 +387,19 @@ static const float defaultCellHeight = 44.f;
 
 #pragma mark - Button Delegate Methods
 
-- (void)setEditing:(BOOL)editing animated:(BOOL)animate {
-
+- (void)setEditing:(BOOL)editing animated:(BOOL)animate
+{
   [super setEditing: editing animated: YES]; // Toggles Done button
   [self.tableView setEditing: editing animated:YES];
 
-  if (self.editing) {
+  if (self.editing)
+  {
     UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel target:self action:@selector(cancelButtonTouchUp:)];
     [self.navigationItem setLeftBarButtonItem: barButtonItem];
 
-  } else {
+  }
+  else
+  {
     [self.navigationItem setLeftBarButtonItem: nil];
     
     if (self.contactID == tagNewContact)
@@ -385,8 +408,8 @@ static const float defaultCellHeight = 44.f;
       AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.contactID];
       [contact commit];
 
-      if ([self.delegate respondsToSelector: @selector(modalViewDidDismissedWithContactID:)])
-        [self.delegate modalViewDidDismissedWithContactID: contact.recordID];
+      if ([self.delegate respondsToSelector: @selector(modalViewDidDismissWithContactID:)])
+        [self.delegate modalViewDidDismissWithContactID: contact.recordID];
 
       if ([self respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
         [self dismissViewControllerAnimated: YES completion: nil];
@@ -402,28 +425,39 @@ static const float defaultCellHeight = 44.f;
   NSMutableIndexSet *insertSet = [[NSMutableIndexSet alloc] init];
   NSMutableArray *insertSections = [[NSMutableArray alloc] init];
 
-  for (NSNumber *numSection in self.sectionIdentifiers) {
-    NSInteger section = [numSection integerValue];
-
-    if (self.editing == YES) {
-      if ([self.sections indexOfObject: [NSNumber numberWithInteger: section]] != NSNotFound) {
-        if ([self isSectionEditable: section] == YES)
-          [reloadSet addIndex: [self.sections indexOfObject: [NSNumber numberWithInteger: section]]];
+  for (NSNumber *section in self.sectionIdentifiers)
+  {
+    if (self.editing == YES)
+    {
+      if ([self.sections indexOfObject: section] != NSNotFound)
+      {
+        if ([self isSectionEditable: [section integerValue]] == YES)
+          [reloadSet addIndex: [self.sections indexOfObject: section]];
         else
-          [deleteSet addIndex: [self.sections indexOfObject: [NSNumber numberWithInteger: section]]];
-      } else {
-        [insertSections addObject: [NSNumber numberWithInteger: section]];
+          [deleteSet addIndex: [self.sections indexOfObject: section]];
       }
-    } else {
-      if ([self.sections indexOfObject: [NSNumber numberWithInteger: section]] != NSNotFound) {
-        if ([self numberOfElementsInSection: section] == 0) {
-          [deleteSet addIndex: [self.sections indexOfObject: [NSNumber numberWithInteger: section]]];
-        } else {
-          [reloadSet addIndex: [self.sections indexOfObject: [NSNumber numberWithInteger: section]]];
+      else
+      {
+        [insertSections addObject: section];
+      }
+    }
+    else
+    {
+      if ([self.sections indexOfObject: section] != NSNotFound)
+      {
+        if ([self numberOfElementsInSection: [section integerValue]] == 0)
+        {
+          [deleteSet addIndex: [self.sections indexOfObject: section]];
         }
-      } else {
-        if ([self isSectionEditable: section] == NO)
-          [insertSections addObject: [NSNumber numberWithInteger: section]];
+        else
+        {
+          [reloadSet addIndex: [self.sections indexOfObject: section]];
+        }
+      }
+      else
+      {
+        if ([self isSectionEditable: [section integerValue]] == NO)
+          [insertSections addObject: section];
       }
     }
   }
@@ -440,7 +474,8 @@ static const float defaultCellHeight = 44.f;
    * operation can affect the array index used for the successive insertion or removal operation.
    */
   
-  for (NSNumber *section in insertSections) {
+  for (NSNumber *section in insertSections)
+  {
     NSInteger index = [self insertIndexForSection: [section integerValue]];
     [insertSet addIndex: index];
     [self.sections insertObject: section atIndex: index];
@@ -529,6 +564,21 @@ static const float defaultCellHeight = 44.f;
   
   [cell configureCellAtRow: row];
   
+  return (UITableViewCell *)cell;
+}
+
+- (UITableViewCell *)deleteButtonCellViewAtRow: (NSInteger)row {
+  static NSString *CellIdentifier = @"AKContactDeleteButtonViewCell";
+
+  AKContactDeleteButtonViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  if (cell == nil) {
+    cell = [[AKContactDeleteButtonViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier: CellIdentifier];
+  }
+
+  [cell setParent: self];
+
+  [cell configureCell];
+
   return (UITableViewCell *)cell;
 }
 

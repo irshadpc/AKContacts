@@ -35,7 +35,11 @@
 /**
  *
  */
-- (void)modalViewDidDismissedWithContactID: (NSInteger)contactID;
+- (void)modalViewDidDismissWithContactID: (NSInteger)contactID;
+/**
+ *
+ */
+- (void)recordDidRemoveWithContactID: (NSInteger)contactID;
 @end
 
 @interface AKContactViewController : UIViewController <UITableViewDataSource, UITableViewDelegate> {
