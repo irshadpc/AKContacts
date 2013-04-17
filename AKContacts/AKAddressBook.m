@@ -514,7 +514,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   return ret;
 }
 
-- (AKSource *)sourceForSourceId: (NSInteger)recordId 
+- (AKSource *)sourceForSourceId: (ABRecordID)recordId
 {  
   AKSource *ret = nil;
   
@@ -533,7 +533,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   return ret;
 }
 
-- (AKContact *)contactForContactId: (NSInteger)recordId 
+- (AKContact *)contactForContactId: (ABRecordID)recordId
 {
   NSNumber *contactID = [NSNumber numberWithInteger: recordId];
   AKContact *ret = [self.contacts objectForKey: contactID];
@@ -543,6 +543,23 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     [self.contacts setObject: ret forKey: contactID];
   }
   return ret;
+}
+
+- (void)removeRecordID: (ABRecordID)recordID
+{
+  AKContact *contact = [self contactForContactId: recordID];
+
+  for (NSMutableArray *array in [self.allContactIdentifiers allValues])
+  {
+    [array removeObject: [NSNumber numberWithInteger: recordID]];
+  }
+
+  CFErrorRef error = NULL;
+  ABAddressBookRemoveRecord(self.addressBookRef, contact.recordRef, &error);
+  if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+
+  ABAddressBookSave(self.addressBookRef, &error);
+  if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
 }
 
 - (void)releaseUnusedContacts 
