@@ -72,19 +72,20 @@ static const int editModeItem = 8;
   [super setFrame:frame];
 }
 
--(void)configureCellAtRow:(NSInteger)row {
-
+- (void)configureCellAtRow:(NSInteger)row
+{
   [self setSelectionStyle: UITableViewCellSelectionStyleNone];
 
   // Clear content view
-  for (UIView *subView in [self.contentView subviews]) {
+  for (UIView *subView in [self.contentView subviews])
+  {
     [subView removeFromSuperview];
   }
-  
+
   AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
 
-  if ([self.parent isEditing]) {
-
+  if ([self.parent isEditing])
+  {
     UITextField *textField = [[UITextField alloc] initWithFrame: CGRectZero];
     [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
     [textField setContentVerticalAlignment: UIControlContentVerticalAlignmentCenter];
@@ -95,14 +96,10 @@ static const int editModeItem = 8;
 
     [self setTextField: textField];
     [self.contentView addSubview: textField];
-    
-    if (row == 0) {
 
+    if (row == 0)
+    {
       [self setAbPropertyID: kABPersonLastNameProperty];
-      CFStringRef placeholder = ABPersonCopyLocalizedPropertyName(kABPersonLastNameProperty);
-      [textField setPlaceholder: (__bridge NSString *)placeholder];
-      CFRelease(placeholder);
-      [textField setText: [contact valueForProperty: kABPersonLastNameProperty]];
 
       UIButton *button = [[UIButton alloc] initWithFrame: CGRectMake(-80.f, 0.f, 64.f, 64.f)];
       [self.contentView addSubview: button];
@@ -116,35 +113,25 @@ static const int editModeItem = 8;
       [button.titleLabel setNumberOfLines: 2];
       [button.titleLabel setTextAlignment: NSTextAlignmentCenter];
       [button setTitleColor: [UIColor colorWithRed:81.f/255.f green:102.f/255.f blue:145.f/255.f alpha: 1.f] forState: UIControlStateNormal];
-
-    } else if (row == 1) {
-      
-      [self setAbPropertyID: kABPersonFirstNameProperty];
-      [textField setText: [contact valueForProperty: kABPersonFirstNameProperty]];
-      CFStringRef placeholder = ABPersonCopyLocalizedPropertyName(kABPersonFirstNameProperty);
-      [textField setPlaceholder: (__bridge NSString *)placeholder];
-      CFRelease(placeholder);
-
-    } else if (row == 2) {
-
-      [self setAbPropertyID: kABPersonOrganizationProperty];
-      [textField setText: [contact valueForProperty: kABPersonOrganizationProperty]];
-      CFStringRef placeholder = ABPersonCopyLocalizedPropertyName(kABPersonOrganizationProperty);
-      [textField setPlaceholder: (__bridge NSString *)placeholder];
-      CFRelease(placeholder);
-
-    } else if (row == 3) {
-      
-      [self setAbPropertyID: kABPersonJobTitleProperty];
-      [textField setText: [contact valueForProperty: kABPersonJobTitleProperty]];
-      CFStringRef placeholder = ABPersonCopyLocalizedPropertyName(kABPersonJobTitleProperty);
-      [textField setPlaceholder: (__bridge NSString *)placeholder];
-      CFRelease(placeholder);
-
     }
-    
-  } else {
-    
+    else if (row == 1)
+    {
+      [self setAbPropertyID: kABPersonFirstNameProperty];
+    }
+    else if (row == 2)
+    {
+      [self setAbPropertyID: kABPersonOrganizationProperty];
+    }
+    else if (row == 3)
+    {
+      [self setAbPropertyID: kABPersonJobTitleProperty];
+    }
+    NSString *placeholder = [AKContact localizedNameForProperty: self.abPropertyID];
+    [textField setPlaceholder: placeholder];
+    [textField setText: [contact valueForProperty: self.abPropertyID]];
+  }
+  else
+  {
     [self.backgroundView setHidden: YES]; // Hide background in default mode
     [self.parent.tableView setSeparatorStyle: UITableViewCellSeparatorStyleNone];
     
@@ -165,23 +152,24 @@ static const int editModeItem = 8;
     
     CGSize constraintSize = CGSizeMake(contactNameLabel.frame.size.width, MAXFLOAT);
     CGSize contactNameSize = [contactNameLabel.text sizeWithFont: contactNameLabel.font constrainedToSize: constraintSize lineBreakMode: NSLineBreakByWordWrapping];
-    if (contactNameLabel.frame.size.height < contactNameSize.height + 5.f) {
-      
+    if (contactNameLabel.frame.size.height < contactNameSize.height + 5.f)
+    {
       contactNameLabel.frame = CGRectMake(contactNameLabel.frame.origin.x,
                                           contactNameLabel.frame.origin.y,
                                           contactNameLabel.frame.size.width + 5.f,
                                           contactNameLabel.frame.size.height);
       
-    } else {
-      
+    }
+    else
+    {
       contactNameLabel.frame = CGRectMake(contactNameLabel.frame.origin.x,
                                           contactNameLabel.frame.origin.y + 10.f,
                                           contactNameLabel.frame.size.width,
                                           contactNameLabel.frame.size.height);
     }
-    
     NSString *contactDetails = [contact displayDetails];
-    if (contactDetails != nil) {
+    if (contactDetails != nil)
+    {
       UILabel *contactDetailsLabel = [[UILabel alloc] initWithFrame: CGRectMake(80.f, 36.f, 210.f, 21.f)];
       [contactDetailsLabel setText: contactDetails];
       [contactDetailsLabel setBackgroundColor: [UIColor clearColor]];
@@ -195,15 +183,15 @@ static const int editModeItem = 8;
                                              contactDetailsSize.width + 5.f,
                                              contactDetailsSize.height);
     }
-    
   }
 }
 
--(void)layoutSubviews {
+-(void)layoutSubviews
+{
   [super layoutSubviews];
 
-  if (self.parent.isEditing) {
-
+  if (self.parent.isEditing)
+  {
     CGRect frame = CGRectMake(self.contentView.bounds.origin.x + 10.f,
                               self.contentView.bounds.origin.y,
                               self.contentView.bounds.size.width - 20.f,
@@ -212,16 +200,16 @@ static const int editModeItem = 8;
 
     [self.backgroundView setHidden: NO]; // Show background in edit mode
     [self.parent.tableView setSeparatorStyle: UITableViewCellSeparatorStyleSingleLine];
-
-  } else {
-
+  }
+  else
+  {
     [self.backgroundView setHidden: YES]; // Hide background in default mode
     [self.parent.tableView setSeparatorStyle: UITableViewCellSeparatorStyleNone];
-    
   }
 }
 
-- (void)dealloc {
+- (void)dealloc
+{
 }
 
 #pragma masrk - UITextField delegate
