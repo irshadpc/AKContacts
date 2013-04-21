@@ -115,8 +115,8 @@
       NSArray *identifiers = [contact identifiersForProperty: self.abPropertyID];
       [self setIdentifier: [[identifiers objectAtIndex: row] integerValue]];
       
-      text = [contact valueForMultiValueProperty: self.abPropertyID forIdentifier: self.identifier];
-      label = [contact labelForMultiValueProperty: self.abPropertyID forIdentifier: self.identifier];
+      text = [contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
+      label = [contact labelForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
     }
     else
     {
@@ -155,11 +155,11 @@
       NSArray *identifiers = [contact identifiersForProperty: self.abPropertyID];
       [self setIdentifier: [[identifiers objectAtIndex: row] integerValue]];
 
-      date = (NSDate *)[contact valueForMultiValueProperty: kABPersonDateProperty forIdentifier: self.identifier];
+      date = (NSDate *)[contact valueForMultiValueProperty: kABPersonDateProperty andIdentifier: self.identifier];
       text = (date) ? [NSDateFormatter localizedStringFromDate: date
                                                      dateStyle: NSDateFormatterLongStyle
                                                      timeStyle: NSDateFormatterNoStyle] : nil;
-      label = [contact labelForMultiValueProperty: kABPersonDateProperty forIdentifier: self.identifier];
+      label = [contact labelForMultiValueProperty: kABPersonDateProperty andIdentifier: self.identifier];
 
       [self setSelectionStyle: UITableViewCellSelectionStyleNone];
     }
@@ -178,7 +178,7 @@
       NSArray *identifiers = [contact identifiersForProperty: self.abPropertyID];
       [self setIdentifier: [[identifiers objectAtIndex: row] integerValue]];
       
-      NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID forIdentifier: self.identifier];
+      NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
       
       text = [dict objectForKey: (NSString *)kABPersonSocialProfileUsernameKey];
       label = [dict objectForKey: (NSString *)kABPersonSocialProfileServiceKey];
@@ -195,7 +195,7 @@
       NSArray *identifiers = [contact identifiersForProperty: self.abPropertyID];
       [self setIdentifier: [[identifiers objectAtIndex: row] integerValue]];
 
-      NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID forIdentifier: self.identifier];
+      NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
 
       text = [dict objectForKey: (NSString *)kABPersonInstantMessageUsernameKey];
       label = [dict objectForKey: (NSString *)kABPersonInstantMessageServiceKey];
@@ -259,20 +259,18 @@
   
   AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
   
-  NSString *oldValue = [contact valueForMultiValueProperty: self.abPropertyID forIdentifier: self.identifier];
-  if ([textField.text isEqualToString: oldValue])
+  NSString *oldValue = [contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
+  if ([textField.text isEqualToString: oldValue] || [textField.text length] == 0)
     return;
 
   if (self.abPropertyID == kABPersonPhoneProperty ||
         self.abPropertyID == kABPersonEmailProperty)
   {
-    if (self.identifier != NSNotFound)
+    NSInteger identifier = self.identifier;
+    [contact setValue: textField.text forMultiValueProperty: self.abPropertyID andIdentifier: &identifier];
+    if (identifier != self.identifier)
     {
-      //[contact updateValue: textField.text forMultiValueProperty: self.abPropertyID forIdentifier: self.identifier];
-    }
-    else
-    {
-      //[contact createValue: textField.text forMultiValueProperty: self.abPropertyID forIdentifier: self.identifier];
+      [self setIdentifier: identifier];
     }
   }
 }
@@ -385,7 +383,7 @@
     else if (self.abPropertyID == kABPersonDateProperty)
     {
       NSDate *date = (NSDate *)[contact valueForMultiValueProperty: kABPersonDateProperty
-                                                     forIdentifier: self.identifier];
+                                                     andIdentifier: self.identifier];
       NSString *text = (date) ? [NSDateFormatter localizedStringFromDate: date
                                                                dateStyle: NSDateFormatterLongStyle
                                                                timeStyle: NSDateFormatterNoStyle] : nil;
@@ -402,7 +400,7 @@
   {
     AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
 
-    NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID forIdentifier: self.identifier];
+    NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
     if ([dict objectForKey: (NSString *)kABPersonSocialProfileURLKey])
       [[UIApplication sharedApplication] openURL: [NSURL URLWithString: [dict objectForKey: (NSString *)kABPersonSocialProfileURLKey]]];
   }
