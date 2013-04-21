@@ -153,9 +153,8 @@ static const int editModeItem = 101;
     [textField setFont: [UIFont boldSystemFontOfSize: 15.]];
     [textField setDelegate: self];
     [textField setTag: kAddressStreet];
-    CFStringRef placeholder = ABAddressBookCopyLocalizedLabel(kABPersonAddressStreetKey);
-    [textField setPlaceholder: (__bridge NSString *)placeholder];
-    CFRelease(placeholder);
+    NSString *placeholder = [AKContact localizedNameForLabel: kABPersonAddressStreetKey];
+    [textField setPlaceholder: placeholder];
     [textField setText: (self.identifier != NSNotFound) ? [contact valueForMultiDictKey: (NSString *)kABPersonAddressStreetKey forIdentifier: self.identifier] : nil];
     
     textField = [[UITextField alloc] initWithFrame: CGRectMake(83.f, 51.f, 90.f, 19.f)];
@@ -165,9 +164,8 @@ static const int editModeItem = 101;
     [textField setFont: [UIFont boldSystemFontOfSize: 15.]];
     [textField setDelegate: self];
     [textField setTag: kAddressCity];
-    placeholder = ABAddressBookCopyLocalizedLabel(kABPersonAddressCityKey);
-    [textField setPlaceholder: (__bridge NSString *)placeholder];
-    CFRelease(placeholder);
+    placeholder = [AKContact localizedNameForLabel: kABPersonAddressCityKey];
+    [textField setPlaceholder: placeholder];
     [textField setText: (self.identifier != NSNotFound) ? [contact valueForMultiDictKey: (NSString *)kABPersonAddressCityKey forIdentifier: self.identifier] : nil];
     
     textField = [[UITextField alloc] initWithFrame: CGRectMake(180.f, 51.f, 85.f, 19.f)];
@@ -176,9 +174,8 @@ static const int editModeItem = 101;
     [textField setFont: [UIFont boldSystemFontOfSize: 15.]];
     [textField setDelegate: self];
     [textField setTag: kAddressState];
-    placeholder = ABAddressBookCopyLocalizedLabel(kABPersonAddressStateKey);
-    [textField setPlaceholder: (__bridge NSString *)placeholder];
-    CFRelease(placeholder);
+    placeholder = [AKContact localizedNameForLabel: kABPersonAddressStateKey];
+    [textField setPlaceholder: placeholder];
 
     [textField setText: (self.identifier != NSNotFound) ? [contact valueForMultiDictKey: (NSString *)kABPersonAddressStateKey forIdentifier: self.identifier] : nil];
 
@@ -189,9 +186,8 @@ static const int editModeItem = 101;
     [textField setFont: [UIFont boldSystemFontOfSize: 15.]];
     [textField setDelegate: self];
     [textField setTag: kAddressZIP];
-    placeholder = ABAddressBookCopyLocalizedLabel(kABPersonAddressZIPKey);
-    [textField setPlaceholder: (__bridge NSString *)placeholder];
-    CFRelease(placeholder);
+    placeholder = [AKContact localizedNameForLabel: kABPersonAddressZIPKey];
+    [textField setPlaceholder: placeholder];
     [textField setText: (self.identifier != NSNotFound) ? [contact valueForMultiDictKey: (NSString *)kABPersonAddressZIPKey forIdentifier: self.identifier] : nil];
 
     textField = [[UITextField alloc] initWithFrame: CGRectMake(180.f, 91.f, 85.f, 19.f)];
@@ -201,9 +197,8 @@ static const int editModeItem = 101;
     [textField setFont: [UIFont boldSystemFontOfSize: 15.]];
     [textField setDelegate: self];
     [textField setTag: kAddressCountry];
-    placeholder = ABAddressBookCopyLocalizedLabel(kABPersonAddressCountryKey);
-    [textField setPlaceholder: (__bridge NSString *)placeholder];
-    CFRelease(placeholder);
+    placeholder = [AKContact localizedNameForLabel: kABPersonAddressCountryKey];
+    [textField setPlaceholder: placeholder];
     [textField setText: (self.identifier != NSNotFound) ? [contact valueForMultiDictKey: (NSString *)kABPersonAddressCountryKey forIdentifier: self.identifier] : nil];
 
     [self.detailTextLabel setText: nil];
