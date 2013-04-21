@@ -35,7 +35,10 @@
 
 @property (assign, nonatomic) ABRecordRef recordRef;
 @property (assign, nonatomic) ABRecordID recordID;
+@property (assign, nonatomic) BOOL recordRefNeedsRelease;
 @property (strong, nonatomic) NSDate *age;
+
++ (NSString *)localizedNameForLabel: (CFStringRef)label;
 
 - (id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef;
 - (NSString *)description;
@@ -67,33 +70,18 @@
  * Return a value for an idenfifier from an ABMultiValue type
  * Return type can be NSString, NSDate, NSDictionary
  **/
-- (id)valueForMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier;
+- (id)valueForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier;
+- (void)setValue: (id)value forMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger *)identifier;
 
 /**
  * Return the values for a key and an identifier for the following properties:
  * kABPersonAddressProperty, kABPersonInstantMessageProperty
  **/
-- (NSString *)valueForMultiDictKey: (NSString *)key forIdentifier: (NSInteger)identifier;
-
+- (NSString *)valueForMultiDictKey: (NSString *)key andIdentifier: (NSInteger)identifier;
 /**
  * Return a label for an identifier from an ABMultiValue type
  **/
-- (NSString*)labelForMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier;
-
-- (void)createValue: (id)value forProperty: (ABPropertyID)property;
-- (void)createValue: (id)value forMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier;
-- (void)createLabel:(NSString *)label forMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier;
-- (void)createValue:(id)value forMultiDictKey: (NSString *)key forIdentifier: (NSInteger)identifier;
-
-- (void)updateValue: (id)value forProperty: (ABPropertyID)property;
-- (void)updateValue: (id)value forMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier;
-- (void)updateLabel: (NSString *)label forMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier;
-- (void)updateValue:(id)value forMultiDictKey: (NSString *)key forIdentifier: (NSInteger)identifier;
-
-- (void)deleteValueForProperty: (ABPropertyID)property;
-- (void)deleteValueForMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier;
-
-- (void)commit;
-- (void)revert;
+- (NSString*)labelForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier;
+//- (void)setLabelForMultiValueProperty: (ABPropertyID)propoerty;
 
 @end

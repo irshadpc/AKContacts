@@ -28,6 +28,7 @@
 
 #import "AKRecord.h"
 #import "AKAddressBook.h"
+#import "AKContact.h"
 
 NSString *const kIdentifier = @"Identifier";
 NSString *const kValue = @"Value";
@@ -50,7 +51,17 @@ NSString *const kLabel = @"Label";
 
 @synthesize recordRef = _recordRef;
 @synthesize recordID = _recordID;
+@synthesize recordRefNeedsRelease = _recordRefNeedsRelease;
 @synthesize age = _age;
+
+#pragma mark - Class methods
+
++ (NSString *)localizedNameForLabel: (CFStringRef)label
+{
+  return (NSString *)CFBridgingRelease(ABAddressBookCopyLocalizedLabel(label));
+}
+
+#pragma mark - Instance methods
 
 - (id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef
 {
@@ -60,6 +71,14 @@ NSString *const kLabel = @"Label";
     _recordID = NSNotFound;
   }
   return  self;
+}
+
+- (void)dealloc
+{
+  if (self.recordRefNeedsRelease == YES)
+  {
+    CFRelease(self.recordRef);
+  }
 }
 
 - (NSString *)description
@@ -114,13 +133,21 @@ NSString *const kLabel = @"Label";
 
 - (void)setValue: (id)value forProperty: (ABPropertyID)property
 {
-  if (self.recordID < 0) return; // Lazy init of recordRef
+  if (self.recordRef == nil && self.recordID < 0) return; // Lazy init of recordRef
 
   dispatch_block_t block = ^{
     CFErrorRef error = NULL;
-    ABRecordSetValue(self.recordRef, property, (__bridge CFTypeRef)(value), &error);
+    if ([value length] == 0)
+    {
+      ABRecordRemoveValue(self.recordRef, property, &error);
+    }
+    else
+    {
+      ABRecordSetValue(self.recordRef, property, (__bridge CFTypeRef)(value), &error);
+    }
+    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
 	};
-  
+
   if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 }
@@ -171,7 +198,7 @@ NSString *const kLabel = @"Label";
   return ret;
 }
 
-- (id)valueForMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier
+- (id)valueForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier
 {
   if (self.recordRef == nil && self.recordID < 0) return nil; // Lazy init of recordRef
   
@@ -196,16 +223,67 @@ NSString *const kLabel = @"Label";
   return ret;
 }
 
-- (NSString *)valueForMultiDictKey: (NSString *)key forIdentifier: (NSInteger)identifier
+- (void)setValue: (id)value forMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger *)identifier
+{
+  if (self.recordRef == nil && self.recordID < 0) return; // Lazy init of recordRef
+  
+  dispatch_block_t block = ^{
+    ABMultiValueRef record = (ABMultiValueRef)ABRecordCopyValue(_recordRef, property);
+    ABMutableMultiValueRef mutableRecord = NULL;
+    if (record != NULL)
+    {
+      mutableRecord = ABMultiValueCreateMutableCopy(record);
+      CFRelease(record);
+    }
+    else
+    {
+      ABPropertyType type = kABInvalidPropertyType;
+      if ([value isKindOfClass: [NSString class]])
+        type = kABMultiStringPropertyType;
+      else if ([value isKindOfClass: [NSDate class]])
+        type = kABMultiDateTimePropertyType;
+      else if ([value isKindOfClass: [NSDictionary class]])
+        type = kABMultiDictionaryPropertyType;
+      if (type != kABInvalidPropertyType)
+        mutableRecord = ABMultiValueCreateMutable(type);
+    }
+
+    if (mutableRecord != NULL)
+    {
+      BOOL didAdd = NO;
+      CFIndex index = ABMultiValueGetIndexForIdentifier(mutableRecord, *identifier);
+      if (index != -1)
+      {
+        didAdd = ABMultiValueReplaceValueAtIndex(mutableRecord, (__bridge CFTypeRef)(value), index);
+      }
+      else
+      {
+        didAdd = ABMultiValueAddValueAndLabel(mutableRecord, (__bridge CFTypeRef)(value), kABPersonPhoneMobileLabel, identifier);
+      }
+      if (didAdd == YES)
+      {
+        CFErrorRef error = NULL;
+        ABRecordSetValue(self.recordRef, property, mutableRecord, &error);
+        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+      }
+      CFRelease(mutableRecord);
+    }
+  };
+
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
+}
+
+- (NSString *)valueForMultiDictKey: (NSString *)key andIdentifier: (NSInteger)identifier
 {
   ABPropertyID property = [AKRecord propertyForMultiDictKey: key];
 
-  NSDictionary *dict = [self valueForMultiValueProperty: property forIdentifier: identifier];
+  NSDictionary *dict = [self valueForMultiValueProperty: property andIdentifier: identifier];
 
   return [dict objectForKey: key];
 }
 
-- (NSString *)labelForMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier
+- (NSString *)labelForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier
 {
   if (self.recordRef == nil && self.recordID < 0) return nil; // Lazy init of recordRef
 
@@ -259,319 +337,7 @@ NSString *const kLabel = @"Label";
   }
   return ret;
 }
-
-#pragma mark - Update
-
-- (void)createValue: (id)value forProperty: (ABPropertyID)property
-{
-  if (!value) return;
-
-  if (!self.createDict)
-    [self setCreateDict: [[NSMutableDictionary alloc] init]];
-
-  [self.createDict setObject: value forKey: [NSNumber numberWithInteger: property]];
-}
-
-- (void)createValue: (id)value forMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier
-{
-  if (!value) return;
-
-  if (!self.createDict)
-    [self setCreateDict: [[NSMutableDictionary alloc] init]];
-  
-  NSMutableDictionary *dict = [AKRecord mutableDictForProperty: property
-                                                 forIdentifier: identifier
-                                                 forDictionary: self.createDict];
-
-  [dict setObject: [NSNumber numberWithInteger: identifier] forKey: kIdentifier];
-  [dict setObject: value forKey: kValue];
-}
-
-- (void)createLabel: (NSString *)label forMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier
-{
-  if (!label) return;
-
-  if (!self.createDict)
-    [self setCreateDict: [[NSMutableDictionary alloc] init]];
-
-  NSMutableDictionary *dict = [AKRecord mutableDictForProperty: property
-                                                  forIdentifier: identifier
-                                                  forDictionary: self.createDict];
-
-  [dict setObject: [NSNumber numberWithInteger: identifier] forKey: kIdentifier];
-  [dict setObject: label forKey: kLabel];
-}
-
-- (void)createValue: (id)value forMultiDictKey: (NSString *)key forIdentifier: (NSInteger)identifier
-{
-  if (!value) return;
-
-  if (!self.createDict)
-    [self setCreateDict: [[NSMutableDictionary alloc] init]];
-
-  ABPropertyID property = [AKRecord propertyForMultiDictKey: key];
-  if (property == kABPropertyInvalidID) return;
-
-  NSMutableDictionary *dict = [AKRecord mutableDictForProperty: property
-                                                 forIdentifier: identifier
-                                                 forDictionary: self.createDict];
-
-  NSMutableDictionary *valueDict = [dict objectForKey: kValue];
-  if (!valueDict)
-  {
-    valueDict = [[NSMutableDictionary alloc] init];
-    [dict setObject: valueDict forKey: kValue];
-  }
-  [valueDict setObject: value forKey: key];
-
-  [dict setObject: [NSNumber numberWithInteger: identifier] forKey: kIdentifier];
-}
-
-- (void)updateValue: (id)value forProperty: (ABPropertyID)property
-{
-  if (!value) return;
-
-  if (!self.updateDict)
-    [self setUpdateDict: [[NSMutableDictionary alloc] init]];
-
-  [self.updateDict setObject: value forKey: [NSNumber numberWithInteger: property]];
-}
-
-- (void)updateValue: (id)value forMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier
-{
-  if (!value) return;
-
-  if (!self.updateDict)
-    [self setUpdateDict: [[NSMutableDictionary alloc] init]];
-
-  NSMutableDictionary *dict = [AKRecord mutableDictForProperty: property
-                                                  forIdentifier: identifier
-                                                  forDictionary: self.updateDict];
-
-  [dict setObject: [NSNumber numberWithInteger: identifier] forKey: kIdentifier];
-  [dict setObject: value forKey: kValue];
-}
-
-- (void)updateValue:(id)value forMultiDictKey: (NSString *)key forIdentifier: (NSInteger)identifier
-{
-  if (!value) return;
-
-  if (!self.updateDict)
-    [self setUpdateDict: [[NSMutableDictionary alloc] init]];
-
-  ABPropertyID property = [AKRecord propertyForMultiDictKey: key];
-  if (property == kABPropertyInvalidID) return;
-
-  NSMutableDictionary *dict = [AKRecord mutableDictForProperty: property
-                                                  forIdentifier: identifier
-                                                  forDictionary: self.updateDict];
-
-  NSMutableDictionary *valueDict = [dict objectForKey: kValue];
-  if (!valueDict)
-  {
-    valueDict = [[NSMutableDictionary alloc] init];
-    [dict setObject: valueDict forKey: kValue];
-  }
-  [valueDict setObject: value forKey: key];
-
-  [dict setObject: [NSNumber numberWithInteger: identifier] forKey: kIdentifier];
-}
-
-- (void)updateLabel: (NSString *)label forMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier
-{
-  if (!label) return;
-
-  if (!self.updateDict)
-    [self setUpdateDict: [[NSMutableDictionary alloc] init]];
-  
-  NSMutableDictionary *dict = [AKRecord mutableDictForProperty: property
-                                                  forIdentifier: identifier
-                                                  forDictionary: self.updateDict];
-  
-  [dict setObject: [NSNumber numberWithInteger: identifier] forKey: kIdentifier];
-  [dict setObject: label forKey: kLabel];
-}
-
-- (void)deleteValueForProperty: (ABPropertyID)property
-{
-  if (!self.deleteDict)
-    [self setDeleteDict: [[NSMutableDictionary alloc] init]];
-
-  [self.deleteDict setObject: @"" forKey: [NSNumber numberWithInteger: property]];
-}
-
-- (void)deleteValueForMultiValueProperty: (ABPropertyID)property forIdentifier: (NSInteger)identifier
-{
-  if (!self.deleteDict)
-    [self setDeleteDict: [[NSMutableDictionary alloc] init]];
-
-  NSMutableDictionary *dict = [AKRecord mutableDictForProperty: property
-                                                  forIdentifier: identifier
-                                                  forDictionary: self.deleteDict];
-
-  [dict setObject: [NSNumber numberWithInteger: identifier] forKey: kIdentifier];
-}
-
-- (void)commit
-{
-  for (NSNumber *key in self.createDict)
-  {
-    ABPropertyID property = (ABPropertyID)[key integerValue];
-    ABPropertyType type = ABPersonGetTypeOfProperty(property);
-    id dictValue = [self.createDict objectForKey: key];
-
-    switch (type)
-    {
-      case kABStringPropertyType:
-      case kABDateTimePropertyType:
-        
-        ABRecordSetValue(_recordRef, property, (__bridge CFTypeRef)dictValue, NULL);
-        break;
-
-      case kABMultiStringPropertyType:
-      case kABMultiDateTimePropertyType:
-      case kABMultiDictionaryPropertyType:
-      {
-        ABMultiValueRef mutableMultiValue = [self mutableMultiValueForProperty: property];
-
-        for (NSMutableDictionary *dict in (NSArray *)dictValue)
-        {
-          id value = [dict objectForKey: kValue];
-          NSString *label = ([dict objectForKey: kLabel]) ? [dict objectForKey: kLabel] : (NSString *)kABOtherLabel;
-
-          ABMultiValueAddValueAndLabel(mutableMultiValue,
-                                       (__bridge CFTypeRef)value,
-                                       (__bridge CFStringRef)label,
-                                       NULL);
-          ABRecordSetValue(_recordRef, property, mutableMultiValue, nil);
-        }
-        break;
-      }
-    }
-  }
-
-  for (NSNumber *key in self.updateDict)
-  {
-    ABPropertyID property = (ABPropertyID)[key integerValue];
-    ABPropertyType type = ABPersonGetTypeOfProperty(property);
-    id dictValue = [self.createDict objectForKey: key];
-    
-    switch (type)
-    {
-      case kABStringPropertyType:
-      case kABDateTimePropertyType:
-        
-        ABRecordSetValue(_recordRef, property, (__bridge CFTypeRef)dictValue, NULL);
-        break;
-
-      case kABMultiStringPropertyType:
-      case kABMultiDateTimePropertyType:
-      {
-        ABMultiValueRef mutableMultiValue = [self mutableMultiValueForProperty: property];
-
-        for (NSMutableDictionary *dict in (NSArray *)dictValue)
-        {
-          id value = [dict objectForKey: kValue];
-          NSString *label = [dict objectForKey: kLabel];
-
-          ABMultiValueIdentifier identifier = [[dict objectForKey: kIdentifier] integerValue];
-          CFIndex index = ABMultiValueGetIndexForIdentifier(mutableMultiValue, identifier);
-
-          if (index != -1)
-          {
-            ABMultiValueReplaceValueAtIndex(mutableMultiValue,
-                                            (__bridge CFTypeRef)value,
-                                            index);
-            if ([label length] > 0)
-            {
-              ABMultiValueReplaceLabelAtIndex(mutableMultiValue, (__bridge CFTypeRef)label, index);
-            }
-          }
-          ABRecordSetValue(_recordRef, property, mutableMultiValue, nil);
-        }
-        break;
-      }
-
-      case kABMultiDictionaryPropertyType:
-      {
-        ABMultiValueRef mutableMultiValue = [self mutableMultiValueForProperty: property];
-
-        for (NSMutableDictionary *dict in (NSArray *)dictValue)
-        {
-          NSString *label = ([dict objectForKey: kLabel]) ? [dict objectForKey: kLabel] : (NSString *)kABOtherLabel;
-          NSMutableDictionary *newValuesDict = [dict objectForKey: kValue];
-
-          ABMultiValueIdentifier identifier = [[dict objectForKey: kIdentifier] integerValue];
-          CFIndex index = ABMultiValueGetIndexForIdentifier(mutableMultiValue, identifier);
-          
-          if (index != -1)
-          {
-            CFTypeRef dict = ABMultiValueCopyValueAtIndex(mutableMultiValue, index);
-            NSMutableDictionary *oldValuesDict = [(__bridge NSDictionary *)dict mutableCopy];
-            CFRelease(dict);
-            [oldValuesDict addEntriesFromDictionary: newValuesDict];
-
-            if ([label length] > 0)
-            {
-              ABMultiValueReplaceLabelAtIndex(mutableMultiValue, (__bridge CFTypeRef)label, index);
-            }
-          }
-        }
-
-        ABRecordSetValue(_recordRef, property, mutableMultiValue, nil);
-
-        break;
-      }
-    }
-  }
-
-  for (NSNumber *key in self.deleteDict)
-  {
-    ABPropertyID property = (ABPropertyID)[key integerValue];
-    ABPropertyType type = ABPersonGetTypeOfProperty(property);
-    id dictValue = [self.createDict objectForKey: key];
-
-    switch (type)
-    {
-      case kABStringPropertyType:
-      case kABDateTimePropertyType:
-
-        ABRecordRemoveValue(_recordRef, property, NULL);
-        break;
-        
-      case kABMultiStringPropertyType:
-      case kABMultiDateTimePropertyType:
-      case kABMultiDictionaryPropertyType:
-      {
-        ABMultiValueRef mutableMultiValue = [self mutableMultiValueForProperty: property];
-
-        for (NSMutableDictionary *dict in (NSArray *)dictValue)
-        {
-          ABMultiValueIdentifier identifier = [[dict objectForKey: kIdentifier] integerValue];
-          CFIndex index = ABMultiValueGetIndexForIdentifier(mutableMultiValue, identifier);
-
-          if (index != -1)
-          {
-            ABMultiValueRemoveValueAndLabelAtIndex(mutableMultiValue, index);
-          }
-          ABRecordSetValue(_recordRef, property, mutableMultiValue, nil);
-        }
-        break;
-      }        
-    }
-  }
-  [self setCreateDict: nil];
-  [self setUpdateDict: nil];
-  [self setDeleteDict: nil];
-}
-
-- (void)revert
-{
-  [self setCreateDict: nil];
-  [self setUpdateDict: nil];
-  [self setDeleteDict: nil];
-}
-
+ 
 #pragma mark - Helper Methods
 
 - (ABMutableMultiValueRef)mutableMultiValueForProperty: (ABPropertyID)property
@@ -591,8 +357,8 @@ NSString *const kLabel = @"Label";
 }
 
 + (NSMutableDictionary *)mutableDictForProperty: (ABPropertyID)property
-                                  forIdentifier: (NSInteger)identifier
-                                  forDictionary: (NSMutableDictionary *)dictionary
+                                  andIdentifier: (NSInteger)identifier
+                                  andDictionary: (NSMutableDictionary *)dictionary
 {
   NSMutableDictionary *ret = nil;
 
