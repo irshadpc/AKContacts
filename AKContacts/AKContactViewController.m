@@ -397,12 +397,13 @@ static const float defaultCellHeight = 44.f;
   {
     [self.navigationItem setLeftBarButtonItem: nil];
     
+    [self.view endEditing: YES]; // Resign first responders
+    
+    AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.contactID];
+    [contact commit];
+    
     if (self.contactID == tagNewContact)
     {
-      [self.view endEditing: YES]; // Resign first responders
-      AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.contactID];
-      [contact commit];
-
       if ([self.delegate respondsToSelector: @selector(modalViewDidDismissWithContactID:)])
         [self.delegate modalViewDidDismissWithContactID: contact.recordID];
 
@@ -484,6 +485,11 @@ static const float defaultCellHeight = 44.f;
 }
 
 - (void)cancelButtonTouchUp: (id)sender {
+
+  [self.view endEditing: YES]; // Resign first responders
+  AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.contactID];
+  [contact revert];
+
   if (self.contactID == tagNewContact)
   {
     [[AKAddressBook sharedInstance].contacts removeObjectForKey: [NSNumber numberWithInteger: tagNewContact]];
