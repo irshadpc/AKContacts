@@ -366,12 +366,7 @@ static const float defaultCellHeight = 44.f;
   NSInteger section = [[self.sections objectAtIndex: indexPath.section] integerValue];
   
   if (self.editing) {
-    
-    if (section == kSectionBirthday ||
-        section == kSectionDate) {
-      AKContactDetailViewCell *cell = (AKContactDetailViewCell *)[self.tableView cellForRowAtIndexPath: indexPath];
-      [cell showDatePicker];
-    }
+
   } else {
     
     if (section == kSectionSocialProfile) {
