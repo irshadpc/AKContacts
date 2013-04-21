@@ -96,7 +96,6 @@
   [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
 
   [self setAccessoryType: UITableViewCellAccessoryDisclosureIndicator];
-  [self.textField setEnabled: self.parent.editing];
   [self.textField setTag: tag];
   [self.textField setPlaceholder: placeholder];
   [self.textField setText: text];
