@@ -304,4 +304,9 @@ const int tagNewContact = -368;
   [addressBook insertRecordID: self.recordID inDictionary: [addressBook allContactIdentifiers] withAddressBookRef: addressBookRef];
 }
 
++ (NSString *)localizedNameForProperty: (ABPropertyID)property
+{
+  return (NSString *)CFBridgingRelease(ABPersonCopyLocalizedPropertyName(property));
+}
+
 @end

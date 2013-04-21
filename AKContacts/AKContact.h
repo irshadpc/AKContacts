@@ -65,4 +65,6 @@ FOUNDATION_EXPORT const int tagNewContact;
 
 - (void)commit;
 
++ (NSString *)localizedNameForProperty: (ABPropertyID)property;
+
 @end
