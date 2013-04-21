@@ -96,11 +96,11 @@ static const int editModeItem = 101;
     NSString *aSubStr = @"";
     NSMutableArray *aArr = [[NSMutableArray alloc] init];
     NSMutableArray *aSubArr = [[NSMutableArray alloc] init];
-    NSString *street = [contact valueForMultiDictKey: (NSString *)kABPersonAddressStreetKey forIdentifier: self.identifier];
-    NSString *city = [contact valueForMultiDictKey: (NSString *)kABPersonAddressCityKey forIdentifier: self.identifier];
-    NSString *state = [contact valueForMultiDictKey: (NSString *)kABPersonAddressStateKey forIdentifier: self.identifier];
-    NSString *ZIP = [contact valueForMultiDictKey: (NSString *)kABPersonAddressZIPKey forIdentifier: self.identifier];
-    NSString *country = [contact valueForMultiDictKey: (NSString *)kABPersonAddressCountryKey forIdentifier: self.identifier];
+    NSString *street = [contact valueForMultiDictKey: (NSString *)kABPersonAddressStreetKey andIdentifier: self.identifier];
+    NSString *city = [contact valueForMultiDictKey: (NSString *)kABPersonAddressCityKey andIdentifier: self.identifier];
+    NSString *state = [contact valueForMultiDictKey: (NSString *)kABPersonAddressStateKey andIdentifier: self.identifier];
+    NSString *ZIP = [contact valueForMultiDictKey: (NSString *)kABPersonAddressZIPKey andIdentifier: self.identifier];
+    NSString *country = [contact valueForMultiDictKey: (NSString *)kABPersonAddressCountryKey andIdentifier: self.identifier];
     
     if ([city length] > 0) [aSubArr addObject: city];
     if ([state length] > 0) [aSubArr addObject: state];
@@ -117,7 +117,7 @@ static const int editModeItem = 101;
     
     [self.detailTextLabel setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
     
-    [self.textLabel setText: [contact labelForMultiValueProperty: kABPersonAddressProperty forIdentifier: self.identifier]];
+    [self.textLabel setText: [contact labelForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.identifier]];
   }
 
   if (self.parent.editing == YES) {
@@ -155,7 +155,7 @@ static const int editModeItem = 101;
     [textField setTag: kAddressStreet];
     NSString *placeholder = [AKContact localizedNameForLabel: kABPersonAddressStreetKey];
     [textField setPlaceholder: placeholder];
-    [textField setText: (self.identifier != NSNotFound) ? [contact valueForMultiDictKey: (NSString *)kABPersonAddressStreetKey forIdentifier: self.identifier] : nil];
+    [textField setText: (self.identifier != NSNotFound) ? [contact valueForMultiDictKey: (NSString *)kABPersonAddressStreetKey andIdentifier: self.identifier] : nil];
     
     textField = [[UITextField alloc] initWithFrame: CGRectMake(83.f, 51.f, 90.f, 19.f)];
     [self.contentView addSubview: textField];
@@ -166,7 +166,7 @@ static const int editModeItem = 101;
     [textField setTag: kAddressCity];
     placeholder = [AKContact localizedNameForLabel: kABPersonAddressCityKey];
     [textField setPlaceholder: placeholder];
-    [textField setText: (self.identifier != NSNotFound) ? [contact valueForMultiDictKey: (NSString *)kABPersonAddressCityKey forIdentifier: self.identifier] : nil];
+    [textField setText: (self.identifier != NSNotFound) ? [contact valueForMultiDictKey: (NSString *)kABPersonAddressCityKey andIdentifier: self.identifier] : nil];
     
     textField = [[UITextField alloc] initWithFrame: CGRectMake(180.f, 51.f, 85.f, 19.f)];
     [self.contentView addSubview: textField];
@@ -177,7 +177,7 @@ static const int editModeItem = 101;
     placeholder = [AKContact localizedNameForLabel: kABPersonAddressStateKey];
     [textField setPlaceholder: placeholder];
 
-    [textField setText: (self.identifier != NSNotFound) ? [contact valueForMultiDictKey: (NSString *)kABPersonAddressStateKey forIdentifier: self.identifier] : nil];
+    [textField setText: (self.identifier != NSNotFound) ? [contact valueForMultiDictKey: (NSString *)kABPersonAddressStateKey andIdentifier: self.identifier] : nil];
 
     textField = [[UITextField alloc] initWithFrame: CGRectMake(83.f, 91.f, 90.f, 19.f)];
     [self.contentView addSubview: textField];
@@ -188,7 +188,7 @@ static const int editModeItem = 101;
     [textField setTag: kAddressZIP];
     placeholder = [AKContact localizedNameForLabel: kABPersonAddressZIPKey];
     [textField setPlaceholder: placeholder];
-    [textField setText: (self.identifier != NSNotFound) ? [contact valueForMultiDictKey: (NSString *)kABPersonAddressZIPKey forIdentifier: self.identifier] : nil];
+    [textField setText: (self.identifier != NSNotFound) ? [contact valueForMultiDictKey: (NSString *)kABPersonAddressZIPKey andIdentifier: self.identifier] : nil];
 
     textField = [[UITextField alloc] initWithFrame: CGRectMake(180.f, 91.f, 85.f, 19.f)];
     [self.contentView addSubview: textField];
@@ -199,7 +199,7 @@ static const int editModeItem = 101;
     [textField setTag: kAddressCountry];
     placeholder = [AKContact localizedNameForLabel: kABPersonAddressCountryKey];
     [textField setPlaceholder: placeholder];
-    [textField setText: (self.identifier != NSNotFound) ? [contact valueForMultiDictKey: (NSString *)kABPersonAddressCountryKey forIdentifier: self.identifier] : nil];
+    [textField setText: (self.identifier != NSNotFound) ? [contact valueForMultiDictKey: (NSString *)kABPersonAddressCountryKey andIdentifier: self.identifier] : nil];
 
     [self.detailTextLabel setText: nil];
   }
