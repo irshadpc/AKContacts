@@ -288,20 +288,34 @@ const int tagNewContact = -368;
   ABAddressBookRef addressBookRef = [AKAddressBook sharedInstance].addressBookRef;
 
   CFErrorRef error = NULL;
-  ABAddressBookAddRecord(addressBookRef, self.recordRef, &error);
-  if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+  if (self.recordID == tagNewContact)
+  {
+    ABAddressBookAddRecord(addressBookRef, self.recordRef, &error);
+    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+  }
 
-  ABAddressBookSave(addressBookRef, &error);
-  if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+  if (ABAddressBookHasUnsavedChanges(addressBookRef))
+  {
+    ABAddressBookSave(addressBookRef, &error);
+    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+  }
 
-  super.recordID = ABRecordGetRecordID(self.recordRef);
+  if(self.recordID == tagNewContact)
+  {
+    super.recordID = ABRecordGetRecordID(self.recordRef);
+    
+    AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+    
+    [addressBook.contacts setObject: self forKey: [NSNumber numberWithInteger: self.recordID]];
+    [addressBook.contacts removeObjectForKey: [NSNumber numberWithInteger: tagNewContact]];
+    
+    [addressBook insertRecordID: self.recordID inDictionary: [addressBook allContactIdentifiers] withAddressBookRef: addressBookRef];
+  }
+}
 
-  AKAddressBook *addressBook = [AKAddressBook sharedInstance];
-
-  [addressBook.contacts setObject: self forKey: [NSNumber numberWithInteger: self.recordID]];
-  [addressBook.contacts removeObjectForKey: [NSNumber numberWithInteger: tagNewContact]];
-
-  [addressBook insertRecordID: self.recordID inDictionary: [addressBook allContactIdentifiers] withAddressBookRef: addressBookRef];
+- (void)revert
+{
+  ABAddressBookRevert([AKAddressBook sharedInstance].addressBookRef);
 }
 
 + (NSString *)localizedNameForProperty: (ABPropertyID)property

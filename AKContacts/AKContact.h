@@ -64,6 +64,7 @@ FOUNDATION_EXPORT const int tagNewContact;
 - (NSComparisonResult)compareByName:(AKContact *)otherContact;
 
 - (void)commit;
+- (void)revert;
 
 + (NSString *)localizedNameForProperty: (ABPropertyID)property;
 
