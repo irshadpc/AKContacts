@@ -35,7 +35,6 @@
 
 @property (assign, nonatomic) ABRecordRef recordRef;
 @property (assign, nonatomic) ABRecordID recordID;
-@property (assign, nonatomic) BOOL recordRefNeedsRelease;
 @property (strong, nonatomic) NSDate *age;
 
 + (NSString *)localizedNameForLabel: (CFStringRef)label;

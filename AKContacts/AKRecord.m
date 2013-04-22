@@ -51,7 +51,6 @@ NSString *const kLabel = @"Label";
 
 @synthesize recordRef = _recordRef;
 @synthesize recordID = _recordID;
-@synthesize recordRefNeedsRelease = _recordRefNeedsRelease;
 @synthesize age = _age;
 
 #pragma mark - Class methods
@@ -71,14 +70,6 @@ NSString *const kLabel = @"Label";
     _recordID = NSNotFound;
   }
   return  self;
-}
-
-- (void)dealloc
-{
-  if (self.recordRefNeedsRelease == YES)
-  {
-    CFRelease(self.recordRef);
-  }
 }
 
 - (NSString *)description
