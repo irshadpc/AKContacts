@@ -55,17 +55,28 @@ const int tagNewContact = -368;
   dispatch_block_t block = ^{
     if (super.recordRef == nil)
     {
+      AKAddressBook *addressBook = [AKAddressBook sharedInstance];
       if (self.recordID != tagNewContact)
       {
-        ABAddressBookRef addressBookRef = [[AKAddressBook sharedInstance] addressBookRef];
-        super.recordRef = ABAddressBookGetPersonWithRecordID(addressBookRef, super.recordID);
+        super.recordRef = ABAddressBookGetPersonWithRecordID(addressBook.addressBookRef, super.recordID);
       }
       else
       {
-        AKAddressBook *addressBook = [AKAddressBook sharedInstance];
         AKSource *source = [addressBook sourceForSourceId: addressBook.sourceID];
-        super.recordRef = ABPersonCreateInSource(source.recordRef);
-        super.recordRefNeedsRelease = YES;
+        ABRecordRef recordRef = ABPersonCreateInSource(source.recordRef);
+
+        CFErrorRef error = NULL;
+        ABAddressBookAddRecord(addressBook.addressBookRef, recordRef, &error);
+        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+
+        ABAddressBookSave(addressBook.addressBookRef, &error);
+        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+        
+        // Do not set super.recordID here!
+        ABRecordID recordID = ABRecordGetRecordID(recordRef);
+        CFRelease(recordRef);
+
+        super.recordRef = ABAddressBookGetPersonWithRecordID(addressBook.addressBookRef, recordID);
       }
     }
     ret = super.recordRef;
@@ -287,15 +298,9 @@ const int tagNewContact = -368;
 {
   ABAddressBookRef addressBookRef = [AKAddressBook sharedInstance].addressBookRef;
 
-  CFErrorRef error = NULL;
-  if (self.recordID == tagNewContact)
-  {
-    ABAddressBookAddRecord(addressBookRef, self.recordRef, &error);
-    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-  }
-
   if (ABAddressBookHasUnsavedChanges(addressBookRef))
   {
+    CFErrorRef error = NULL;
     ABAddressBookSave(addressBookRef, &error);
     if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
   }
@@ -315,7 +320,22 @@ const int tagNewContact = -368;
 
 - (void)revert
 {
-  ABAddressBookRevert([AKAddressBook sharedInstance].addressBookRef);
+  ABAddressBookRef addressBookRef = [AKAddressBook sharedInstance].addressBookRef;
+
+  if (self.recordID == tagNewContact)
+  { // Reference super.recordRef not self.recordRef here
+    CFErrorRef error = NULL;
+    ABAddressBookRemoveRecord(addressBookRef, super.recordRef, &error);
+    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+
+    ABAddressBookSave(addressBookRef, &error);
+    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+  }
+
+  if (ABAddressBookHasUnsavedChanges(addressBookRef))
+  {
+    ABAddressBookRevert(addressBookRef);
+  }
 }
 
 + (NSString *)localizedNameForProperty: (ABPropertyID)property
