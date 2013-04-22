@@ -181,9 +181,7 @@ NSString *const DefaultsKeySources = @"Sources";
       CFRelease(record);
 
       [group setRecordID: recordID];
-      [group setRecordRefNeedsRelease: YES];
       [group setProvisoryName: nil];
-      
     }
     else if (group.provisoryName != nil)
     {
