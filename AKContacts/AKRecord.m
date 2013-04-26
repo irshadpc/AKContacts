@@ -214,6 +214,33 @@ NSString *const kLabel = @"Label";
   return ret;
 }
 
+- (NSString *)labelForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier
+{
+  if (self.recordRef == nil && self.recordID < 0) return nil; // Lazy init of recordRef
+  
+  __block NSString *ret = nil;
+  
+  dispatch_block_t block = ^{
+    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(_recordRef, property);
+    if (multiValueRecord)
+    {
+      CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
+      if (index != -1)
+      {
+        CFStringRef label = ABMultiValueCopyLabelAtIndex(multiValueRecord, index);
+        ret = (NSString *)CFBridgingRelease(ABAddressBookCopyLocalizedLabel(label));
+        CFRelease(label);
+      }
+      CFRelease(multiValueRecord);
+    }
+  };
+  
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
+  
+  return ret;
+}
+
 - (void)setValue: (id)value forMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger *)identifier
 {
   if (self.recordRef == nil && self.recordID < 0) return; // Lazy init of recordRef
@@ -228,15 +255,7 @@ NSString *const kLabel = @"Label";
     }
     else
     {
-      ABPropertyType type = kABInvalidPropertyType;
-      if ([value isKindOfClass: [NSString class]])
-        type = kABMultiStringPropertyType;
-      else if ([value isKindOfClass: [NSDate class]])
-        type = kABMultiDateTimePropertyType;
-      else if ([value isKindOfClass: [NSDictionary class]])
-        type = kABMultiDictionaryPropertyType;
-      if (type != kABInvalidPropertyType)
-        mutableRecord = ABMultiValueCreateMutable(type);
+      mutableRecord = ABMultiValueCreateMutable(ABPersonGetTypeOfProperty(property));
     }
 
     if (mutableRecord != NULL)
@@ -263,122 +282,6 @@ NSString *const kLabel = @"Label";
 
   if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
-}
-
-- (NSString *)valueForMultiDictKey: (NSString *)key andIdentifier: (NSInteger)identifier
-{
-  ABPropertyID property = [AKRecord propertyForMultiDictKey: key];
-
-  NSDictionary *dict = [self valueForMultiValueProperty: property andIdentifier: identifier];
-
-  return [dict objectForKey: key];
-}
-
-- (NSString *)labelForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier
-{
-  if (self.recordRef == nil && self.recordID < 0) return nil; // Lazy init of recordRef
-
-  __block NSString *ret = nil;
-
-  dispatch_block_t block = ^{
-    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(_recordRef, property);
-    if (multiValueRecord)
-    {
-      CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
-      if (index != -1)
-      {
-        CFStringRef label = ABMultiValueCopyLabelAtIndex(multiValueRecord, index);
-        ret = (NSString *)CFBridgingRelease(ABAddressBookCopyLocalizedLabel(label));
-        CFRelease(label);
-      }
-      CFRelease(multiValueRecord);
-    }
-  };
-
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
-  else dispatch_sync(dispatch_get_main_queue(), block);
-
-  return ret;
-}
-
-+ (ABPropertyID)propertyForMultiDictKey: (NSString*)key
-{
-  ABPropertyID ret = kABPropertyInvalidID;
-
-  if ([key isEqualToString: (NSString *)kABPersonAddressCityKey] ||
-      [key isEqualToString: (NSString *)kABPersonAddressCountryCodeKey] ||
-      [key isEqualToString: (NSString *)kABPersonAddressCountryKey] ||
-      [key isEqualToString: (NSString *)kABPersonAddressStateKey] ||
-      [key isEqualToString: (NSString *)kABPersonAddressStreetKey] ||
-      [key isEqualToString: (NSString *)kABPersonAddressZIPKey])
-  {
-    ret = kABPersonAddressProperty;
-
-  }
-  else if ([key isEqualToString: (NSString *)kABPersonInstantMessageServiceKey] ||
-             [key isEqualToString: (NSString *)kABPersonInstantMessageUsernameKey])
-  {
-    ret = kABPersonInstantMessageProperty;
-
-  }
-  else if ([key isEqualToString: (NSString *)kABPersonSocialProfileURLKey] ||
-             [key isEqualToString: (NSString *)kABPersonSocialProfileServiceKey])
-  {
-    ret = kABPersonSocialProfileProperty;
-  }
-  return ret;
-}
- 
-#pragma mark - Helper Methods
-
-- (ABMutableMultiValueRef)mutableMultiValueForProperty: (ABPropertyID)property
-{
-  ABMutableMultiValueRef mutableMultiValue = NULL;
-  ABMultiValueRef multiValue = (ABMultiValueRef)ABRecordCopyValue(_recordRef, property);
-  if (multiValue)
-  {
-    mutableMultiValue = ABMultiValueCreateMutableCopy(multiValue);
-    CFRelease(multiValue);
-  }
-  else
-  {
-    mutableMultiValue = ABMultiValueCreateMutable(ABPersonGetTypeOfProperty(property));
-  }
-  return (__bridge ABMutableMultiValueRef)(CFBridgingRelease(mutableMultiValue));
-}
-
-+ (NSMutableDictionary *)mutableDictForProperty: (ABPropertyID)property
-                                  andIdentifier: (NSInteger)identifier
-                                  andDictionary: (NSMutableDictionary *)dictionary
-{
-  NSMutableDictionary *ret = nil;
-
-  NSNumber *propertyKey = [NSNumber numberWithInteger: property];
-
-  // Locate the array for the given property
-  NSMutableArray *array = [dictionary objectForKey: propertyKey];
-  if (!array)
-  {
-    array = [[NSMutableArray alloc] init];
-    [dictionary setObject: array forKey: propertyKey];
-  }
-
-  // Locate the dictionary in the array
-  for (NSMutableDictionary *dict in array)
-  {
-    NSNumber *nIdentifier = [dict objectForKey: kIdentifier];
-    if ([nIdentifier integerValue] == identifier)
-    {
-      ret = dict;
-      break;
-    }
-  }
-  if (!ret)
-  { // If dictionary is not found, put it in
-    ret = [[NSMutableDictionary alloc] init];
-    [array addObject: ret];
-  }
-  return ret;
 }
 
 @end
