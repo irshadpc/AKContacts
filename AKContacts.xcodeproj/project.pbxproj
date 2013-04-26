@@ -38,6 +38,7 @@
 		C6C2066316E18A810033C58A /* AKGroupsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2066216E18A810033C58A /* AKGroupsViewController.m */; };
 		C6C2066616E39D790033C58A /* AKSource.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2066516E39D760033C58A /* AKSource.m */; };
 		C6C2066916E436BE0033C58A /* AKAddressBook.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2066816E436BE0033C58A /* AKAddressBook.m */; };
+		C6C89337172B1CD100FA4A4F /* AKContactButtonsViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C89336172B1CD100FA4A4F /* AKContactButtonsViewCell.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -101,6 +102,8 @@
 		C6C2066516E39D760033C58A /* AKSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKSource.m; sourceTree = "<group>"; };
 		C6C2066716E436BE0033C58A /* AKAddressBook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKAddressBook.h; sourceTree = "<group>"; };
 		C6C2066816E436BE0033C58A /* AKAddressBook.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKAddressBook.m; sourceTree = "<group>"; };
+		C6C89335172B1CD000FA4A4F /* AKContactButtonsViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactButtonsViewCell.h; sourceTree = "<group>"; };
+		C6C89336172B1CD100FA4A4F /* AKContactButtonsViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactButtonsViewCell.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -141,6 +144,8 @@
 				C620080B16B997A900C16121 /* AKContactSwitchViewCell.m */,
 				C682DEF9171DF9A300CC4A70 /* AKContactDeleteButtonViewCell.h */,
 				C682DEFA171DF9A300CC4A70 /* AKContactDeleteButtonViewCell.m */,
+				C6C89335172B1CD000FA4A4F /* AKContactButtonsViewCell.h */,
+				C6C89336172B1CD100FA4A4F /* AKContactButtonsViewCell.m */,
 				C620080C16B997A900C16121 /* AKContactViewController.h */,
 				C620080D16B997A900C16121 /* AKContactViewController.m */,
 			);
@@ -399,6 +404,7 @@
 				C6C2066916E436BE0033C58A /* AKAddressBook.m in Sources */,
 				C620EA7D16F932640035CA1F /* AKGroupsViewCell.m in Sources */,
 				C682DEFB171DF9A300CC4A70 /* AKContactDeleteButtonViewCell.m in Sources */,
+				C6C89337172B1CD100FA4A4F /* AKContactButtonsViewCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
