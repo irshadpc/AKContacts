@@ -31,6 +31,7 @@
 #import "AKContactDetailViewCell.h"
 #import "AKContactAddressViewCell.h"
 #import "AKContactSwitchViewCell.h"
+#import "AKContactButtonsViewCell.h"
 #import "AKContactDeleteButtonViewCell.h"
 #import "AKContact.h"
 #import "AKAddressBook.h"
@@ -47,7 +48,7 @@ typedef NS_ENUM(NSInteger, Identifier) {
   kSectionSocialProfile,
   kSectionInstantMessage,
   kSectionNote,
-  kSectionButton,
+  kSectionButtons,
   kSectionDeleteButton,
 };
 
@@ -68,16 +69,18 @@ static const float defaultCellHeight = 44.f;
 @synthesize sections = _sections;
 @synthesize sectionIdentifiers = _sectionIdentifiers;
 
--(id)initWithContactID: (NSInteger)contactID {
+- (id)initWithContactID: (NSInteger)contactID
+{
   self = [self init];
-  if (self) {
+  if (self)
+  {
     _contactID = contactID;
   }
   return self;
 }
 
--(void)loadView {
-
+- (void)loadView
+{
   [self setSections: [[NSMutableArray alloc] init]];
   [self.sections addObject: [NSNumber numberWithInteger: kSectionHeader]];
   [self.sections addObject: [NSNumber numberWithInteger: kSectionSwitch]];
@@ -90,14 +93,19 @@ static const float defaultCellHeight = 44.f;
   [self.sections addObject: [NSNumber numberWithInteger: kSectionSocialProfile]];
   [self.sections addObject: [NSNumber numberWithInteger: kSectionInstantMessage]];
   [self.sections addObject: [NSNumber numberWithInteger: kSectionNote]];
+  [self.sections addObject: [NSNumber numberWithInteger: kSectionButtons]];
   [self.sections addObject: [NSNumber numberWithInteger: kSectionDeleteButton]];
   [self setSectionIdentifiers: [self.sections copy]];
 
-  if (self.contactID == tagNewContact) {
+  if (self.contactID == tagNewContact)
+  {
     [self setEditing: YES animated: NO];
-  } else {
+  }
+  else
+  {
     NSMutableArray *sectionsToRemove = [[NSMutableArray alloc] init];
-    for (NSNumber *section in self.sections) {
+    for (NSNumber *section in self.sections)
+    {
       if ([self numberOfElementsInSection: [section integerValue]] == 0)
         [sectionsToRemove addObject: section];
     }
@@ -118,11 +126,13 @@ static const float defaultCellHeight = 44.f;
   [self.navigationItem setRightBarButtonItem: self.editButtonItem];
 }
 
-- (void)viewDidLoad {
+- (void)viewDidLoad
+{
   [super viewDidLoad];
 }
 
-- (void)didReceiveMemoryWarning {
+- (void)didReceiveMemoryWarning
+{
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
@@ -130,11 +140,12 @@ static const float defaultCellHeight = 44.f;
 /**
  * Return the number of entries in a section
  **/
--(NSInteger)numberOfElementsInSection: (NSInteger)section {
-
+- (NSInteger)numberOfElementsInSection: (NSInteger)section
+{
   AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.contactID];
 
-  switch (section) {
+  switch (section)
+  {
     case kSectionPhone:
       return [contact countForProperty: kABPersonPhoneProperty];
     case kSectionEmail:
@@ -166,6 +177,7 @@ static const float defaultCellHeight = 44.f;
   switch (section)
   {
     case kSectionSwitch:
+    case kSectionButtons:
       return NO;
     default:
       return YES;
@@ -277,6 +289,9 @@ static const float defaultCellHeight = 44.f;
     case kSectionSwitch:
       return [self switchCellViewAtRow: indexPath.row];
 
+    case kSectionButtons:
+      return [self buttonsCellViewAtRow: indexPath.row];
+      
     case kSectionDeleteButton:
       return [self deleteButtonCellViewAtRow: indexPath.row];
 
@@ -285,13 +300,15 @@ static const float defaultCellHeight = 44.f;
   }
 }
 
-- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
-
+- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath
+{
   NSInteger section = [[self.sections objectAtIndex: indexPath.section] integerValue];
 
-  switch (section) {
+  switch (section)
+  {
     case kSectionHeader:
     case kSectionDeleteButton:
+    case kSectionButtons:
       return NO;
     default:
       return YES;
@@ -336,48 +353,36 @@ static const float defaultCellHeight = 44.f;
   }
 }
 
-- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
-  if (editingStyle == UITableViewCellEditingStyleDelete) {
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath
+{
+  if (editingStyle == UITableViewCellEditingStyleDelete)
+  {
     //[_objects removeObjectAtIndex:indexPath.row];
     //[tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
-  } else if (editingStyle == UITableViewCellEditingStyleInsert) {
+  }
+  else if (editingStyle == UITableViewCellEditingStyleInsert)
+  {
     // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view.
   }
 }
 
-/*
- // Override to support rearranging the table view.
- - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath
- {
- }
- */
-
-/*
- // Override to support conditional rearranging of the table view.
- - (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath
- {
- // Return NO if you do not want the item to be re-orderable.
- return YES;
- }
- */
-
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
   NSInteger section = [[self.sections objectAtIndex: indexPath.section] integerValue];
   
-  if (self.editing) {
+  if (self.editing)
+  {
 
-  } else {
-    
-    if (section == kSectionSocialProfile) {
-      
+  }
+  else
+  {
+    if (section == kSectionSocialProfile)
+    {
       AKContactDetailViewCell *cell = (AKContactDetailViewCell *)[self.tableView cellForRowAtIndexPath: indexPath];
       [cell openURLForSocialProfile];
     }
   }
-
   [self.tableView deselectRowAtIndexPath: indexPath animated: YES];
-
 }
 
 #pragma mark - Button Delegate Methods
@@ -484,8 +489,8 @@ static const float defaultCellHeight = 44.f;
   [self.tableView endUpdates];
 }
 
-- (void)cancelButtonTouchUp: (id)sender {
-
+- (void)cancelButtonTouchUp: (id)sender
+{
   [self.view endEditing: YES]; // Resign first responders
   AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.contactID];
   [contact revert];
@@ -506,11 +511,13 @@ static const float defaultCellHeight = 44.f;
 
 #pragma mark - Table View Cells
 
-- (UITableViewCell *)headerCellViewAtRow: (NSInteger)row {
+- (UITableViewCell *)headerCellViewAtRow: (NSInteger)row
+{
   static NSString *CellIdentifier = @"AKContactHeaderCellView";
 
   AKContactHeaderViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil) {
+  if (cell == nil)
+  {
     cell = [[AKContactHeaderViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
   }
 
@@ -521,12 +528,13 @@ static const float defaultCellHeight = 44.f;
   return (UITableViewCell *)cell;
 }
 
-- (UITableViewCell *)detailCellViewForProperty: (ABPropertyID)property atRow: (NSInteger)row {
-
+- (UITableViewCell *)detailCellViewForProperty: (ABPropertyID)property atRow: (NSInteger)row
+{
   static NSString *CellIdentifier = @"AKContactDetailViewCell";
 
   AKContactDetailViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil) {
+  if (cell == nil)
+  {
     cell = [[AKContactDetailViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
   }
 
@@ -537,12 +545,13 @@ static const float defaultCellHeight = 44.f;
   return (UITableViewCell *)cell;
 }
 
-- (UITableViewCell *)addressCellViewAtRow: (NSInteger)row {
-
+- (UITableViewCell *)addressCellViewAtRow: (NSInteger)row
+{
   static NSString *CellIdentifier = @"AKContactAddressViewCell";
 
   AKContactAddressViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil) {
+  if (cell == nil)
+  {
     cell = [[AKContactAddressViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
   }
 
@@ -553,11 +562,13 @@ static const float defaultCellHeight = 44.f;
   return (UITableViewCell *)cell;
 }
 
-- (UITableViewCell *)switchCellViewAtRow: (NSInteger)row {
+- (UITableViewCell *)switchCellViewAtRow: (NSInteger)row
+{
   static NSString *CellIdentifier = @"AKContactSwitchViewCell";
 
   AKContactSwitchViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil) {
+  if (cell == nil)
+  {
     cell = [[AKContactSwitchViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
   }
   
@@ -568,11 +579,30 @@ static const float defaultCellHeight = 44.f;
   return (UITableViewCell *)cell;
 }
 
-- (UITableViewCell *)deleteButtonCellViewAtRow: (NSInteger)row {
+- (UITableViewCell *)buttonsCellViewAtRow: (NSInteger)row
+{
+  static NSString *CellIdentifier = @"AKContactButtonsViewCell";
+  
+  AKContactButtonsViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  if (cell == nil)
+  {
+    cell = [[AKContactButtonsViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier: CellIdentifier];
+  }
+  
+  [cell setParent: self];
+  
+  [cell configureCellAtRow: row];
+  
+  return (UITableViewCell *)cell;
+}
+
+- (UITableViewCell *)deleteButtonCellViewAtRow: (NSInteger)row
+{
   static NSString *CellIdentifier = @"AKContactDeleteButtonViewCell";
 
   AKContactDeleteButtonViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil) {
+  if (cell == nil)
+  {
     cell = [[AKContactDeleteButtonViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier: CellIdentifier];
   }
 
