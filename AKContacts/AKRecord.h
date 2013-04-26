@@ -73,11 +73,6 @@
 - (void)setValue: (id)value forMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger *)identifier;
 
 /**
- * Return the values for a key and an identifier for the following properties:
- * kABPersonAddressProperty, kABPersonInstantMessageProperty
- **/
-- (NSString *)valueForMultiDictKey: (NSString *)key andIdentifier: (NSInteger)identifier;
-/**
  * Return a label for an identifier from an ABMultiValue type
  **/
 - (NSString*)labelForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier;
