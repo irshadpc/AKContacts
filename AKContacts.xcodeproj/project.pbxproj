@@ -40,6 +40,7 @@
 		C6C2066916E436BE0033C58A /* AKAddressBook.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2066816E436BE0033C58A /* AKAddressBook.m */; };
 		C6C89337172B1CD100FA4A4F /* AKContactButtonsViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C89336172B1CD100FA4A4F /* AKContactButtonsViewCell.m */; };
 		F35CCDD8172EE10700466697 /* AKMessenger.m in Sources */ = {isa = PBXBuildFile; fileRef = F35CCDD7172EE10700466697 /* AKMessenger.m */; };
+		F35CCE61172F13BF00466697 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F35CCE60172F13BF00466697 /* MessageUI.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -107,6 +108,7 @@
 		C6C89336172B1CD100FA4A4F /* AKContactButtonsViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactButtonsViewCell.m; sourceTree = "<group>"; };
 		F35CCDD6172EE10700466697 /* AKMessenger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKMessenger.h; sourceTree = "<group>"; };
 		F35CCDD7172EE10700466697 /* AKMessenger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKMessenger.m; sourceTree = "<group>"; };
+		F35CCE60172F13BF00466697 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,6 +116,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F35CCE61172F13BF00466697 /* MessageUI.framework in Frameworks */,
 				C66951E416B705C400D030A2 /* AddressBook.framework in Frameworks */,
 				C669518C16B6FD7100D030A2 /* UIKit.framework in Frameworks */,
 				C669518E16B6FD7100D030A2 /* Foundation.framework in Frameworks */,
@@ -178,6 +181,7 @@
 		C669518A16B6FD7100D030A2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				F35CCE60172F13BF00466697 /* MessageUI.framework */,
 				C66951E316B705C400D030A2 /* AddressBook.framework */,
 				C669518B16B6FD7100D030A2 /* UIKit.framework */,
 				C669518D16B6FD7100D030A2 /* Foundation.framework */,
