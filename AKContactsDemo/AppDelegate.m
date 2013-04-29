@@ -9,6 +9,11 @@
 #import "AKAddressBook.h"
 #import "AKContactsViewController.h"
 #import "AKGroupsViewController.h"
+#import "AKMessenger.h"
+
+@interface AppDelegate () <AKMessengerDelegate>
+
+@end
 
 @implementation AppDelegate
 
@@ -27,6 +32,8 @@
       [rootViewController setTitle: NSLocalizedString(@"Groups", @"")];
       [self.navigationController pushViewController: [[AKContactsViewController alloc] init] animated: NO];
     }
+
+    [[AKMessenger sharedInstance] setDelegate: self];
 
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
@@ -59,6 +66,23 @@
 - (void)applicationWillTerminate:(UIApplication *)application
 {
   // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+}
+
+#pragma mark - AKMessenger delegate
+
+- (void)presentModalComposeEmailViewController: (UIViewController *)viewController
+{
+  [self.navigationController presentModalViewController: viewController animated: YES];
+}
+
+- (void)presentActionSheet: (UIActionSheet *)actionSheet
+{
+  [actionSheet showInView: self.navigationController.view];
+}
+
+- (void)dismissModalViewController
+{
+  [self.navigationController dismissModalViewControllerAnimated: YES];
 }
 
 @end
