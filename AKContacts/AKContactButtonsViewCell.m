@@ -27,6 +27,15 @@
 //
 
 #import "AKContactButtonsViewCell.h"
+#import "AKAddressBook.h"
+#import "AKContactViewController.h"
+#import "AKContact.h"
+#import "AKMessenger.h"
+
+typedef NS_ENUM(NSInteger, ButtonTags) {
+    kButtonText = 1,
+    kButtonGroup,
+};
 
 @interface AKContactButtonsViewCell ()
 
@@ -47,18 +56,20 @@
     UIColor *blue = [UIColor colorWithRed: .196f green: .3098f blue: .52f alpha: 1.f];
     
     UIButton *button = [UIButton buttonWithType: UIButtonTypeRoundedRect];
+    [button setTag: kButtonText];
     [button setTitleColor: blue forState: UIControlStateNormal];
     [button.titleLabel setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
     [button setTitle: NSLocalizedString(@"Send Message", @"") forState: UIControlStateNormal];
-    [button addTarget: self action:@selector(textButtonTouchUpInside:) forControlEvents: UIControlEventTouchUpInside];
+    [button addTarget: self action:@selector(buttonTouchUpInside:) forControlEvents: UIControlEventTouchUpInside];
     [self setTextButton: button];
     [self.contentView addSubview: self.textButton];
     
     button = [UIButton buttonWithType: UIButtonTypeRoundedRect];
+    [button setTag: kButtonGroup];
     [button setTitleColor: blue forState: UIControlStateNormal];
     [button.titleLabel setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
     [button setTitle: NSLocalizedString(@"Add to Group", @"") forState: UIControlStateNormal];
-    [button addTarget: self action: @selector(groupButtonTouchUpInside:) forControlEvents: UIControlEventTouchUpInside];
+    [button addTarget: self action: @selector(buttonTouchUpInside:) forControlEvents: UIControlEventTouchUpInside];
     [self setGroupButton: button];
     [self.contentView addSubview: self.groupButton];
   }
@@ -97,24 +108,43 @@
 
 #pragma mark - UIButton
 
-- (void)textButtonTouchUpInside: (id)sender
+- (void)buttonTouchUpInside: (id)sender
 {
-  UIAlertView *alertView = [[UIAlertView alloc] initWithTitle: NSLocalizedString(@"Feature Not Implemented", @"")
-                                                      message: nil
-                                                     delegate: self
-                                            cancelButtonTitle: NSLocalizedString(@"OK", @"")
-                                            otherButtonTitles: nil];
-  [alertView show];
-}
+  UIButton *button = (UIButton *)sender;
+  if (button.tag == kButtonText)
+  {
+      AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
+      NSInteger phoneCount = [contact countForProperty: kABPersonPhoneProperty];
+      NSInteger emailCount = [contact countForProperty: kABPersonEmailProperty];
 
-- (void)groupButtonTouchUpInside: (id)sender
-{
-  UIAlertView *alertView = [[UIAlertView alloc] initWithTitle: NSLocalizedString(@"Feature Not Implemented", @"")
-                                                      message: nil
-                                                     delegate: self
-                                            cancelButtonTitle: NSLocalizedString(@"OK", @"")
-                                            otherButtonTitles: nil];
-  [alertView show];  
+      AKMessenger *messanger = [AKMessenger sharedInstance];
+      
+      if (phoneCount == 1 && emailCount == 0)
+      {
+          NSInteger identifier = [[[contact identifiersForProperty: kABPersonPhoneProperty] objectAtIndex: 0] integerValue];
+          NSString *phoneNumber = [contact valueForMultiValueProperty: kABPersonPhoneProperty andIdentifier: identifier];
+          [messanger sendTextWithRecipient: phoneNumber];
+      }
+      else if (phoneCount == 0 && emailCount == 1)
+      {
+          NSInteger identifier = [[[contact identifiersForProperty: kABPersonEmailProperty] objectAtIndex: 0] integerValue];
+          NSString *email = [contact valueForMultiValueProperty: kABPersonEmailProperty andIdentifier: identifier];
+          [messanger sendEmailWithRecipients: [[NSArray alloc] initWithObjects: email, nil]];
+      }
+      else
+      {
+          [messanger showTextActionSheetWithContactID: self.parent.contactID];
+      }
+  }
+  else
+  {
+    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle: NSLocalizedString(@"Feature Not Implemented", @"")
+                                                        message: nil
+                                                       delegate: self
+                                              cancelButtonTitle: NSLocalizedString(@"OK", @"")
+                                              otherButtonTitles: nil];
+    [alertView show];
+  }
 }
 
 @end
