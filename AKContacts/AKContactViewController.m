@@ -35,6 +35,7 @@
 #import "AKContactDeleteButtonViewCell.h"
 #import "AKContact.h"
 #import "AKAddressBook.h"
+#import "AKMessenger.h"
 
 typedef NS_ENUM(NSInteger, Identifier) {
   kSectionHeader = 0,
@@ -376,7 +377,27 @@ static const float defaultCellHeight = 44.f;
   }
   else
   {
-    if (section == kSectionSocialProfile)
+    if (section == kSectionPhone)
+    {
+      AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.contactID];
+      NSArray *identifiers = [contact identifiersForProperty: kABPersonPhoneProperty];
+      NSInteger identifier = [[identifiers objectAtIndex: indexPath.row] integerValue];
+      NSString *value = [contact valueForMultiValueProperty: kABPersonPhoneProperty andIdentifier: identifier];
+      value = [[value componentsSeparatedByCharactersInSet:
+                                [[NSCharacterSet decimalDigitCharacterSet] invertedSet]]
+                               componentsJoinedByString: @""];
+      NSURL *url = [[NSURL alloc] initWithString: [NSString stringWithFormat: @"tel:%@", value]];
+      [[UIApplication sharedApplication] openURL: url];
+    }
+    else if (section == kSectionEmail)
+    {
+      AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.contactID];
+      NSArray *identifiers = [contact identifiersForProperty: kABPersonEmailProperty];
+      NSInteger identifier = [[identifiers objectAtIndex: indexPath.row] integerValue];
+      NSString *value = [contact valueForMultiValueProperty: kABPersonEmailProperty andIdentifier: identifier];
+      [[AKMessenger sharedInstance] sendEmailWithRecipients: [[NSArray alloc] initWithObjects: value, nil]];
+    }
+    else if (section == kSectionSocialProfile)
     {
       AKContactDetailViewCell *cell = (AKContactDetailViewCell *)[self.tableView cellForRowAtIndexPath: indexPath];
       [cell openURLForSocialProfile];
