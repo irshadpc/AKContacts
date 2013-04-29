@@ -28,7 +28,15 @@
 
 #import <Foundation/Foundation.h>
 
+@protocol AKMessengerDelegate <NSObject>
+- (void)presentModalComposeEmailViewController: (UIViewController *)viewController;
+- (void)presentActionSheet: (UIActionSheet *)actionSheet;
+- (void)dismissModalViewController;
+@end
+
 @interface AKMessenger : NSObject
+
+@property (nonatomic, assign) id <AKMessengerDelegate> delegate;
 
 + (AKMessenger *)sharedInstance;
 

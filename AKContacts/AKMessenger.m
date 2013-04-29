@@ -29,7 +29,6 @@
 #import "AKMessenger.h"
 #import "AKAddressBook.h"
 #import "AKContact.h"
-#import "AppDelegate.h"
 
 #import <MessageUI/MFMessageComposeViewController.h>
 #import <MessageUI/MFMailComposeViewController.h>
@@ -41,6 +40,9 @@
 @end
 
 @implementation AKMessenger
+
+@synthesize contactID = _contactID;
+@synthesize delegate = _delegate;
 
 #pragma mark - Class methods
 
@@ -56,8 +58,10 @@
 
 - (void)sendTextWithRecipient: (NSString *)recipient
 {
-  NSString *sURL = [NSString stringWithFormat: @"heywire:%@", recipient];
-  NSURL *URL = [[NSURL alloc] initWithString: sURL];
+    recipient = [[recipient componentsSeparatedByCharactersInSet:
+                            [[NSCharacterSet decimalDigitCharacterSet] invertedSet]]
+                           componentsJoinedByString: @""];
+  NSURL *URL = [[NSURL alloc] initWithString: [NSString stringWithFormat: @"heywire:%@", recipient]];
 
   UIApplication *application = [UIApplication sharedApplication];
   if ([application canOpenURL: URL])
@@ -82,8 +86,9 @@
     MFMailComposeViewController *emailVC = [[MFMailComposeViewController alloc] init];
     [emailVC setMailComposeDelegate: self];
     [emailVC setToRecipients: recipients];
-    //AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-    //[emailVC presentModalViewController:  animated: YES];
+
+    if ([self.delegate respondsToSelector: @selector(presentModalComposeEmailViewController:)])
+      [self.delegate presentModalComposeEmailViewController: emailVC];
   }
   else
   {
@@ -123,8 +128,8 @@
   [actionSheet addButtonWithTitle: NSLocalizedString(@"Cancel", @"")];
   [actionSheet setCancelButtonIndex: ([actionSheet numberOfButtons] - 1)];
     
-  //AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-  //[appDelegate showInView: ];
+  if ([self.delegate respondsToSelector: @selector(presentActionSheet:)])
+    [self.delegate presentActionSheet: actionSheet];
 }
 
 #pragma mark - MFMailComposeViewControllerDelegate
@@ -144,8 +149,9 @@
     default:
       break;
   }
-  //AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-  //[appDelegate dismissModalViewControllerAnimated: YES];
+
+  if ([self.delegate respondsToSelector: @selector(dismissModalViewController)])
+    [self.delegate dismissModalViewController];
 }
 
 #pragma mark - MFMailComposeViewControllerDelegate
@@ -163,8 +169,8 @@
     default:
       break;
   }
-  //AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-  //[appDelegate dismissModalViewControllerAnimated: YES];
+  if ([self.delegate respondsToSelector: @selector(dismissModalViewController)])
+    [self.delegate dismissModalViewController];
 }
 
 #pragma mark - UIActionSheetDelegate
