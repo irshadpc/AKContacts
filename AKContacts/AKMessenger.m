@@ -88,7 +88,13 @@
     [emailVC setToRecipients: recipients];
 
     if ([self.delegate respondsToSelector: @selector(presentModalComposeEmailViewController:)])
+    {
       [self.delegate presentModalComposeEmailViewController: emailVC];
+    }
+    else
+    {
+      NSLog(@"AKMessengerDelegate should respond to presentModalComposeEmailViewController: selector");
+    }
   }
   else
   {
@@ -129,7 +135,13 @@
   [actionSheet setCancelButtonIndex: ([actionSheet numberOfButtons] - 1)];
     
   if ([self.delegate respondsToSelector: @selector(presentActionSheet:)])
+  {
     [self.delegate presentActionSheet: actionSheet];
+  }
+  else
+  {
+    NSLog(@"AKMessengerDelegate should respond to presentActionSheet: selector");
+  }
 }
 
 #pragma mark - MFMailComposeViewControllerDelegate
@@ -151,7 +163,13 @@
   }
 
   if ([self.delegate respondsToSelector: @selector(dismissModalViewController)])
+  {
     [self.delegate dismissModalViewController];
+  }
+  else
+  {
+      NSLog(@"AKMessengerDelegate should respond to dismissModalViewController selector");
+  }
 }
 
 #pragma mark - MFMailComposeViewControllerDelegate
@@ -170,7 +188,13 @@
       break;
   }
   if ([self.delegate respondsToSelector: @selector(dismissModalViewController)])
+  {
     [self.delegate dismissModalViewController];
+  }
+  else
+  {
+    NSLog(@"AKMessengerDelegate should respond to dismissModalViewController selector");
+  }
 }
 
 #pragma mark - UIActionSheetDelegate
