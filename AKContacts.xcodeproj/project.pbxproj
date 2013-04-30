@@ -42,6 +42,8 @@
 		F35CCDD8172EE10700466697 /* AKMessenger.m in Sources */ = {isa = PBXBuildFile; fileRef = F35CCDD7172EE10700466697 /* AKMessenger.m */; };
 		F35CCE61172F13BF00466697 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F35CCE60172F13BF00466697 /* MessageUI.framework */; };
 		F3F0720E1730491F0044084A /* AKContactsRecordViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = F3F0720D1730491F0044084A /* AKContactsRecordViewCell.m */; };
+		F3F072111730552B0044084A /* AKContactsProgressIndicatorView.m in Sources */ = {isa = PBXBuildFile; fileRef = F3F072101730552B0044084A /* AKContactsProgressIndicatorView.m */; };
+		F3F072131730575B0044084A /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F3F072121730575B0044084A /* QuartzCore.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -112,6 +114,9 @@
 		F35CCE60172F13BF00466697 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
 		F3F0720C1730491F0044084A /* AKContactsRecordViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactsRecordViewCell.h; sourceTree = "<group>"; };
 		F3F0720D1730491F0044084A /* AKContactsRecordViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactsRecordViewCell.m; sourceTree = "<group>"; };
+		F3F0720F1730552B0044084A /* AKContactsProgressIndicatorView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactsProgressIndicatorView.h; sourceTree = "<group>"; };
+		F3F072101730552B0044084A /* AKContactsProgressIndicatorView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactsProgressIndicatorView.m; sourceTree = "<group>"; };
+		F3F072121730575B0044084A /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,6 +124,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F3F072131730575B0044084A /* QuartzCore.framework in Frameworks */,
 				F35CCE61172F13BF00466697 /* MessageUI.framework in Frameworks */,
 				C66951E416B705C400D030A2 /* AddressBook.framework in Frameworks */,
 				C669518C16B6FD7100D030A2 /* UIKit.framework in Frameworks */,
@@ -184,6 +190,7 @@
 		C669518A16B6FD7100D030A2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				F3F072121730575B0044084A /* QuartzCore.framework */,
 				F35CCE60172F13BF00466697 /* MessageUI.framework */,
 				C66951E316B705C400D030A2 /* AddressBook.framework */,
 				C669518B16B6FD7100D030A2 /* UIKit.framework */,
@@ -272,6 +279,8 @@
 				C66951D816B702F800D030A2 /* AKContactsViewController.m */,
 				F3F0720C1730491F0044084A /* AKContactsRecordViewCell.h */,
 				F3F0720D1730491F0044084A /* AKContactsRecordViewCell.m */,
+				F3F0720F1730552B0044084A /* AKContactsProgressIndicatorView.h */,
+				F3F072101730552B0044084A /* AKContactsProgressIndicatorView.m */,
 			);
 			name = Contacts;
 			sourceTree = "<group>";
@@ -421,6 +430,7 @@
 				C6C89337172B1CD100FA4A4F /* AKContactButtonsViewCell.m in Sources */,
 				F35CCDD8172EE10700466697 /* AKMessenger.m in Sources */,
 				F3F0720E1730491F0044084A /* AKContactsRecordViewCell.m in Sources */,
+				F3F072111730552B0044084A /* AKContactsProgressIndicatorView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
