@@ -27,6 +27,7 @@
 //
 
 #import "AKContactsViewController.h"
+#import "AKContactsRecordViewCell.h"
 #import "AKContact.h"
 #import "AKContactViewController.h"
 #import "AKAddressBook.h"
@@ -261,100 +262,32 @@ static const int manyContacts = 20;
  
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-  static NSString *CellIdentifier = @"Cell";
-  
-  UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
-  if (cell == nil)
-  {
-    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
-  }
-
-  [cell.textLabel setText: nil];
-  [cell setTag: NSNotFound];
-  [cell.textLabel setTextAlignment: NSTextAlignmentLeft];
-  [cell.textLabel setTextColor: [UIColor blackColor]];
-  [cell setSelectionStyle: UITableViewCellSelectionStyleNone];
-
-  NSInteger section = [indexPath section];
-  NSInteger row = [indexPath row];
-
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
-  
+
   if (akAddressBook.status == kAddressBookOnline)
   {
     if ([akAddressBook displayedContactsCount] == 0)
     {
-      [cell setAccessoryView: nil];
-
-      [cell.textLabel setFont:[UIFont boldSystemFontOfSize: 20.f]];
-      [cell.textLabel setTextAlignment: NSTextAlignmentCenter];
-      [cell.textLabel setTextColor: [UIColor lightGrayColor]];
-      if ([self.searchBar isFirstResponder])
-      {
-        if (row == 2)
-        {
-          [cell.textLabel setText: NSLocalizedString(@"No Results", @"")];
-        }
-      }
-      else
-      {
-        if (row == 3)
-        {
-          [cell.textLabel setText: NSLocalizedString(@"No Contacts", @"")];
-        }
-      }
+      return [self noContactsCellAtIndexPath: indexPath];
     }
     else
     {
-      NSString *key = nil;
-      if ([akAddressBook.keys count] > section)
-        key = [akAddressBook.keys objectAtIndex: section];
-
-      NSArray *identifiersArray = [akAddressBook.contactIdentifiers objectForKey: key];
-      if ([identifiersArray count] == 0) return cell;
-      NSNumber *recordId = [identifiersArray objectAtIndex: row];
-      AKContact *contact = [akAddressBook contactForContactId: [recordId integerValue]];
-      if (!contact) return cell;
-      [cell setTag: [contact recordID]];
-      [cell setSelectionStyle: UITableViewCellSelectionStyleBlue];
-      
-      [cell setAccessoryView: nil];
-      if (![contact name])
-      {
-        cell.textLabel.font = [UIFont italicSystemFontOfSize: 20.f];
-        cell.textLabel.text = NSLocalizedString(@"No Name", @"");
-      }
-      else
-      {
-        cell.textLabel.font = [UIFont boldSystemFontOfSize: 20.f];
-        cell.textLabel.text = [contact name];
-      }
+      return [self recordCellAtIndexPath: indexPath];
     }
   }
   else
   {
-    [cell setAccessoryView: nil];
-
-    if (row == 3)
+    if (akAddressBook.status == kAddressBookInitializing ||
+        akAddressBook.status == kAddressBookLoading)
     {
-      [cell.textLabel setTextColor: [UIColor grayColor]];
-      [cell.textLabel setTextAlignment: NSTextAlignmentCenter];
-      if (akAddressBook.status == kAddressBookInitializing ||
-          akAddressBook.status == kAddressBookLoading)
-      {
-        [cell.textLabel setText: NSLocalizedString(@"Loading address book...", @"")];
-        UIActivityIndicatorView *activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle: UIActivityIndicatorViewStyleGray];
-        [cell setAccessoryView: activity];
-        [activity startAnimating];
-      }
-      else if (akAddressBook.status == kAddressBookOffline)
-      {
-        [cell.textLabel setText: NSLocalizedString(@"No Contacts", @"")];
-      }
+      return [self loadingCellAtIndexPath: indexPath];
     }
+    else
+    {
+      return [self noContactsCellAtIndexPath: indexPath];
+    }      
   }
-
-  return cell;
+  return [self emptyCellView];
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection: (NSInteger)section
@@ -471,6 +404,85 @@ static const int manyContacts = 20;
       [self.searchBar resignFirstResponder];
     }
   }
+}
+
+#pragma mark - Table View Cells
+
+- (UITableViewCell *)emptyCellView
+{
+  static NSString *CellIdentifier = @"Cell";
+
+  UITableViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+  if (cell == nil)
+  {
+    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
+  }
+
+  [cell.textLabel setText: nil];
+  [cell setAccessoryView: nil];
+  [cell setTag: NSNotFound];
+  [cell.textLabel setTextAlignment: NSTextAlignmentLeft];
+  [cell.textLabel setTextColor: [UIColor blackColor]];
+  [cell setSelectionStyle: UITableViewCellSelectionStyleNone];
+
+  return cell;
+}
+
+- (UITableViewCell *)noContactsCellAtIndexPath: (NSIndexPath *)indexPath
+{
+  UITableViewCell *cell = [self emptyCellView];
+
+  [cell.textLabel setFont:[UIFont boldSystemFontOfSize: 20.f]];
+  [cell.textLabel setTextAlignment: NSTextAlignmentCenter];
+  [cell.textLabel setTextColor: [UIColor lightGrayColor]];
+  if ([self.searchBar isFirstResponder])
+  {
+    if (indexPath.row == 2)
+    {
+      [cell.textLabel setText: NSLocalizedString(@"No Results", @"")];
+    }
+  }
+  else
+  {
+    if (indexPath.row == 3)
+    {
+      [cell.textLabel setText: NSLocalizedString(@"No Contacts", @"")];
+    }
+  }
+  return cell;
+}
+
+- (UITableViewCell *)recordCellAtIndexPath: (NSIndexPath *)indexPath
+{
+  static NSString *CellIdentifier = @"AKContactsRecordCellView";
+
+  AKContactsRecordViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  if (cell == nil)
+  {
+    cell = [[AKContactsRecordViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
+  }
+
+  [cell setParent: self];
+
+  [cell configureCellAtIndexPath: indexPath];
+
+  return (UITableViewCell *)cell;
+}
+
+- (UITableViewCell *)loadingCellAtIndexPath: (NSIndexPath *)indexPath
+{
+  UITableViewCell *cell = [self emptyCellView];
+
+  if (indexPath.row == 3)
+  {
+    [cell.textLabel setTextColor: [UIColor grayColor]];
+    [cell.textLabel setTextAlignment: NSTextAlignmentCenter];
+    [cell.textLabel setText: NSLocalizedString(@"Loading address book...", @"")];
+    UIActivityIndicatorView *activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle: UIActivityIndicatorViewStyleGray];
+    [cell setAccessoryView: activity];
+    [activity startAnimating];
+  }
+  return cell;
 }
 
 #pragma mark - Search Bar delegate
