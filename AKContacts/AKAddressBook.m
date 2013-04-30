@@ -30,6 +30,7 @@
 #import "AKContact.h"
 #import "AKGroup.h"
 #import "AKSource.h"
+#import "AppDelegate.h"
 
 NSString *const AKAddressBookQueueName = @"AKAddressBookQueue";
 
