@@ -41,6 +41,7 @@
 		C6C89337172B1CD100FA4A4F /* AKContactButtonsViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C89336172B1CD100FA4A4F /* AKContactButtonsViewCell.m */; };
 		F35CCDD8172EE10700466697 /* AKMessenger.m in Sources */ = {isa = PBXBuildFile; fileRef = F35CCDD7172EE10700466697 /* AKMessenger.m */; };
 		F35CCE61172F13BF00466697 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F35CCE60172F13BF00466697 /* MessageUI.framework */; };
+		F3F0720E1730491F0044084A /* AKContactsRecordViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = F3F0720D1730491F0044084A /* AKContactsRecordViewCell.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -109,6 +110,8 @@
 		F35CCDD6172EE10700466697 /* AKMessenger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKMessenger.h; sourceTree = "<group>"; };
 		F35CCDD7172EE10700466697 /* AKMessenger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKMessenger.m; sourceTree = "<group>"; };
 		F35CCE60172F13BF00466697 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
+		F3F0720C1730491F0044084A /* AKContactsRecordViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactsRecordViewCell.h; sourceTree = "<group>"; };
+		F3F0720D1730491F0044084A /* AKContactsRecordViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactsRecordViewCell.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -267,6 +270,8 @@
 				C620080316B9972A00C16121 /* Contact */,
 				C66951D716B702F800D030A2 /* AKContactsViewController.h */,
 				C66951D816B702F800D030A2 /* AKContactsViewController.m */,
+				F3F0720C1730491F0044084A /* AKContactsRecordViewCell.h */,
+				F3F0720D1730491F0044084A /* AKContactsRecordViewCell.m */,
 			);
 			name = Contacts;
 			sourceTree = "<group>";
@@ -415,6 +420,7 @@
 				C682DEFB171DF9A300CC4A70 /* AKContactDeleteButtonViewCell.m in Sources */,
 				C6C89337172B1CD100FA4A4F /* AKContactButtonsViewCell.m in Sources */,
 				F35CCDD8172EE10700466697 /* AKMessenger.m in Sources */,
+				F3F0720E1730491F0044084A /* AKContactsRecordViewCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
