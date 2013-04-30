@@ -27,6 +27,7 @@
 //
 
 #import "AKContactsViewController.h"
+#import "AKContactsProgressIndicatorView.h"
 #import "AKContactsRecordViewCell.h"
 #import "AKContact.h"
 #import "AKContactViewController.h"
@@ -478,9 +479,11 @@ static const int manyContacts = 20;
     [cell.textLabel setTextColor: [UIColor grayColor]];
     [cell.textLabel setTextAlignment: NSTextAlignmentCenter];
     [cell.textLabel setText: NSLocalizedString(@"Loading address book...", @"")];
-    UIActivityIndicatorView *activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle: UIActivityIndicatorViewStyleGray];
+
+    CGRect frame = CGRectMake(0.f, 0.f, 20.f, 20.f);
+    AKContactsProgressIndicatorView *activity = [[AKContactsProgressIndicatorView alloc] initWithFrame: frame];
     [cell setAccessoryView: activity];
-    [activity startAnimating];
+    [[AKAddressBook sharedInstance] setDelegate: activity];
   }
   return cell;
 }
