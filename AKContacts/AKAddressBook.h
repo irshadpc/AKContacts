@@ -59,7 +59,13 @@ typedef enum {
   kGroupAggregate = -1,
 } Groups;
 
+@protocol AKAddressBookDelegate <NSObject>
+- (void)setProgress: (CGFloat)progress;
+@end
+
 @interface AKAddressBook : NSObject
+
+@property (nonatomic, assign) id <AKAddressBookDelegate> delegate;
 
 @property (assign, nonatomic) ABAddressBookRef addressBookRef;
 
