@@ -402,7 +402,9 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
   AKSource *aggregateSource = [self sourceForSourceId: kSourceAggregate];
   AKGroup *mainAggregateGroup = [aggregateSource groupForGroupId: kGroupAggregate];
-    
+
+  NSInteger total = ABAddressBookGetPersonCount(addressBook);
+  NSInteger i = 0;
   // Get array of records in Address Book
   for (AKSource *source in _sources) 
   {
@@ -421,6 +423,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
       ABRecordID recordID = ABRecordGetRecordID(recordRef);
       NSNumber *contactID = [NSNumber numberWithInteger: recordID];
+
+      [self.delegate setProgress: (CGFloat)++i / total];
 
       /*
        NSArray *linkedContactIDs = [contact linkedContactIDs];
