@@ -60,6 +60,8 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 @property (nonatomic, assign) dispatch_source_t ab_timer;
 @property (nonatomic, assign) BOOL ab_timer_suspended;
 
+@property (nonatomic, assign) NSInteger contactsCount;
+
 /**
  * ABAddressBookRegisterExternalChangeCallback tends to fire multiple times
  * for a single change, so we store the last date when the addressbook
@@ -307,10 +309,12 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   NSAssert(dispatch_get_specific(IsOnMainQueueKey) == NULL, @"Must not be dispatched on main queue");
 
   _sources = [[NSMutableArray alloc] init];
-
+  
+  [self setSourceID: kSourceAggregate];
+  
   NSArray *sources = (NSArray *)CFBridgingRelease(ABAddressBookCopyArrayOfAllSources(addressBook));
 
-  if ([sources count] > 1) 
+  if ([sources count] > 1)
   {
     AKSource *aggregatorSource = [[AKSource alloc] initWithABRecordID: kSourceAggregate];
     [_sources addObject: aggregatorSource];
@@ -340,7 +344,9 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   NSAssert(dispatch_get_specific(IsOnMainQueueKey) == NULL, @"Must not be dispatched on main queue");
 
   if (ShowGroups == NO) return;
-  
+
+  [self setGroupID: kGroupAggregate];
+
   AKGroup *mainAggregateGroup = nil;
   
   for (AKSource *source in _sources) 
@@ -403,7 +409,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   AKSource *aggregateSource = [self sourceForSourceId: kSourceAggregate];
   AKGroup *mainAggregateGroup = [aggregateSource groupForGroupId: kGroupAggregate];
 
-  NSInteger total = ABAddressBookGetPersonCount(addressBook);
+  [self setContactsCount: ABAddressBookGetPersonCount(addressBook)];
+  NSLog(@"Number of contacts: %d", self.contactsCount);
   NSInteger i = 0;
   // Get array of records in Address Book
   for (AKSource *source in _sources) 
@@ -424,7 +431,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       ABRecordID recordID = ABRecordGetRecordID(recordRef);
       NSNumber *contactID = [NSNumber numberWithInteger: recordID];
 
-      [self.delegate setProgress: (CGFloat)++i / total];
+      [self.delegate setProgress: (CGFloat)++i / self.contactsCount];
 
       /*
        NSArray *linkedContactIDs = [contact linkedContactIDs];
@@ -499,13 +506,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   NSAssert(ret != nil, @"No default source present");
 
   return ret;
-}
-
-- (NSInteger)contactsCount 
-{  
-  NSAssert(dispatch_get_specific(IsOnMainQueueKey) == NULL, @"Must not be dispatched on main queue");
-
-  return ABAddressBookGetPersonCount(self.addressBookRef);
 }
 
 - (NSInteger)displayedContactsCount 
@@ -615,27 +615,31 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   [self setContactIdentifiers: [[NSMutableDictionary alloc] initWithCapacity: [self.allContactIdentifiers count]]];
   [self setKeys: [[NSMutableArray alloc] init]];
 
-  NSEnumerator *enumerator = [self.allContactIdentifiers keyEnumerator];
-  NSString *key;
-
   AKSource *source = [self sourceForSourceId: _sourceID];
   AKGroup *group = [source groupForGroupId: _groupID];
   NSMutableArray *groupMembers = [group memberIDs];
 
-  while ((key = [enumerator nextObject])) 
+  if ([groupMembers count] == self.contactsCount)
+  { // Speed up for aggregate group
+    [self setContactIdentifiers: [self.allContactIdentifiers mutableCopy]];
+  }
+  else
   {
-    NSArray *arrayForKey = [self.allContactIdentifiers objectForKey: key];
-    NSMutableArray *sectionArray = [[NSMutableArray alloc] initWithCapacity: [arrayForKey count]];
-    [self.contactIdentifiers setObject: sectionArray forKey: key];
-    [sectionArray addObjectsFromArray: [self.allContactIdentifiers objectForKey: key]];
-
-    NSMutableArray *recordsToRemove = [[NSMutableArray alloc] init];
-    for (NSNumber *contactID in sectionArray) 
+    for (NSString *key in self.allContactIdentifiers)
     {
-      if ([groupMembers indexOfObject: contactID] == NSNotFound)
-        [recordsToRemove addObject: contactID];
+      NSArray *arrayForKey = [self.allContactIdentifiers objectForKey: key];
+      NSMutableArray *sectionArray = [[NSMutableArray alloc] initWithCapacity: [arrayForKey count]];
+      [self.contactIdentifiers setObject: sectionArray forKey: key];
+      [sectionArray addObjectsFromArray: [self.allContactIdentifiers objectForKey: key]];
+      
+      NSMutableArray *recordsToRemove = [[NSMutableArray alloc] init];
+      for (NSNumber *contactID in sectionArray)
+      {
+        if ([groupMembers indexOfObject: contactID] == NSNotFound)
+          [recordsToRemove addObject: contactID];
+      }
+      [sectionArray removeObjectsInArray: recordsToRemove];
     }
-    [sectionArray removeObjectsInArray: recordsToRemove];
   }
 
   [self.keys addObject: UITableViewIndexSearch];

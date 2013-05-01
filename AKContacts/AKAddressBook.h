@@ -100,7 +100,6 @@ typedef enum {
 - (void)requestAddressBookAccess;
 - (void)insertRecordID: (ABRecordID)recordID inDictionary: (NSMutableDictionary *)dictionary withAddressBookRef: (ABAddressBookRef)addressBook;
 - (AKSource *)defaultSource;
-- (NSInteger)contactsCount;
 - (NSInteger)displayedContactsCount;
 - (AKSource *)sourceForSourceId: (ABRecordID)recordId;
 - (AKContact *)contactForContactId: (ABRecordID)recordId;
