@@ -31,7 +31,7 @@
 #import <QuartzCore/QuartzCore.h>
 
 static const CGFloat kStrokeWidth = 6.f;
-static const CGFloat kRadius = 7.f;
+static const CGFloat kRadius = 13.f;
 
 @interface AKContactsProgressIndicatorView ()
 
@@ -51,7 +51,7 @@ static const CGFloat kRadius = 7.f;
         [self addSubview: activity];
 
         CAShapeLayer *s = [CAShapeLayer layer];
-        UIColor *stroke = [UIColor colorWithRed: .196f green: .3098f blue: .52f alpha: .5f];
+        UIColor *stroke = [UIColor colorWithRed: .196f green: .3098f blue: .52f alpha: .8f];
         [s setStrokeColor: stroke.CGColor];
         [s setLineWidth: kStrokeWidth];
         [s setFillColor: [UIColor clearColor].CGColor];
