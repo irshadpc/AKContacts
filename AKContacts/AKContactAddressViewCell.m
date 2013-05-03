@@ -32,14 +32,19 @@
 #import "AKAddressBook.h"
 
 typedef NS_ENUM(NSInteger, AddressTag) {
-  kAddressStreet,
+  kAddressStreet = 256,
   kAddressCity,
   kAddressState,
   kAddressZIP,
   kAddressCountry
 };
 
-static const int editModeItem = 101;
+typedef NS_ENUM(NSInteger, SeparatorTag) {
+  kVertical1 = 512,
+  kVertical2,
+  kHorizontal1,
+  kHorizontal2,
+};
 
 @interface AKContactAddressViewCell ()
 
@@ -53,6 +58,150 @@ static const int editModeItem = 101;
 
 @synthesize parent = _parent;
 
+-(id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
+{
+  self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
+  if (self)
+  {
+
+  }
+  return self;
+}
+
+-(void)setSelected:(BOOL)selected animated:(BOOL)animated
+{
+  [super setSelected:selected animated:animated];
+
+  // Configure the view for the selected state
+}
+
+-(void)configureCellAtRow:(NSInteger)row
+{
+  [self setIdentifier: NSNotFound];
+  [self.textLabel setText: nil];
+  [self.detailTextLabel setText: nil];
+  [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
+
+  for (UIView *subView in self.contentView.subviews)
+  { // Remove edit mode items that might be hanging around on reused cells
+    if (subView.tag >= kAddressStreet)
+    {
+      [subView removeFromSuperview];
+    }
+  }
+
+  AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
+  
+  if (row < [contact countForProperty: kABPersonAddressProperty])
+  {
+    NSArray *addressIdentifiers = [contact identifiersForProperty: kABPersonAddressProperty];
+    [self setIdentifier: [[addressIdentifiers objectAtIndex: row] integerValue]];
+
+    NSInteger numRows = 0;
+    NSString *address = [contact addressForIdentifier: self.identifier andNumRows: &numRows];
+
+    [self.detailTextLabel setText: address];
+    [self.detailTextLabel setLineBreakMode: NSLineBreakByWordWrapping];
+    [self.detailTextLabel setNumberOfLines: numRows];
+
+    [self.detailTextLabel setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
+
+    [self.textLabel setText: [contact labelForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.identifier]];
+  }
+
+  if (self.parent.editing == YES)
+  {
+    [self.contentView addSubview: [AKContactAddressViewCell separatorWithTag: kHorizontal1]];
+    [self.contentView addSubview: [AKContactAddressViewCell separatorWithTag: kHorizontal2]];
+    [self.contentView addSubview: [AKContactAddressViewCell separatorWithTag: kVertical1]];
+    [self.contentView addSubview: [AKContactAddressViewCell separatorWithTag: kVertical2]];
+
+    [self.contentView addSubview: [self getTextFieldWithTag: kAddressStreet]];
+    [self.contentView addSubview: [self getTextFieldWithTag: kAddressCity]];
+    [self.contentView addSubview: [self getTextFieldWithTag: kAddressState]];
+    [self.contentView addSubview: [self getTextFieldWithTag: kAddressZIP]];
+    [self.contentView addSubview: [self getTextFieldWithTag: kAddressCountry]];
+
+    [self.detailTextLabel setText: nil];
+  }
+}
+
+-(void)layoutSubviews
+{
+  [super layoutSubviews];
+
+  [self.textLabel setFrame: CGRectMake(self.textLabel.frame.origin.x, 13.f,
+                                       self.textLabel.frame.size.width,
+                                       self.textLabel.frame.size.height)];
+  
+  if (self.editing)
+  {
+    UIView *view = [self.contentView viewWithTag: kAddressStreet];
+    [view setFrame: CGRectMake(83.f, 0.f, 180.f, 40.f)];
+  
+    view = [self.contentView viewWithTag: kAddressCity];
+    [view setFrame: CGRectMake(83.f, 41.f, 90.f, 39.f)];
+    
+    view = [self.contentView viewWithTag: kAddressState];
+    [view setFrame: CGRectMake(180.f, 41.f, 85.f, 39.f)];
+
+    view = [self.contentView viewWithTag: kAddressZIP];
+    [view setFrame: CGRectMake(83.f, 81.f, 90.f, 37.f)];
+
+    view = [self.contentView viewWithTag: kAddressCountry];
+    [view setFrame: CGRectMake(180.f, 81.f, 85.f, 37.f)];
+    
+    view = [self.contentView viewWithTag: kVertical1];
+    [view setFrame: CGRectMake(80.f, 0.f, 1.f, self.contentView.bounds.size.height)];
+    
+    view = [self.contentView viewWithTag: kVertical2];
+    [view setFrame: CGRectMake(175.f, 40.f, 1.f, 80.f)];
+    
+    view = [self.contentView viewWithTag: kHorizontal1];
+    [view setFrame: CGRectMake(80.f, 80.f, self.contentView.bounds.size.width - 80.f, 1.f)];
+
+    view = [self.contentView viewWithTag: kHorizontal2];
+    [view setFrame: CGRectMake(80.f, 40.f, self.contentView.bounds.size.width - 80.f, 1.f)];
+  }
+}
+
+- (void)dealloc
+{
+}
+
+#pragma mark - Custom methods
+
+- (UITextField *)getTextFieldWithTag: (NSInteger)tag
+{
+  AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
+  NSDictionary *address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.identifier];
+  
+  UITextField *textField = [[UITextField alloc] initWithFrame: CGRectZero];
+  [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
+  [textField setKeyboardType: UIKeyboardTypeAlphabet];
+  [textField setFont: [UIFont boldSystemFontOfSize: 15.]];
+  [textField setContentVerticalAlignment: UIControlContentVerticalAlignmentCenter];
+  [textField setDelegate: self];
+  [textField setTag: tag];
+  NSString *key = [AKContactAddressViewCell descriptionForAddressTag: tag];
+  [textField setPlaceholder: [AKContact localizedNameForLabel: (__bridge CFStringRef)(key)]];
+  [textField setText: [address objectForKey: key]];
+  
+  return textField;
+}
+
+#pragma mark - Class methods
+
++ (UIView *)separatorWithTag: (SeparatorTag)tag
+{
+  UIView *separator = [[UIView alloc] initWithFrame: CGRectZero];
+  [separator setBackgroundColor: [UIColor lightGrayColor]];
+  [separator setTag: tag];
+  [separator setAutoresizingMask: UIViewAutoresizingNone];
+  
+  return separator;
+}
+
 + (NSString *)descriptionForAddressTag: (AddressTag)tag
 {
   switch (tag) {
@@ -65,179 +214,15 @@ static const int editModeItem = 101;
   }
 }
 
--(id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
-  
-  self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-  if (self) {
-    // Initialization code
-  }
-  return self;
-}
+#pragma mark - UITextField delegate
 
--(void)setSelected:(BOOL)selected animated:(BOOL)animated {
-
-  [super setSelected:selected animated:animated];
-
-  // Configure the view for the selected state
-}
-
--(void)configureCellAtRow:(NSInteger)row {
-
-  [self setIdentifier: NSNotFound];
-  [self.textLabel setText: nil];
-  [self.detailTextLabel setText: nil];
-  [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
-
-  // Remove edit mode items that might be hanging around on reused cells
-  for (UIView *subView in [self.contentView subviews]) {
-    if (subView.tag == editModeItem || subView.tag == kAddressStreet ||
-        subView.tag == kAddressCity || subView.tag == kAddressState ||
-        subView.tag == kAddressCountry || subView.tag == kAddressZIP) {
-      [subView removeFromSuperview];
-    }
-  }
-  
-  AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
-  
-  if (row < [contact countForProperty: kABPersonAddressProperty]) {
-    
-    NSArray *addressIdentifiers = [contact identifiersForProperty: kABPersonAddressProperty];
-    [self setIdentifier: [[addressIdentifiers objectAtIndex: row] integerValue]];
-
-    NSDictionary *address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.identifier];
-    
-    NSString *aSubStr = @"";
-    NSMutableArray *aArr = [[NSMutableArray alloc] init];
-    NSMutableArray *aSubArr = [[NSMutableArray alloc] init];
-    NSString *street = [address objectForKey: (NSString *)kABPersonAddressStreetKey];
-    NSString *city = [address objectForKey: (NSString *)kABPersonAddressCityKey];
-    NSString *state = [address objectForKey: (NSString *)kABPersonAddressStateKey];
-    NSString *ZIP = [address objectForKey: (NSString *)kABPersonAddressZIPKey];
-    NSString *country = [address objectForKey: (NSString *)kABPersonAddressCountryKey];
-
-    if ([city length] > 0) [aSubArr addObject: city];
-    if ([state length] > 0) [aSubArr addObject: state];
-    if ([ZIP length] > 0) [aSubArr addObject: ZIP];
-    if ([aSubArr count] > 0) aSubStr = [aSubArr componentsJoinedByString: @" "];
-    
-    if ([street length] > 0) [aArr addObject: street];
-    if ([aSubStr length] > 0) [aArr addObject: aSubStr];
-    if ([country length] > 0) [aArr addObject: country];
-    
-    [self.detailTextLabel setText: [aArr componentsJoinedByString: @"\n"]];
-    [self.detailTextLabel setLineBreakMode: NSLineBreakByWordWrapping];
-    [self.detailTextLabel setNumberOfLines: [aArr count]];
-    
-    [self.detailTextLabel setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
-    
-    [self.textLabel setText: [contact labelForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.identifier]];
-  }
-
-  if (self.parent.editing == YES) {
-
-    UIView *separator = [[UIView alloc] initWithFrame:CGRectMake(80.f, 0.f, 1.f, self.contentView.bounds.size.height)];
-    [separator setBackgroundColor: [UIColor lightGrayColor]];
-    [separator setAutoresizingMask: UIViewAutoresizingFlexibleHeight];
-    [separator setTag: editModeItem];
-    [self.contentView addSubview: separator];
-
-    separator = [[UIView alloc] initWithFrame:CGRectMake(80.f, 40.f, self.contentView.bounds.size.width - 80.f, 1.f)];
-    [separator setBackgroundColor: [UIColor lightGrayColor]];
-    [separator setAutoresizingMask: UIViewAutoresizingFlexibleWidth];
-    [separator setTag: editModeItem];
-    [self.contentView addSubview: separator];
-
-    separator = [[UIView alloc] initWithFrame:CGRectMake(80.f, 80.f, self.contentView.bounds.size.width - 80.f, 1.f)];
-    [separator setBackgroundColor: [UIColor lightGrayColor]];
-    [separator setAutoresizingMask: UIViewAutoresizingFlexibleWidth];
-    [separator setTag: editModeItem];
-    [self.contentView addSubview: separator];
-    
-    separator = [[UIView alloc] initWithFrame:CGRectMake(175.f, 40.f, 1.f, 80.f)];
-    [separator setBackgroundColor: [UIColor lightGrayColor]];
-    [separator setAutoresizingMask: UIViewAutoresizingNone];
-    [separator setTag: editModeItem];
-    [self.contentView addSubview: separator];
-
-    NSDictionary *address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.identifier];
-    
-    UITextField *textField = [[UITextField alloc] initWithFrame: CGRectMake(83.f, 11.f, 175.f, 19.f)];
-    [self.contentView addSubview: textField];
-    [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
-    [textField setKeyboardType: UIKeyboardTypeAlphabet];
-    [textField setFont: [UIFont boldSystemFontOfSize: 15.]];
-    [textField setDelegate: self];
-    [textField setTag: kAddressStreet];
-    NSString *placeholder = [AKContact localizedNameForLabel: kABPersonAddressStreetKey];
-    [textField setPlaceholder: placeholder];
-    [textField setText: (self.identifier != NSNotFound) ? [address objectForKey: (NSString *)kABPersonAddressStreetKey] : nil];
-
-    textField = [[UITextField alloc] initWithFrame: CGRectMake(83.f, 51.f, 90.f, 19.f)];
-    [self.contentView addSubview: textField];
-    [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
-    [textField setKeyboardType: UIKeyboardTypeAlphabet];
-    [textField setFont: [UIFont boldSystemFontOfSize: 15.]];
-    [textField setDelegate: self];
-    [textField setTag: kAddressCity];
-    placeholder = [AKContact localizedNameForLabel: kABPersonAddressCityKey];
-    [textField setPlaceholder: placeholder];
-    [textField setText: (self.identifier != NSNotFound) ?  [address objectForKey: (NSString *)kABPersonAddressCityKey] : nil];
-    
-    textField = [[UITextField alloc] initWithFrame: CGRectMake(180.f, 51.f, 85.f, 19.f)];
-    [self.contentView addSubview: textField];
-    [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
-    [textField setFont: [UIFont boldSystemFontOfSize: 15.]];
-    [textField setDelegate: self];
-    [textField setTag: kAddressState];
-    placeholder = [AKContact localizedNameForLabel: kABPersonAddressStateKey];
-    [textField setPlaceholder: placeholder];
-
-    [textField setText: (self.identifier != NSNotFound) ? [address objectForKey: (NSString *)kABPersonAddressStateKey] : nil];
-
-    textField = [[UITextField alloc] initWithFrame: CGRectMake(83.f, 91.f, 90.f, 19.f)];
-    [self.contentView addSubview: textField];
-    [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
-    [textField setKeyboardType: UIKeyboardTypeNumbersAndPunctuation];
-    [textField setFont: [UIFont boldSystemFontOfSize: 15.]];
-    [textField setDelegate: self];
-    [textField setTag: kAddressZIP];
-    placeholder = [AKContact localizedNameForLabel: kABPersonAddressZIPKey];
-    [textField setPlaceholder: placeholder];
-    [textField setText: (self.identifier != NSNotFound) ? [address objectForKey: (NSString *)kABPersonAddressZIPKey] : nil];
-
-    textField = [[UITextField alloc] initWithFrame: CGRectMake(180.f, 91.f, 85.f, 19.f)];
-    [self.contentView addSubview: textField];
-    [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
-    [textField setKeyboardType: UIKeyboardTypeAlphabet];
-    [textField setFont: [UIFont boldSystemFontOfSize: 15.]];
-    [textField setDelegate: self];
-    [textField setTag: kAddressCountry];
-    placeholder = [AKContact localizedNameForLabel: kABPersonAddressCountryKey];
-    [textField setPlaceholder: placeholder];
-    [textField setText: (self.identifier != NSNotFound) ? [address objectForKey: (NSString *)kABPersonAddressCountryKey] : nil];
-
-    [self.detailTextLabel setText: nil];
-  }
-}
-
--(void)layoutSubviews {
-  [super layoutSubviews];
-
-  [self.textLabel setFrame: CGRectMake(self.textLabel.frame.origin.x, 13.f,
-                                       self.textLabel.frame.size.width,
-                                       self.textLabel.frame.size.height)];
-}
-
-- (void)dealloc {
-}
-
-#pragma masrk - UITextField delegate
-
--(void)textFieldDidBeginEditing:(UITextField *)textField {
+-(void)textFieldDidBeginEditing:(UITextField *)textField
+{
   
 }
 
--(void)textFieldDidEndEditing:(UITextField *)textField {
+-(void)textFieldDidEndEditing:(UITextField *)textField
+{
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
 
@@ -264,7 +249,8 @@ static const int editModeItem = 101;
   [contact setValue: address forMultiValueProperty: kABPersonAddressProperty andIdentifier: &identifier];
 }
 
--(BOOL)textFieldShouldReturn:(UITextField *)textField {
+-(BOOL)textFieldShouldReturn:(UITextField *)textField
+{
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
   return YES;
