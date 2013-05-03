@@ -229,7 +229,6 @@ NSString *const kLabel = @"Label";
       {
         CFStringRef label = ABMultiValueCopyLabelAtIndex(multiValueRecord, index);
         ret = (NSString *)CFBridgingRelease(ABAddressBookCopyLocalizedLabel(label));
-        CFRelease(label);
       }
       CFRelease(multiValueRecord);
     }
