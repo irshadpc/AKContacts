@@ -289,6 +289,33 @@ const int tagNewContact = -368;
   return ret;
 }
 
+- (NSString *)addressForIdentifier: (NSInteger)identifier andNumRows: (NSInteger *)numRows
+{
+  NSDictionary *address = [self valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: identifier];
+
+  NSMutableArray *rows = [[NSMutableArray alloc] init];
+  NSMutableArray *row = [[NSMutableArray alloc] init];
+  NSString *street = [address objectForKey: (NSString *)kABPersonAddressStreetKey];
+  NSString *city = [address objectForKey: (NSString *)kABPersonAddressCityKey];
+  NSString *state = [address objectForKey: (NSString *)kABPersonAddressStateKey];
+  NSString *ZIP = [address objectForKey: (NSString *)kABPersonAddressZIPKey];
+  NSString *country = [address objectForKey: (NSString *)kABPersonAddressCountryKey];
+  
+  if ([city length] > 0) [row addObject: city];
+  if ([state length] > 0) [row addObject: state];
+  if ([ZIP length] > 0) [row addObject: ZIP];
+  
+  if ([street length] > 0) [rows addObject: street];
+  if ([row count] > 0) [rows addObject: [row componentsJoinedByString: @" "]];
+  if ([country length] > 0) [rows addObject: country];
+
+  if (numRows != nil)
+  {
+    *numRows = [rows count];
+  }
+  return [rows componentsJoinedByString: @"\n"];
+}
+
 - (NSComparisonResult)compareByName:(AKContact *)otherContact
 {
   return [self.name localizedCaseInsensitiveCompare: otherContact.name];
