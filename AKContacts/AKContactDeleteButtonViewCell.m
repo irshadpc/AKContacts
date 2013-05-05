@@ -107,9 +107,9 @@
 {
   if (buttonIndex == actionSheet.destructiveButtonIndex)
   {
-    [[AKAddressBook sharedInstance] removeRecordID: self.parent.contactID];
+    [[AKAddressBook sharedInstance] removeRecordID: self.parent.contact.recordID];
     if ([self.parent.delegate respondsToSelector: @selector(recordDidRemoveWithContactID:)])
-      [self.parent.delegate recordDidRemoveWithContactID: self.parent.contactID];
+      [self.parent.delegate recordDidRemoveWithContactID: self.parent.contact.recordID];
     [self.parent.navigationController popViewControllerAnimated: YES];
   }
 }

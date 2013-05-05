@@ -82,7 +82,7 @@ static const int editModeItem = 8;
     [subView removeFromSuperview];
   }
 
-  AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
+  AKContact *contact = self.parent.contact;
 
   if ([self.parent isEditing])
   {
@@ -224,7 +224,7 @@ static const int editModeItem = 8;
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
   
-  AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
+  AKContact *contact = self.parent.contact;
   if (self.abPropertyID == kABPersonLastNameProperty)
   {
     [contact setValue: textField.text forProperty: kABPersonLastNameProperty];

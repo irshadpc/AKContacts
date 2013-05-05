@@ -113,7 +113,7 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
   UIButton *button = (UIButton *)sender;
   if (button.tag == kButtonText)
   {
-      AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
+      AKContact *contact = self.parent.contact;
       NSInteger phoneCount = [contact countForProperty: kABPersonPhoneProperty];
       NSInteger emailCount = [contact countForProperty: kABPersonEmailProperty];
 
@@ -133,7 +133,7 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
       }
       else
       {
-          [messanger showTextActionSheetWithContactID: self.parent.contactID];
+          [messanger showTextActionSheetWithContactID: self.parent.contact.recordID];
       }
   }
   else

@@ -96,7 +96,7 @@
   [self.detailTextLabel setText: nil];
   [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
 
-  AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
+  AKContact *contact = self.parent.contact;
 
   NSString *text = nil;
   NSString *placeholder = nil;
@@ -257,7 +257,7 @@
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
   
-  AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
+  AKContact *contact = self.parent.contact;
   
   NSString *oldValue = [contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
   if ([textField.text isEqualToString: oldValue] || [textField.text length] == 0)
@@ -370,7 +370,7 @@
   }
   else if (button.tag == UIBarButtonSystemItemCancel)
   {
-    AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
+    AKContact *contact = self.parent.contact;
     
     if (self.abPropertyID == kABPersonBirthdayProperty)
     {
@@ -398,7 +398,7 @@
 {
   if (self.abPropertyID == kABPersonSocialProfileProperty)
   {
-    AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
+    AKContact *contact = self.parent.contact;
 
     NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
     if ([dict objectForKey: (NSString *)kABPersonSocialProfileURLKey])
