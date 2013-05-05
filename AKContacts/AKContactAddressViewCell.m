@@ -90,7 +90,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     }
   }
 
-  AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
+  AKContact *contact = self.parent.contact;
   
   if (row < [contact countForProperty: kABPersonAddressProperty])
   {
@@ -108,8 +108,13 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
     [self.textLabel setText: [contact labelForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.identifier]];
   }
+  else
+  {
+    [self.textLabel setText: (self.parent.willAddAddress == YES) ? [[AKContact localizedNameForLabel: kABOtherLabel] lowercaseString] : NSLocalizedString(@"add new address", @"")];
+  }
 
-  if (self.parent.editing == YES)
+  if ((self.parent.editing == YES && self.identifier != NSNotFound) ||
+      (self.parent.editing == YES && self.parent.willAddAddress == YES))
   {
     [self.contentView addSubview: [AKContactAddressViewCell separatorWithTag: kHorizontal1]];
     [self.contentView addSubview: [AKContactAddressViewCell separatorWithTag: kHorizontal2]];
@@ -134,22 +139,22 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
                                        self.textLabel.frame.size.width,
                                        self.textLabel.frame.size.height)];
   
-  if (self.editing)
+  if (self.parent.editing)
   {
     UIView *view = [self.contentView viewWithTag: kAddressStreet];
-    [view setFrame: CGRectMake(83.f, 0.f, 180.f, 40.f)];
+    [view setFrame: CGRectMake(81.f, 0.f, 187.f, 40.f)];
   
     view = [self.contentView viewWithTag: kAddressCity];
-    [view setFrame: CGRectMake(83.f, 41.f, 90.f, 39.f)];
+    [view setFrame: CGRectMake(81.f, 41.f, 93.f, 39.f)];
     
     view = [self.contentView viewWithTag: kAddressState];
-    [view setFrame: CGRectMake(180.f, 41.f, 85.f, 39.f)];
+    [view setFrame: CGRectMake(176.f, 41.f, 92.f, 39.f)];
 
     view = [self.contentView viewWithTag: kAddressZIP];
-    [view setFrame: CGRectMake(83.f, 81.f, 90.f, 37.f)];
+    [view setFrame: CGRectMake(81.f, 81.f, 93.f, 37.f)];
 
     view = [self.contentView viewWithTag: kAddressCountry];
-    [view setFrame: CGRectMake(180.f, 81.f, 85.f, 37.f)];
+    [view setFrame: CGRectMake(176.f, 81.f, 92.f, 37.f)];
     
     view = [self.contentView viewWithTag: kVertical1];
     [view setFrame: CGRectMake(80.f, 0.f, 1.f, self.contentView.bounds.size.height)];
@@ -162,6 +167,14 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
     view = [self.contentView viewWithTag: kHorizontal2];
     [view setFrame: CGRectMake(80.f, 40.f, self.contentView.bounds.size.width - 80.f, 1.f)];
+    
+    if (self.parent.willAddAddress == NO && self.identifier == NSNotFound)
+    { // Add new address frame
+      CGFloat width = [self.textLabel.text sizeWithFont: self.textLabel.font].width;
+      CGRect frame = self.textLabel.frame;
+      frame.size.width = width;
+      [self.textLabel setFrame: frame];
+    }
   }
 }
 
@@ -173,8 +186,11 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
 - (UITextField *)getTextFieldWithTag: (NSInteger)tag
 {
-  AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
+  AKContact *contact = self.parent.contact;
   NSDictionary *address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.identifier];
+
+  NSString *key = [AKContactAddressViewCell descriptionForAddressTag: tag];
+  NSString *text = [address objectForKey: key];
   
   UITextField *textField = [[UITextField alloc] initWithFrame: CGRectZero];
   [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
@@ -183,10 +199,15 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   [textField setContentVerticalAlignment: UIControlContentVerticalAlignmentCenter];
   [textField setDelegate: self];
   [textField setTag: tag];
-  NSString *key = [AKContactAddressViewCell descriptionForAddressTag: tag];
-  [textField setPlaceholder: [AKContact localizedNameForLabel: (__bridge CFStringRef)(key)]];
-  [textField setText: [address objectForKey: key]];
-  
+
+  [textField setPlaceholder: (text) ? text : [AKContact localizedNameForLabel: (__bridge CFStringRef)(key)]];
+  [textField setText: text];
+
+  UIView *inset = [[UIView alloc] initWithFrame:CGRectMake(.0f, 0.f, 5.f, 10.f)];
+  [inset setUserInteractionEnabled: NO];
+  [textField setLeftView: inset];
+  [textField setLeftViewMode: UITextFieldViewModeAlways];
+
   return textField;
 }
 
@@ -228,7 +249,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
   if ([textField.text length] == 0) return;
 
-  AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.parent.contactID];
+  AKContact *contact = self.parent.contact;
 
   NSString *key = [AKContactAddressViewCell descriptionForAddressTag: textField.tag];
 
