@@ -47,7 +47,7 @@
 }
 
 @property (nonatomic, strong) UITableView *tableView;
-@property (nonatomic, assign) NSInteger contactID;
+@property (nonatomic, unsafe_unretained) AKContact *contact;
 @property (nonatomic, unsafe_unretained) id <AKContactViewControllerDelegate> delegate;
 
 -(id)initWithContactID: (NSInteger)contactID;
