@@ -35,6 +35,12 @@ FOUNDATION_EXPORT const int tagNewContact;
 
 @interface AKContact : AKRecord
 
+/**
+ * Set to YES when add new address row is
+ * selected in the contact edit view
+ */
+@property (nonatomic, assign) BOOL addAddress;
+
 - (id)initWithABRecordID: (ABRecordID) recordID;
 - (ABRecordRef)recordRef;
 /**
