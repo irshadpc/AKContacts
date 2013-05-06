@@ -260,17 +260,24 @@ NSString *const kLabel = @"Label";
 
     if (mutableRecord != NULL)
     {
-      BOOL didAdd = NO;
+      BOOL didChange = NO;
       CFIndex index = ABMultiValueGetIndexForIdentifier(mutableRecord, *identifier);
       if (index != -1)
       {
-        didAdd = ABMultiValueReplaceValueAtIndex(mutableRecord, (__bridge CFTypeRef)(value), index);
+        if ([value length] > 0)
+        {
+          didChange = ABMultiValueReplaceValueAtIndex(mutableRecord, (__bridge CFTypeRef)(value), index);
+        }
+        else
+        {
+          didChange = ABMultiValueRemoveValueAndLabelAtIndex(mutableRecord, index);
+        }
       }
       else
       {
-        didAdd = ABMultiValueAddValueAndLabel(mutableRecord, (__bridge CFTypeRef)(value), kABPersonPhoneMobileLabel, identifier);
+        didChange = ABMultiValueAddValueAndLabel(mutableRecord, (__bridge CFTypeRef)(value), kABPersonPhoneMobileLabel, identifier);
       }
-      if (didAdd == YES)
+      if (didChange == YES)
       {
         CFErrorRef error = NULL;
         ABRecordSetValue(self.recordRef, property, mutableRecord, &error);
