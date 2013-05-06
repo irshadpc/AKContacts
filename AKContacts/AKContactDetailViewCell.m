@@ -392,18 +392,4 @@
   }
 }
 
-#pragma mark - Open URL for social profile
-
-- (void)openURLForSocialProfile
-{
-  if (self.abPropertyID == kABPersonSocialProfileProperty)
-  {
-    AKContact *contact = self.parent.contact;
-
-    NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
-    if ([dict objectForKey: (NSString *)kABPersonSocialProfileURLKey])
-      [[UIApplication sharedApplication] openURL: [NSURL URLWithString: [dict objectForKey: (NSString *)kABPersonSocialProfileURLKey]]];
-  }
-}
-
 @end

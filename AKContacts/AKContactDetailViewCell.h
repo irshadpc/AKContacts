@@ -38,6 +38,5 @@
 @property (nonatomic) AKContactViewController *parent;
 
 -(void)configureCellForProperty: (ABPropertyID)property atRow: (NSInteger)row;
--(void)openURLForSocialProfile;
 
 @end
