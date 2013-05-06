@@ -37,7 +37,7 @@
 #import "AKAddressBook.h"
 #import "AKMessenger.h"
 
-typedef NS_ENUM(NSInteger, Identifier) {
+typedef NS_ENUM(NSInteger, SectionID) {
   kSectionHeader = 0,
   kSectionSwitch, // Custom
   kSectionPhone,
@@ -60,9 +60,46 @@ static const float defaultCellHeight = 44.f;
 @property (nonatomic, strong) NSMutableArray *sections;
 @property (nonatomic, strong) NSArray *sectionIdentifiers;
 
+/**
+ * Return the ABPropertyID of a section
+ */
++ (ABPropertyID)abPropertyIDforSection: (SectionID)section;
+/**
+ * Return the number of entries in a section
+ **/
+- (NSInteger)numberOfElementsInSection: (NSInteger)section;
+/**
+ * Return YES if a section is editable, NO otherwise
+ **/
+-(BOOL)isSectionEditable: (NSInteger)section;
+/**
+ * Returns the index a section should be inserted at
+ */
+- (NSInteger)insertIndexForSection: (NSInteger)section;
+
 @end
 
 @implementation AKContactViewController
+
+#pragma mark - Class methods
+
++ (ABPropertyID)abPropertyIDforSection: (SectionID)section
+{
+  switch (section) {
+    case kSectionPhone: return kABPersonPhoneProperty;
+    case kSectionEmail: return kABPersonEmailProperty;
+    case kSectionURL: return kABPersonURLProperty;
+    case kSectionAddress: return kABPersonAddressProperty;
+    case kSectionBirthday: return kABPersonBirthdayProperty;
+    case kSectionDate: return kABPersonDateProperty;
+    case kSectionSocialProfile: return kABPersonSocialProfileProperty;
+    case kSectionInstantMessage: return kABPersonInstantMessageProperty;
+    case kSectionNote: return kABPersonNoteProperty;
+    default: return kABInvalidPropertyType;
+  }
+}
+
+#pragma mark - Custom methods
 
 - (id)initWithContactID: (NSInteger)contactID
 {
@@ -73,6 +110,58 @@ static const float defaultCellHeight = 44.f;
   }
   return self;
 }
+
+- (NSInteger)numberOfElementsInSection: (NSInteger)section
+{
+  ABPropertyID property = [AKContactViewController abPropertyIDforSection: section];
+  
+  switch (section)
+  {
+    case kSectionPhone:
+    case kSectionEmail:
+    case kSectionURL:
+    case kSectionAddress:
+    case kSectionDate:
+    case kSectionSocialProfile:
+    case kSectionInstantMessage:
+      return [self.contact countForProperty: property];
+
+    case kSectionBirthday:
+    case kSectionNote:
+      return ([self.contact valueForProperty: property]) ? 1 : 0;
+
+    case kSectionDeleteButton:
+      return 0;
+      // If custom section does not default to having one element add case here
+    default:
+      return 1;
+  }
+}
+
+- (BOOL)isSectionEditable: (NSInteger)section
+{
+  switch (section)
+  {
+    case kSectionSwitch:
+    case kSectionButtons:
+      return NO;
+    default:
+      return YES;
+  }
+}
+
+- (NSInteger)insertIndexForSection: (NSInteger)section
+{
+  for (NSInteger i = 0; i < [self.sections count]; ++i)
+  {
+    NSInteger aSection = [[self.sections objectAtIndex: i] integerValue];
+    if (section < aSection)
+      return i;
+  }
+  return [self.sections count];
+}
+
+#pragma mark - UIViewController
 
 - (void)loadView
 {
@@ -133,62 +222,6 @@ static const float defaultCellHeight = 44.f;
     // Dispose of any resources that can be recreated.
 }
 
-/**
- * Return the number of entries in a section
- **/
-- (NSInteger)numberOfElementsInSection: (NSInteger)section
-{
-  switch (section)
-  {
-    case kSectionPhone:
-      return [self.contact countForProperty: kABPersonPhoneProperty];
-    case kSectionEmail:
-      return [self.contact countForProperty: kABPersonEmailProperty];
-    case kSectionURL:
-      return [self.contact countForProperty: kABPersonURLProperty];
-    case kSectionAddress:
-      return [self.contact countForProperty: kABPersonAddressProperty];
-    case kSectionBirthday:
-      return ([self.contact valueForProperty: kABPersonBirthdayProperty]) ? 1 : 0;
-    case kSectionDate:
-      return [self.contact countForProperty: kABPersonDateProperty];
-    case kSectionSocialProfile:
-      return [self.contact countForProperty: kABPersonSocialProfileProperty];
-    case kSectionInstantMessage:
-      return [self.contact countForProperty: kABPersonInstantMessageProperty];
-    case kSectionNote:
-      return ([self.contact valueForProperty: kABPersonNoteProperty]) ? 1 : 0;
-    case kSectionDeleteButton:
-      return 0;
-    // If custom section does not default to having one element add case here
-    default:
-      return 1;
-  }
-}
-
--(BOOL)isSectionEditable: (NSInteger)section
-{
-  switch (section)
-  {
-    case kSectionSwitch:
-    case kSectionButtons:
-      return NO;
-    default:
-      return YES;
-  }
-}
-
--(NSInteger)insertIndexForSection: (NSInteger)section
-{
-  for (NSInteger i = 0; i < [self.sections count]; ++i)
-  {
-    NSInteger aSection = [[self.sections objectAtIndex: i] integerValue];
-    if (section < aSection)
-      return i;
-  }
-  return [self.sections count];  
-}
-
 #pragma mark - Table View
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
@@ -205,17 +238,15 @@ static const float defaultCellHeight = 44.f;
   if (section == kSectionHeader)
   {
     ret = (self.editing) ? 3 : 1;
-  } else if (section == kSectionBirthday ||
-             section == kSectionNote)
-  {
-    ret = 1;
   }
   else
   {
     ret = [self numberOfElementsInSection: section];
-    if (self.editing) ret += 1;
+    if (section != kSectionBirthday && section != kSectionNote)
+    {
+        if (self.editing) ret += 1;
+    }
   }
-
   return ret;
 }
 
@@ -256,37 +287,25 @@ static const float defaultCellHeight = 44.f;
 {
   NSInteger section = [[self.sections objectAtIndex: indexPath.section] integerValue];
 
+  ABPropertyID property = [AKContactViewController abPropertyIDforSection: section];
+
   switch (section)
   {
     case kSectionHeader:
       return [self headerCellViewAtRow: indexPath.row];
 
     case kSectionPhone:
-      return [self detailCellViewForProperty: kABPersonPhoneProperty atRow: indexPath.row];
-
     case kSectionEmail:
-      return [self detailCellViewForProperty: kABPersonEmailProperty atRow: indexPath.row];
-
     case kSectionURL:
-      return [self detailCellViewForProperty: kABPersonURLProperty atRow: indexPath.row];
+    case kSectionBirthday:
+    case kSectionDate:
+    case kSectionSocialProfile:
+    case kSectionInstantMessage:
+    case kSectionNote:
+      return [self detailCellViewForProperty: property atRow: indexPath.row];
 
     case kSectionAddress:
       return [self addressCellViewAtRow: indexPath.row];
-
-    case kSectionBirthday:
-      return [self detailCellViewForProperty: kABPersonBirthdayProperty atRow: indexPath.row];
-
-    case kSectionDate:
-      return [self detailCellViewForProperty: kABPersonDateProperty atRow: indexPath.row];
-
-    case kSectionSocialProfile:
-      return [self detailCellViewForProperty: kABPersonSocialProfileProperty atRow: indexPath.row];
-
-    case kSectionInstantMessage:
-      return [self detailCellViewForProperty: kABPersonInstantMessageProperty atRow: indexPath.row];
-
-    case kSectionNote:
-      return [self detailCellViewForProperty: kABPersonNoteProperty atRow: indexPath.row];
 
     case kSectionSwitch:
       return [self switchCellViewAtRow: indexPath.row];
@@ -321,16 +340,17 @@ static const float defaultCellHeight = 44.f;
 {
   NSInteger section = [[self.sections objectAtIndex: indexPath.section] integerValue];
 
+  ABPropertyID property = [AKContactViewController abPropertyIDforSection: section];
+
   switch (section)
   {
     case kSectionPhone:
-      return (indexPath.row < [self.contact countForProperty: kABPersonPhoneProperty]) ? UITableViewCellEditingStyleDelete : UITableViewCellEditingStyleNone;
-
     case kSectionEmail:
-      return (indexPath.row < [self.contact countForProperty: kABPersonEmailProperty]) ? UITableViewCellEditingStyleDelete : UITableViewCellEditingStyleNone;
-
     case kSectionURL:
-      return (indexPath.row < [self.contact countForProperty: kABPersonURLProperty]) ? UITableViewCellEditingStyleDelete : UITableViewCellEditingStyleNone;
+    case kSectionDate:
+    case kSectionSocialProfile:
+    case kSectionInstantMessage:
+      return (indexPath.row < [self.contact countForProperty: property]) ? UITableViewCellEditingStyleDelete : UITableViewCellEditingStyleNone;
 
     case kSectionAddress:
       if (indexPath.row < [self.contact countForProperty: kABPersonAddressProperty])
@@ -339,20 +359,9 @@ static const float defaultCellHeight = 44.f;
         return (self.willAddAddress == YES) ? UITableViewCellEditingStyleNone : UITableViewCellEditingStyleInsert;
    
     case kSectionBirthday:
-      return ([self.contact valueForProperty: kABPersonBirthdayProperty]) ? UITableViewCellEditingStyleDelete : UITableViewCellEditingStyleNone;
-      
-    case kSectionDate:
-      return (indexPath.row < [self.contact countForProperty: kABPersonDateProperty]) ? UITableViewCellEditingStyleDelete : UITableViewCellEditingStyleNone;
-
-    case kSectionSocialProfile:
-      return  (indexPath.row < [self.contact countForProperty: kABPersonSocialProfileProperty]) ? UITableViewCellEditingStyleDelete : UITableViewCellEditingStyleNone;
-
-    case kSectionInstantMessage:
-      return  (indexPath.row < [self.contact countForProperty: kABPersonInstantMessageProperty]) ? UITableViewCellEditingStyleDelete : UITableViewCellEditingStyleNone;
-
     case kSectionNote:
-      return ([self.contact valueForProperty: kABPersonNoteProperty]) ? UITableViewCellEditingStyleDelete : UITableViewCellEditingStyleNone;
-      
+      return ([self.contact valueForProperty: property]) ? UITableViewCellEditingStyleDelete : UITableViewCellEditingStyleNone;
+
     default:
       return UITableViewCellEditingStyleNone;
   }
@@ -362,9 +371,30 @@ static const float defaultCellHeight = 44.f;
 {
   if (editingStyle == UITableViewCellEditingStyleDelete)
   {
-  }
-  else if (editingStyle == UITableViewCellEditingStyleInsert)
-  {
+    NSInteger section = [[self.sections objectAtIndex: indexPath.section] integerValue];
+
+    ABPropertyID property = [AKContactViewController abPropertyIDforSection: section];
+    
+    switch (section) {
+      case kSectionPhone:
+      case kSectionEmail:
+      case kSectionAddress:
+      case kSectionURL:
+      case kSectionDate:
+      case kSectionSocialProfile:
+      case kSectionInstantMessage:
+      {
+        NSArray *identifiers = [self.contact identifiersForProperty: property];
+        NSInteger identifier = [[identifiers objectAtIndex: indexPath.row] integerValue];
+        [self.contact setValue: nil forMultiValueProperty: property andIdentifier: &identifier];
+        break;
+      }
+      case kSectionBirthday:
+      case kSectionNote:
+        [self.contact setValue: nil forProperty: property];
+    }
+
+    [tableView deleteRowsAtIndexPaths: [NSArray arrayWithObject: indexPath] withRowAnimation: UITableViewRowAnimationAutomatic];
   }
 }
 
@@ -419,8 +449,7 @@ static const float defaultCellHeight = 44.f;
     {
       NSArray *identifiers = [self.contact identifiersForProperty: kABPersonAddressProperty];
       NSInteger identifier = [[identifiers objectAtIndex: indexPath.row] integerValue];
-      NSInteger rows = 0;
-      NSString *address = [self.contact addressForIdentifier: identifier andNumRows: &rows];
+      NSString *address = [self.contact addressForIdentifier: identifier andNumRows: NULL];
       address = [address stringByReplacingOccurrencesOfString: @"\n" withString: @" "];
       address = [address stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
       address = [NSString stringWithFormat: @"http://maps.apple.com/?q=%@", address];
