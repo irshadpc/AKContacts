@@ -309,7 +309,7 @@ const int tagNewContact = -368;
   if ([row count] > 0) [rows addObject: [row componentsJoinedByString: @" "]];
   if ([country length] > 0) [rows addObject: country];
 
-  if (numRows != nil)
+  if (numRows != NULL)
   {
     *numRows = [rows count];
   }
