@@ -378,7 +378,6 @@ static const float defaultCellHeight = 44.f;
     {
       if (indexPath.row < [self.contact countForProperty: kABPersonAddressProperty])
       {
-        
       }
       else
       {
@@ -410,10 +409,32 @@ static const float defaultCellHeight = 44.f;
       NSString *value = [self.contact valueForMultiValueProperty: kABPersonEmailProperty andIdentifier: identifier];
       [[AKMessenger sharedInstance] sendEmailWithRecipients: [[NSArray alloc] initWithObjects: value, nil]];
     }
+    else if (section == kSectionURL) {
+      NSArray *identifiers = [self.contact identifiersForProperty: kABPersonURLProperty];
+      NSInteger identifier = [[identifiers objectAtIndex: indexPath.row] integerValue];
+      NSString *url = [self.contact valueForMultiValueProperty: kABPersonURLProperty andIdentifier: identifier];
+      [[UIApplication sharedApplication] openURL: [NSURL URLWithString: url]];
+    }
+    else if (section == kSectionAddress)
+    {
+      NSArray *identifiers = [self.contact identifiersForProperty: kABPersonAddressProperty];
+      NSInteger identifier = [[identifiers objectAtIndex: indexPath.row] integerValue];
+      NSInteger rows = 0;
+      NSString *address = [self.contact addressForIdentifier: identifier andNumRows: &rows];
+      address = [address stringByReplacingOccurrencesOfString: @"\n" withString: @" "];
+      address = [address stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
+      address = [NSString stringWithFormat: @"http://maps.apple.com/?q=%@", address];
+      [[UIApplication sharedApplication] openURL: [NSURL URLWithString: address]];
+    }
     else if (section == kSectionSocialProfile)
     {
-      AKContactDetailViewCell *cell = (AKContactDetailViewCell *)[self.tableView cellForRowAtIndexPath: indexPath];
-      [cell openURLForSocialProfile];
+      NSArray *identifiers = [self.contact identifiersForProperty: kABPersonSocialProfileProperty];
+      NSInteger identifier = [[identifiers objectAtIndex: indexPath.row] integerValue];
+      NSDictionary *dict = [self.contact valueForMultiValueProperty: kABPersonSocialProfileProperty andIdentifier: identifier];
+      if ([dict objectForKey: (NSString *)kABPersonSocialProfileURLKey])
+      {
+        [[UIApplication sharedApplication] openURL: [NSURL URLWithString: [dict objectForKey: (NSString *)kABPersonSocialProfileURLKey]]];
+      }
     }
   }
   [self.tableView deselectRowAtIndexPath: indexPath animated: YES];
