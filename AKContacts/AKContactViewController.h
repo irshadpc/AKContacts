@@ -33,11 +33,11 @@
 @protocol AKContactViewControllerDelegate <NSObject>
 @required
 /**
- *
+ * Notify the delegate that the modal contact view is dismissed
  */
 - (void)modalViewDidDismissWithContactID: (NSInteger)contactID;
 /**
- *
+ * Notify the delegate that a contact has been removed
  */
 - (void)recordDidRemoveWithContactID: (NSInteger)contactID;
 @end
@@ -55,7 +55,9 @@
  */
 @property (nonatomic, assign) BOOL willAddAddress;
 
-
+/**
+ * Create a person view with a contactID
+ */
 -(id)initWithContactID: (NSInteger)contactID;
 
 @end
