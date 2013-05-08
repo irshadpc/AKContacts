@@ -55,9 +55,14 @@
   [self.textLabel setText: nil];
   [self.detailTextLabel setText: nil];
   [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
-  [self setAccessoryType: UITableViewCellAccessoryDisclosureIndicator];
+  [self setAccessoryType: UITableViewCellAccessoryNone];
 
   NSInteger recordID = [[[self.parent.contact linkedContactIDs] objectAtIndex: row] integerValue];
+
+  if (recordID != self.parent.parentLinkedContactID)
+  {
+    [self setAccessoryType: UITableViewCellAccessoryDisclosureIndicator];
+  }
 
   AKSource *source = [[AKAddressBook sharedInstance] sourceForContactId: recordID];
   AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: recordID];
