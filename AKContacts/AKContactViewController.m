@@ -282,8 +282,9 @@ static const float defaultCellHeight = 44.f;
   [self.tableView setContentInset: contentInsets];
   [self.tableView setScrollIndicatorInsets: contentInsets];
   
+  CGFloat offset = self.tableView.contentOffset.y;
   CGRect textFieldFrame = self.firstResponder.frame;
-  CGFloat textFieldOrigin = self.firstResponder.superview.superview.frame.origin.y;
+  CGFloat textFieldOrigin = self.firstResponder.superview.superview.frame.origin.y - offset;
   CGFloat textFieldBottom = textFieldOrigin + textFieldFrame.origin.y + textFieldFrame.size.height;
   CGRect visibleFrame = self.view.frame;
   visibleFrame.size.height -= kbSize.height;
@@ -293,7 +294,7 @@ static const float defaultCellHeight = 44.f;
   
   if (CGRectContainsPoint(visibleFrame, point) == NO)
   {
-    CGFloat posY = fabs(textFieldBottom - keyboardTop) + 10.f;
+    CGFloat posY = fabs(textFieldBottom - keyboardTop) + 10.f + offset;
     CGPoint scrollPoint = CGPointMake(0.f, posY);
     [self.tableView setContentOffset: scrollPoint animated: YES];
   }
