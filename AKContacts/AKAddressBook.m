@@ -409,6 +409,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   AKSource *aggregateSource = [self sourceForSourceId: kSourceAggregate];
   AKGroup *mainAggregateGroup = [aggregateSource groupForGroupId: kGroupAggregate];
 
+  NSMutableArray *linkedRecords = [[NSMutableArray alloc] init];
+  
   [self setContactsCount: ABAddressBookGetPersonCount(addressBook)];
   NSLog(@"Number of contacts: %d", self.contactsCount);
   NSInteger i = 0;
@@ -423,7 +425,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     NSArray *people = (NSArray *)CFBridgingRelease(ABAddressBookCopyArrayOfAllPeopleInSourceWithSortOrdering(addressBook,
                                                                                                              source.recordRef,
                                                                                                              ABPersonGetSortOrdering()));
-
     for (id obj in people) 
     {
       ABRecordRef recordRef = (__bridge ABRecordRef)obj;
@@ -433,22 +434,27 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
       [self.delegate setProgress: (CGFloat)++i / self.contactsCount];
 
-      /*
-       NSArray *linkedContactIDs = [contact linkedContactIDs];
-       NSMutableArray *allContactIDs = aggregateGroup.memberIDs;
-       for (NSNumber *linkedID in linkedContactIDs) {
-        if ([allContactIDs indexOfObject: linkedID] == NSNotFound) {
-          [allContactIDs addObject: linkedID];
-          break;
+      NSArray *linked = CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople(recordRef));
+      for (id obj in linked)
+      {
+        ABRecordRef linkedRef = (__bridge ABRecordRef)obj;
+        ABRecordID linkedID = ABRecordGetRecordID(linkedRef);
+        if (linkedID != recordID)
+        {
+          [linkedRecords addObject: [NSNumber numberWithInteger: linkedID]];
         }
       }
-      */
 
-      if ([mainAggregateGroup.memberIDs indexOfObject: contactID] == NSNotFound)
+      if ([mainAggregateGroup.memberIDs indexOfObject: contactID] == NSNotFound &&
+          [linkedRecords indexOfObject: contactID] == NSNotFound)
+      {
         [mainAggregateGroup.memberIDs addObject: contactID];
+      }
 
       if ([aggregateGroup.memberIDs indexOfObject: contactID] == NSNotFound)
+      {
         [aggregateGroup.memberIDs addObject: contactID];
+      }
 
       [self insertRecordID: recordID inDictionary: tempContactIdentifiers withAddressBookRef: addressBook];
     }
@@ -545,6 +551,24 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   {
     ret = [[AKContact alloc] initWithABRecordID: recordId];
     [self.contacts setObject: ret forKey: contactID];
+  }
+  return ret;
+}
+
+- (AKSource *)sourceForContactId: (ABRecordID)recordId
+{
+  AKSource *ret = nil;
+  NSNumber *contactId = [NSNumber numberWithInteger: recordId];
+  for (AKSource *source in self.sources)
+  {
+    if (source.recordID == kSourceAggregate) continue;
+
+    AKGroup *group = [source groupForGroupId: kGroupAggregate];
+    if ([group.memberIDs indexOfObject: contactId] != NSNotFound)
+    {
+      ret = source;
+      break;
+    }
   }
   return ret;
 }

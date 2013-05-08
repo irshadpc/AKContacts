@@ -103,6 +103,7 @@ typedef enum {
 - (NSInteger)displayedContactsCount;
 - (AKSource *)sourceForSourceId: (ABRecordID)recordId;
 - (AKContact *)contactForContactId: (ABRecordID)recordId;
+- (AKSource *)sourceForContactId: (ABRecordID)recordId;
 - (void)removeRecordID: (ABRecordID)recordID;
 - (void)resetSearch;
 
