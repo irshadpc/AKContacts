@@ -58,7 +58,10 @@
  * UITextField currently being edited
  */
 @property (nonatomic, strong) UIView *firstResponder;
-
+/**
+ * Set to YES when displaying a linked contact
+ */
+@property (nonatomic, assign) NSInteger parentLinkedContactID;
 /**
  * Create a person view with a contactID
  */

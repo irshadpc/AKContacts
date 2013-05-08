@@ -132,6 +132,7 @@ static const float defaultCellHeight = 44.f;
   if (self)
   {
     _contact = (contactID != tagNewContact) ? [[AKAddressBook sharedInstance] contactForContactId: contactID] : nil;
+    _parentLinkedContactID = NSNotFound;
   }
   return self;
 }
@@ -573,10 +574,17 @@ static const float defaultCellHeight = 44.f;
     else if (section == kSectionLinked)
     {
       NSInteger recordId = [[[self.contact linkedContactIDs] objectAtIndex: indexPath.row] integerValue];
-
-      AKContactViewController *contactView = [[AKContactViewController alloc ] initWithContactID: recordId];
-      [self.navigationController pushViewController: contactView animated: YES];
-
+      
+      if (self.parentLinkedContactID != recordId)
+      {
+        AKContactViewController *contactView = [[AKContactViewController alloc ] initWithContactID: recordId];
+        [contactView setParentLinkedContactID: self.contact.recordID];
+        [self.navigationController pushViewController: contactView animated: YES];
+      }
+      else
+      {
+        [self.navigationController popViewControllerAnimated: YES];
+      }
     }
   }
   [self.tableView deselectRowAtIndexPath: indexPath animated: YES];
