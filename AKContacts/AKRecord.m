@@ -128,7 +128,7 @@ NSString *const kLabel = @"Label";
 
   dispatch_block_t block = ^{
     CFErrorRef error = NULL;
-    if ([value length] == 0)
+    if (value == nil)
     {
       ABRecordRemoveValue(self.recordRef, property, &error);
     }
@@ -264,13 +264,13 @@ NSString *const kLabel = @"Label";
       CFIndex index = ABMultiValueGetIndexForIdentifier(mutableRecord, *identifier);
       if (index != -1)
       {
-        if ([value length] > 0)
+        if (value == nil)
         {
-          didChange = ABMultiValueReplaceValueAtIndex(mutableRecord, (__bridge CFTypeRef)(value), index);
+          didChange = ABMultiValueRemoveValueAndLabelAtIndex(mutableRecord, index);
         }
         else
         {
-          didChange = ABMultiValueRemoveValueAndLabelAtIndex(mutableRecord, index);
+          didChange = ABMultiValueReplaceValueAtIndex(mutableRecord, (__bridge CFTypeRef)(value), index);
         }
       }
       else
