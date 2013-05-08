@@ -216,13 +216,15 @@ static const int editModeItem = 8;
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField
 {
-  
+  [self.parent setFirstResponder: textField];
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField
 {
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
+  
+  [self.parent setFirstResponder: nil];
   
   AKContact *contact = self.parent.contact;
   if (self.abPropertyID == kABPersonLastNameProperty)
