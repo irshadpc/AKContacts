@@ -266,7 +266,7 @@ static const float defaultCellHeight = 44.f;
 
   CGRect textFieldFrame = self.firstResponder.frame;
   CGFloat textFieldOrigin = self.firstResponder.superview.superview.frame.origin.y;
-  CGFloat textFieldBottom = textFieldOrigin + textFieldFrame.size.height;
+  CGFloat textFieldBottom = textFieldOrigin + textFieldFrame.origin.y + textFieldFrame.size.height;
   CGRect visibleFrame = self.view.frame;
   visibleFrame.size.height -= kbSize.height;
 
