@@ -249,14 +249,16 @@
 
 -(void)textFieldDidBeginEditing:(UITextField *)textField
 {
-  
+  [self.parent setFirstResponder: textField];
 }
 
 -(void)textFieldDidEndEditing:(UITextField *)textField
 {
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
-  
+
+  [self.parent setFirstResponder: nil];
+
   AKContact *contact = self.parent.contact;
   
   NSString *oldValue = [contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
@@ -267,7 +269,8 @@
         self.abPropertyID == kABPersonEmailProperty)
   {
     NSInteger identifier = self.identifier;
-    [contact setValue: textField.text forMultiValueProperty: self.abPropertyID andIdentifier: &identifier];
+    NSString *value = ([textField.text length] > 0) ? textField.text : nil;
+    [contact setValue: value forMultiValueProperty: self.abPropertyID andIdentifier: &identifier];
     if (identifier != self.identifier)
     {
       [self setIdentifier: identifier];
@@ -284,19 +287,28 @@
 
 #pragma mark - UITextView delegate
 
-- (void)textViewDidBeginEditing:(UITextField *)textField
+- (void)textViewDidBeginEditing:(UITextField *)textView
 {
-  
+  [self.parent setFirstResponder: textView];
 }
 
-- (void)textViewDidEndEditing:(UITextField *)textField
+- (void)textViewDidEndEditing:(UITextField *)textView
 {
-  if ([textField isFirstResponder])
-    [textField resignFirstResponder];
-  
+  if ([textView isFirstResponder])
+    [textView resignFirstResponder];
+
+  [self.parent setFirstResponder: nil];
+
   if (self.abPropertyID == kABPersonNoteProperty)
   {
+    AKContact *contact = self.parent.contact;
+
+    NSString *oldValue = [contact valueForProperty: kABPersonNoteProperty];
+    if ([textView.text isEqualToString: oldValue] || [textView.text length] == 0)
+      return;
     
+    NSString *value = ([textView.text length] > 0) ? textView.text : nil;
+    [contact setValue: value forProperty: kABPersonNoteProperty];
   }
 }
 
@@ -314,9 +326,9 @@
   UIDatePicker *picker = [[UIDatePicker alloc] initWithFrame: CGRectZero];
   [picker setDatePickerMode: UIDatePickerModeDate];
   [picker addTarget: self
-              action: @selector(datePickerDidChangeValue:)
-    forControlEvents: UIControlEventValueChanged];
-  
+             action: @selector(datePickerDidChangeValue:)
+   forControlEvents: UIControlEventValueChanged];
+
   [picker setDate: date];
   return picker;
 }
@@ -344,8 +356,7 @@
                                                                               action: @selector(datePickerDidEndEditing:)];
   [doneButton setTag: UIBarButtonSystemItemDone];
   [barItems addObject: doneButton];
-  
-  
+
   [toolbar setItems: barItems animated:NO];
   return toolbar;
 }
@@ -363,15 +374,30 @@
   if ([self.textField isFirstResponder])
     [self.textField resignFirstResponder];
   
+  AKContact *contact = self.parent.contact;
+  
   UIBarButtonItem *button = (UIBarButtonItem *)sender;
   if (button.tag == UIBarButtonSystemItemDone)
   {
-    NSLog(@"Done");
+    UIDatePicker *datePicker = (UIDatePicker *)self.textField.inputView;
+
+    NSString *text = [NSDateFormatter localizedStringFromDate: datePicker.date
+                                                    dateStyle: NSDateFormatterLongStyle
+                                                    timeStyle: NSDateFormatterNoStyle];
+    [self.textField setText: text];
+    
+    if (self.abPropertyID == kABPersonBirthdayProperty)
+    {
+      [contact setValue: datePicker.date forProperty: self.abPropertyID];
+    }
+    else if (self.abPropertyID == kABPersonDateProperty)
+    {
+      NSInteger identifier = self.identifier;
+      [contact setValue: datePicker.date forMultiValueProperty: kABPersonDateProperty andIdentifier: &identifier];
+    }
   }
   else if (button.tag == UIBarButtonSystemItemCancel)
   {
-    AKContact *contact = self.parent.contact;
-    
     if (self.abPropertyID == kABPersonBirthdayProperty)
     {
       NSDate *date = (NSDate *)[contact valueForProperty: kABPersonBirthdayProperty];
