@@ -152,6 +152,16 @@
 		C620080316B9972A00C16121 /* Contact */ = {
 			isa = PBXGroup;
 			children = (
+				C65D925A1739E992001D1C15 /* Cells */,
+				C620080C16B997A900C16121 /* AKContactViewController.h */,
+				C620080D16B997A900C16121 /* AKContactViewController.m */,
+			);
+			name = Contact;
+			sourceTree = "<group>";
+		};
+		C65D925A1739E992001D1C15 /* Cells */ = {
+			isa = PBXGroup;
+			children = (
 				C620080816B997A900C16121 /* AKContactHeaderViewCell.h */,
 				C620080916B997A900C16121 /* AKContactHeaderViewCell.m */,
 				C620080616B997A900C16121 /* AKContactDetailViewCell.h */,
@@ -166,10 +176,28 @@
 				C6C89336172B1CD100FA4A4F /* AKContactButtonsViewCell.m */,
 				C65D925717389670001D1C15 /* AKContactLinkedViewCell.h */,
 				C65D925817389671001D1C15 /* AKContactLinkedViewCell.m */,
-				C620080C16B997A900C16121 /* AKContactViewController.h */,
-				C620080D16B997A900C16121 /* AKContactViewController.m */,
 			);
-			name = Contact;
+			name = Cells;
+			sourceTree = "<group>";
+		};
+		C65D925B1739E9BC001D1C15 /* Cells */ = {
+			isa = PBXGroup;
+			children = (
+				F3F0720C1730491F0044084A /* AKContactsRecordViewCell.h */,
+				F3F0720D1730491F0044084A /* AKContactsRecordViewCell.m */,
+				F3F0720F1730552B0044084A /* AKContactsProgressIndicatorView.h */,
+				F3F072101730552B0044084A /* AKContactsProgressIndicatorView.m */,
+			);
+			name = Cells;
+			sourceTree = "<group>";
+		};
+		C65D925C1739E9DA001D1C15 /* Cells */ = {
+			isa = PBXGroup;
+			children = (
+				C620EA7B16F932630035CA1F /* AKGroupsViewCell.h */,
+				C620EA7C16F932640035CA1F /* AKGroupsViewCell.m */,
+			);
+			name = Cells;
 			sourceTree = "<group>";
 		};
 		C669517F16B6FD7100D030A2 = {
@@ -268,10 +296,9 @@
 		C682DEDB1714B52F00CC4A70 /* Groups */ = {
 			isa = PBXGroup;
 			children = (
+				C65D925C1739E9DA001D1C15 /* Cells */,
 				C6C2066116E18A800033C58A /* AKGroupsViewController.h */,
 				C6C2066216E18A810033C58A /* AKGroupsViewController.m */,
-				C620EA7B16F932630035CA1F /* AKGroupsViewCell.h */,
-				C620EA7C16F932640035CA1F /* AKGroupsViewCell.m */,
 			);
 			name = Groups;
 			sourceTree = "<group>";
@@ -279,13 +306,10 @@
 		C682DEDC1714B54000CC4A70 /* Contacts */ = {
 			isa = PBXGroup;
 			children = (
-				C620080316B9972A00C16121 /* Contact */,
+				C65D925B1739E9BC001D1C15 /* Cells */,
 				C66951D716B702F800D030A2 /* AKContactsViewController.h */,
 				C66951D816B702F800D030A2 /* AKContactsViewController.m */,
-				F3F0720C1730491F0044084A /* AKContactsRecordViewCell.h */,
-				F3F0720D1730491F0044084A /* AKContactsRecordViewCell.m */,
-				F3F0720F1730552B0044084A /* AKContactsProgressIndicatorView.h */,
-				F3F072101730552B0044084A /* AKContactsProgressIndicatorView.m */,
+				C620080316B9972A00C16121 /* Contact */,
 			);
 			name = Contacts;
 			sourceTree = "<group>";
