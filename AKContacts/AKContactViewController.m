@@ -33,6 +33,7 @@
 #import "AKContactSwitchViewCell.h"
 #import "AKContactButtonsViewCell.h"
 #import "AKContactDeleteButtonViewCell.h"
+#import "AKContactLinkedViewCell.h"
 #import "AKContact.h"
 #import "AKAddressBook.h"
 #import "AKMessenger.h"
@@ -50,6 +51,7 @@ typedef NS_ENUM(NSInteger, SectionID) {
   kSectionInstantMessage,
   kSectionNote,
   kSectionButtons,
+  kSectionLinked,
   kSectionDeleteButton,
 };
 
@@ -59,6 +61,7 @@ static const float defaultCellHeight = 44.f;
 
 @property (nonatomic, strong) NSMutableArray *sections;
 @property (nonatomic, strong) NSArray *sectionIdentifiers;
+@property (nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer;
 
 /**
  * Return the ABPropertyID of a section
@@ -82,6 +85,28 @@ static const float defaultCellHeight = 44.f;
 @implementation AKContactViewController
 
 #pragma mark - Class methods
+
++ (BOOL)sectionIsMultiValue: (SectionID)section
+{
+  switch (section) {
+    case kSectionPhone:
+    case kSectionEmail:
+    case kSectionURL:
+    case kSectionAddress:
+    case kSectionBirthday:
+    case kSectionDate:
+    case kSectionSocialProfile:
+    case kSectionInstantMessage:
+    case kSectionNote:
+    {
+      ABPropertyID property = [AKContactViewController abPropertyIDforSection: section];
+      ABPropertyType type = ABPersonGetTypeOfProperty(property);
+      if ((type & kABMultiValueMask) == kABMultiValueMask) return YES;
+      return NO;
+    }
+    default: return NO;
+  }
+}
 
 + (ABPropertyID)abPropertyIDforSection: (SectionID)section
 {
@@ -123,18 +148,16 @@ static const float defaultCellHeight = 44.f;
     case kSectionAddress:
     case kSectionDate:
     case kSectionSocialProfile:
-    case kSectionInstantMessage:
-      return [self.contact countForProperty: property];
+    case kSectionInstantMessage: return [self.contact countForProperty: property];
 
     case kSectionBirthday:
-    case kSectionNote:
-      return ([self.contact valueForProperty: property]) ? 1 : 0;
-
-    case kSectionDeleteButton:
-      return 0;
-      // If custom section does not default to having one element add case here
-    default:
-      return 1;
+    case kSectionNote: return ([self.contact valueForProperty: property]) ? 1 : 0;
+      
+    case kSectionDeleteButton: return 0;
+      
+    case kSectionLinked: return [[self.contact linkedContactIDs] count];
+    // If custom section does not default to having one element add case here
+    default: return 1;
   }
 }
 
@@ -144,6 +167,7 @@ static const float defaultCellHeight = 44.f;
   {
     case kSectionSwitch:
     case kSectionButtons:
+    case kSectionLinked:
       return NO;
     default:
       return YES;
@@ -178,6 +202,7 @@ static const float defaultCellHeight = 44.f;
   [self.sections addObject: [NSNumber numberWithInteger: kSectionInstantMessage]];
   [self.sections addObject: [NSNumber numberWithInteger: kSectionNote]];
   [self.sections addObject: [NSNumber numberWithInteger: kSectionButtons]];
+  [self.sections addObject: [NSNumber numberWithInteger: kSectionLinked]];
   [self.sections addObject: [NSNumber numberWithInteger: kSectionDeleteButton]];
   [self setSectionIdentifiers: [self.sections copy]];
 
@@ -222,6 +247,67 @@ static const float defaultCellHeight = 44.f;
     // Dispose of any resources that can be recreated.
 }
 
+- (void)viewWillAppear: (BOOL)animated
+{
+  [super viewWillAppear:animated];
+  
+  [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardDidShow:)
+                                               name: UIKeyboardDidShowNotification object:nil];
+  [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillHide:)
+                                               name: UIKeyboardWillHideNotification object:nil];
+}
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+  [super viewWillDisappear:animated];
+
+  [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardDidShowNotification object: nil];
+  [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillHideNotification object: nil];
+}
+
+#pragma mark - Keyboard
+
+- (void)keyboardDidShow: (NSNotification *)notification
+{
+  UITapGestureRecognizer *recognizer = [[UITapGestureRecognizer alloc] initWithTarget: self
+                                                                               action: @selector(tableViewTouchUpInside:)];
+  [recognizer setCancelsTouchesInView: NO];
+  [self.tableView addGestureRecognizer: recognizer];
+  [self setTapGestureRecognizer: recognizer];
+  
+  NSDictionary* info = [notification userInfo];
+  CGSize kbSize = [[info objectForKey: UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
+  
+  UIEdgeInsets contentInsets = UIEdgeInsetsMake(0.f, 0.f, kbSize.height, 0.f);
+  [self.tableView setContentInset: contentInsets];
+  [self.tableView setScrollIndicatorInsets: contentInsets];
+  
+  CGRect textFieldFrame = self.firstResponder.frame;
+  CGFloat textFieldOrigin = self.firstResponder.superview.superview.frame.origin.y;
+  CGFloat textFieldBottom = textFieldOrigin + textFieldFrame.origin.y + textFieldFrame.size.height;
+  CGRect visibleFrame = self.view.frame;
+  visibleFrame.size.height -= kbSize.height;
+  
+  CGFloat keyboardTop = visibleFrame.size.height;
+  CGPoint point = CGPointMake(textFieldFrame.origin.x, textFieldBottom);
+  
+  if (CGRectContainsPoint(visibleFrame, point) == NO)
+  {
+    CGFloat posY = fabs(textFieldBottom - keyboardTop) + 10.f;
+    CGPoint scrollPoint = CGPointMake(0.f, posY);
+    [self.tableView setContentOffset: scrollPoint animated: YES];
+  }
+}
+
+- (void)keyboardWillHide: (NSNotification *)notification
+{
+  [self.tableView removeGestureRecognizer: self.tapGestureRecognizer];
+
+  UIEdgeInsets contentInsets = UIEdgeInsetsZero;
+  [self.tableView setContentInset: contentInsets];
+  [self.tableView setScrollIndicatorInsets: contentInsets];
+}
+
 #pragma mark - Table View
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
@@ -242,9 +328,12 @@ static const float defaultCellHeight = 44.f;
   else
   {
     ret = [self numberOfElementsInSection: section];
-    if (section != kSectionBirthday && section != kSectionNote)
+    if (self.editing == YES)
     {
-        if (self.editing) ret += 1;
+      if ([AKContactViewController sectionIsMultiValue: section]) ret += 1;
+      else if (section == kSectionDeleteButton) ret += 1;
+      else if (section == kSectionBirthday && [self.contact valueForProperty: kABPersonBirthdayProperty] == nil) ret += 1;
+      else if (section == kSectionNote && [self.contact valueForProperty: kABPersonNoteProperty] == nil) ret += 1;
     }
   }
   return ret;
@@ -312,12 +401,26 @@ static const float defaultCellHeight = 44.f;
 
     case kSectionButtons:
       return [self buttonsCellViewAtRow: indexPath.row];
-      
+
+    case kSectionLinked:
+      return [self linkedCellViewAtRow: indexPath.row];
+
     case kSectionDeleteButton:
       return [self deleteButtonCellViewAtRow: indexPath.row];
 
     default:
       return nil;
+  }
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
+{
+  section = [[self.sections objectAtIndex: section] integerValue];
+
+  switch (section) {
+    case kSectionLinked:
+      return (self.editing) ? nil : NSLocalizedString(@"Linked Contacts", @"");
+    default: return nil;
   }
 }
 
@@ -330,6 +433,7 @@ static const float defaultCellHeight = 44.f;
     case kSectionHeader:
     case kSectionDeleteButton:
     case kSectionButtons:
+    case kSectionLinked:
       return NO;
     default:
       return YES;
@@ -465,6 +569,14 @@ static const float defaultCellHeight = 44.f;
         [[UIApplication sharedApplication] openURL: [NSURL URLWithString: [dict objectForKey: (NSString *)kABPersonSocialProfileURLKey]]];
       }
     }
+    else if (section == kSectionLinked)
+    {
+      NSInteger recordId = [[[self.contact linkedContactIDs] objectAtIndex: indexPath.row] integerValue];
+
+      AKContactViewController *contactView = [[AKContactViewController alloc ] initWithContactID: recordId];
+      [self.navigationController pushViewController: contactView animated: YES];
+
+    }
   }
   [self.tableView deselectRowAtIndexPath: indexPath animated: YES];
 }
@@ -523,8 +635,10 @@ static const float defaultCellHeight = 44.f;
       }
       else
       {
-        if (section.integerValue == kSectionDeleteButton && self.contact != nil)
+        if (section.integerValue != kSectionDeleteButton || self.contact != nil)
+        {
           [insertSections addObject: section];
+        }
       }
     }
     else
@@ -592,6 +706,11 @@ static const float defaultCellHeight = 44.f;
   {
     [self setEditing: NO animated: YES];
   }
+}
+
+- (void)tableViewTouchUpInside: (id)sender
+{
+  [self.firstResponder resignFirstResponder];
 }
 
 #pragma mark - Table View Cells
@@ -694,6 +813,23 @@ static const float defaultCellHeight = 44.f;
   [cell setParent: self];
 
   [cell configureCell];
+
+  return (UITableViewCell *)cell;
+}
+
+- (UITableViewCell *)linkedCellViewAtRow: (NSInteger)row
+{
+  static NSString *CellIdentifier = @"AKContactLinkedViewCell";
+
+  AKContactLinkedViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  if (cell == nil)
+  {
+    cell = [[AKContactLinkedViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
+  }
+
+  [cell setParent: self];
+
+  [cell configureCellAtRow: row];
 
   return (UITableViewCell *)cell;
 }

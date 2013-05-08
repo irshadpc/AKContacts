@@ -54,6 +54,10 @@
  * selected in the contact edit view
  */
 @property (nonatomic, assign) BOOL willAddAddress;
+/**
+ * UITextField currently being edited
+ */
+@property (nonatomic, strong) UIView *firstResponder;
 
 /**
  * Create a person view with a contactID
