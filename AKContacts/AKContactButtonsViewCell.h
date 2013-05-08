@@ -36,6 +36,6 @@
 
 @property (nonatomic) AKContactViewController *parent;
 
--(void)configureCellAtRow:(NSInteger)row;
+-(void)configureCellAtRow: (NSInteger)row;
 
 @end
