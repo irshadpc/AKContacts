@@ -229,14 +229,17 @@ const int tagNewContact = -368;
     {
       ABRecordRef record = (__bridge ABRecordRef)obj;
       ABRecordID recordID = ABRecordGetRecordID(record);
-      [ret addObject: [NSNumber numberWithInteger: recordID]];
+      if (recordID != self.recordID)
+      {
+        [ret addObject: [NSNumber numberWithInteger: recordID]];
+      }
     }
 	};
 
   if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
-  return [[NSArray alloc] initWithArray: ret];
+  return [ret copy];
 }
 
 - (NSString *)dictionaryKey
