@@ -95,6 +95,8 @@
   [self.textLabel setText: nil];
   [self.detailTextLabel setText: nil];
   [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
+  [self.textField setInputView: nil];
+  [self.textField setInputAccessoryView: nil];
 
   AKContact *contact = self.parent.contact;
 
