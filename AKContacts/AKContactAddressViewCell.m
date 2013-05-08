@@ -239,7 +239,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
 -(void)textFieldDidBeginEditing:(UITextField *)textField
 {
-  
+  [self.parent setFirstResponder: textField];
 }
 
 -(void)textFieldDidEndEditing:(UITextField *)textField
@@ -247,6 +247,8 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
 
+  [self.parent setFirstResponder: nil];
+  
   if ([textField.text length] == 0) return;
 
   AKContact *contact = self.parent.contact;
