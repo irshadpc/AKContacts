@@ -74,16 +74,13 @@ static const float defaultCellHeight = 44.f;
 
 - (void)loadView
 {
-  CGFloat navBarHeight = ([self.navigationController isNavigationBarHidden]) ? 0.f :
-  self.navigationController.navigationBar.frame.size.height;
-
-  [self setTableView: [[UITableView alloc] initWithFrame: CGRectMake(0.f, 0.f, 320.f, 460.f - navBarHeight)
+  CGFloat height = ([UIScreen mainScreen].bounds.size.height == 568.f) ? 568.f : 480.f;
+  height -= (self.navigationController.navigationBar.frame.size.height + [UIApplication sharedApplication].statusBarFrame.size.height);
+  [self setTableView: [[UITableView alloc] initWithFrame: CGRectMake(0.f, 0.f, 320.f, height)
                                                    style: UITableViewStyleGrouped]];
   [self.tableView setDataSource: self];
   [self.tableView setDelegate: self];
-
-  [self setView: [[UIView alloc] init]];
-  [self.view addSubview: self.tableView];
+  [self setView: self.tableView];
 }
 
 - (void)viewDidLoad
