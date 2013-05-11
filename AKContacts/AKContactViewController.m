@@ -35,6 +35,7 @@
 #import "AKContactDeleteButtonViewCell.h"
 #import "AKContactLinkedViewCell.h"
 #import "AKContact.h"
+#import "AKLabelViewController.h"
 #import "AKAddressBook.h"
 #import "AKMessenger.h"
 
@@ -207,11 +208,10 @@ static const float defaultCellHeight = 44.f;
   [self.sections addObject: [NSNumber numberWithInteger: kSectionDeleteButton]];
   [self setSectionIdentifiers: [self.sections copy]];
 
-  CGFloat navBarHeight = ([self.navigationController isNavigationBarHidden]) ? 0.f :
-  self.navigationController.navigationBar.frame.size.height;
-
-  CGRect frame = CGRectMake(0.f, 0.f, 320.f, 460.f - navBarHeight);
-  [self setTableView: [[UITableView alloc] initWithFrame: frame style: UITableViewStyleGrouped]];
+  CGFloat height = ([UIScreen mainScreen].bounds.size.height == 568.f) ? 568.f : 480.f;
+  height -= (self.navigationController.navigationBar.frame.size.height + [UIApplication sharedApplication].statusBarFrame.size.height);
+  [self setTableView: [[UITableView alloc] initWithFrame: CGRectMake(0.f, 0.f, 320.f, height)
+                                                   style: UITableViewStyleGrouped]];
   [self.tableView setDataSource: self];
   [self.tableView setDelegate: self];
   [self.tableView setAllowsSelectionDuringEditing: YES];
@@ -508,20 +508,28 @@ static const float defaultCellHeight = 44.f;
 {
   NSInteger section = [[self.sections objectAtIndex: indexPath.section] integerValue];
   
-  if (self.editing)
+  if (self.editing == YES)
   {
-    if (section == kSectionAddress)
+    if ([AKContactViewController sectionIsMultiValue: section] == YES)
     {
-      if (indexPath.row < [self.contact countForProperty: kABPersonAddressProperty])
-      {
-      }
-      else
+      if (section == kSectionAddress && indexPath.row == [self.contact countForProperty: kABPersonAddressProperty])
       {
         if (self.willAddAddress == NO)
         {
           [self setWillAddAddress: YES];
           [self.tableView reloadRowsAtIndexPaths: [NSArray arrayWithObject: indexPath] withRowAnimation: UITableViewRowAnimationBottom];
         }
+      }
+      else
+      {
+        ABPropertyID property = [AKContactViewController abPropertyIDforSection: section];
+        AKLabelViewController *labelView = [[AKLabelViewController alloc] initWithPropertyID: property];
+        UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: labelView];
+
+        if ([self.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
+          [self.navigationController presentViewController: navigationController animated: YES completion: nil];
+        else
+          [self.navigationController presentModalViewController: navigationController animated: YES];
       }
     }
   }
