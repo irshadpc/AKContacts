@@ -82,7 +82,10 @@
 
 - (void)dismissModalViewController
 {
-  [self.navigationController dismissModalViewControllerAnimated: YES];
+  if ([self.navigationController respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
+    [self.navigationController dismissViewControllerAnimated: YES completion: nil];
+  else
+    [self.navigationController dismissModalViewControllerAnimated: YES];
 }
 
 @end
