@@ -106,7 +106,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
     [self.detailTextLabel setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
 
-    [self.textLabel setText: [contact labelForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.identifier]];
+    [self.textLabel setText: [contact localizedLabelForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.identifier]];
   }
   else
   {
@@ -260,7 +260,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   {
     NSDictionary *newAddress = [[NSDictionary alloc] initWithObjectsAndKeys: textField.text, key, nil];
     NSInteger identifier = self.identifier;
-    [contact setValue: newAddress forMultiValueProperty: kABPersonAddressProperty andIdentifier: &identifier];
+    [contact setValue: newAddress andLabel: nil forMultiValueProperty: kABPersonAddressProperty andIdentifier: &identifier];
     [self setIdentifier: identifier];
     address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.identifier];
   }
@@ -269,7 +269,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   [mutableAddress setObject: textField.text forKey: key];
   address = [mutableAddress copy];
   NSInteger identifier = self.identifier;
-  [contact setValue: address forMultiValueProperty: kABPersonAddressProperty andIdentifier: &identifier];
+  [contact setValue: address andLabel: nil forMultiValueProperty: kABPersonAddressProperty andIdentifier: &identifier];
 }
 
 -(BOOL)textFieldShouldReturn:(UITextField *)textField
