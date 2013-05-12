@@ -530,7 +530,7 @@ static const float defaultCellHeight = 44.f;
         ABPropertyID property = [AKContactViewController abPropertyIDforSection: section];
         NSArray *identifiers = [self.contact identifiersForProperty: property];
         NSInteger identifier = (indexPath.row < [identifiers count]) ? [[identifiers objectAtIndex: indexPath.row] integerValue] : NSNotFound;
-        NSString *label = (identifier != NSNotFound) ? [self.contact labelForMultiValueProperty: property andIdentifier: identifier] : [AKLabelViewController defaultLabelForABPropertyID: property];
+        NSString *label = (identifier != NSNotFound) ? [self.contact labelForMultiValueProperty: property andIdentifier: identifier] : [AKRecord defaultLabelForABPropertyID: property];
     
         AKLabelViewController *labelView = [[AKLabelViewController alloc] initWithPropertyID: property andIdentifier: identifier andSelectedLabel: label andCompletionHandler: handler];
         UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: labelView];

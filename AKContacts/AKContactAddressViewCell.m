@@ -110,7 +110,8 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   }
   else
   {
-    [self.textLabel setText: (self.parent.willAddAddress == YES) ? [[AKContact localizedNameForLabel: kABOtherLabel] lowercaseString] : NSLocalizedString(@"add new address", @"")];
+    [self.textLabel setText: (self.parent.willAddAddress == YES) ?
+     [[AKRecord defaultLocalizedLabelForABPropertyID: kABPersonAddressProperty] lowercaseString] : NSLocalizedString(@"add new address", @"")];
   }
 
   if ((self.parent.editing == YES && self.identifier != NSNotFound) ||

@@ -29,7 +29,6 @@
 #import "AKContactDetailViewCell.h"
 #import "AKContact.h"
 #import "AKContactViewController.h"
-#import "AKLabelViewController.h"
 #import "AKAddressBook.h"
 
 @interface AKContactDetailViewCell ()
@@ -123,7 +122,7 @@
     }
     else
     {
-      label = [[AKLabelViewController defaultLocalizedLabelForABPropertyID: self.abPropertyID] lowercaseString];
+      label = [[AKRecord defaultLocalizedLabelForABPropertyID: self.abPropertyID] lowercaseString];
     }
 
     [self.textField setKeyboardType: (self.abPropertyID == kABPersonPhoneProperty) ? UIKeyboardTypePhonePad : UIKeyboardTypeDefault];
@@ -168,7 +167,7 @@
     }
     else
     {
-      label = [[AKLabelViewController defaultLocalizedLabelForABPropertyID: self.abPropertyID] lowercaseString];
+      label = [[AKRecord defaultLocalizedLabelForABPropertyID: self.abPropertyID] lowercaseString];
       placeholder = [AKContact localizedNameForProperty: self.abPropertyID];
     }
     [self.textField setInputView: [self datePickerInputViewWithDate: (date) ? date : [NSDate date]]];
@@ -188,7 +187,7 @@
     }
     else
     {
-      label = [[AKLabelViewController defaultLocalizedLabelForABPropertyID: self.abPropertyID] lowercaseString];
+      label = [[AKRecord defaultLocalizedLabelForABPropertyID: self.abPropertyID] lowercaseString];
     }
   }
   else if (self.abPropertyID == kABPersonInstantMessageProperty)
@@ -205,7 +204,7 @@
     }
     else
     {
-      label = [[AKLabelViewController defaultLocalizedLabelForABPropertyID: self.abPropertyID] lowercaseString];
+      label = [[AKRecord defaultLocalizedLabelForABPropertyID: self.abPropertyID] lowercaseString];
     }
   }
 
