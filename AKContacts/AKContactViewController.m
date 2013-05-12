@@ -492,7 +492,7 @@ static const float defaultCellHeight = 44.f;
       {
         NSArray *identifiers = [self.contact identifiersForProperty: property];
         NSInteger identifier = [[identifiers objectAtIndex: indexPath.row] integerValue];
-        [self.contact setValue: nil forMultiValueProperty: property andIdentifier: &identifier];
+        [self.contact setValue: nil  andLabel: nil forMultiValueProperty: property andIdentifier: &identifier];
         break;
       }
       case kSectionBirthday:
@@ -522,8 +522,17 @@ static const float defaultCellHeight = 44.f;
       }
       else
       {
+        AKLabelViewCompletionHandler handler = ^(ABPropertyID property, NSInteger identifier, NSString *label){
+          
+          
+          
+        };
         ABPropertyID property = [AKContactViewController abPropertyIDforSection: section];
-        AKLabelViewController *labelView = [[AKLabelViewController alloc] initWithPropertyID: property];
+        NSArray *identifiers = [self.contact identifiersForProperty: property];
+        NSInteger identifier = (indexPath.row < [identifiers count]) ? [[identifiers objectAtIndex: indexPath.row] integerValue] : NSNotFound;
+        NSString *label = (identifier != NSNotFound) ? [self.contact labelForMultiValueProperty: property andIdentifier: identifier] : [AKLabelViewController defaultLabelForABPropertyID: property];
+    
+        AKLabelViewController *labelView = [[AKLabelViewController alloc] initWithPropertyID: property andIdentifier: identifier andSelectedLabel: label andCompletionHandler: handler];
         UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: labelView];
 
         if ([self.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
