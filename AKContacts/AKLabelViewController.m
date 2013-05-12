@@ -32,75 +32,208 @@
 @interface AKLabelViewController () <UITableViewDataSource, UITableViewDelegate>
 
 @property (nonatomic, strong) UITableView *tableView;
-@property (nonatomic, strong) NSMutableArray *dataSource;
+@property (nonatomic, strong) NSMutableArray *labels;
+@property (nonatomic, assign) ABPropertyID property;
+@property (nonatomic, assign) NSInteger identifier;
+@property (nonatomic, copy) AKLabelViewCompletionHandler handler;
+@property (nonatomic, copy) NSString *selectedLabel;
 
 @end
 
 @implementation AKLabelViewController
 
--(id)initWithPropertyID: (ABPropertyID)property
++ (NSString *)defaultLabelForABPropertyID: (ABPropertyID)property
+{
+  if (property == kABPersonPhoneProperty)
+  {
+    return (__bridge NSString *)(kABPersonPhoneMobileLabel);
+  }
+  else if (property == kABPersonEmailProperty)
+  {
+    return (__bridge NSString *)(kABWorkLabel);
+  }
+  else if (property == kABPersonAddressProperty)
+  {
+    return (__bridge NSString *)(kABHomeLabel);
+  }
+  else if (property == kABPersonURLProperty)
+  {
+    return (__bridge NSString *)(kABPersonHomePageLabel);
+  }
+  else if (property == kABPersonDateProperty)
+  {
+    return (__bridge NSString *)(kABPersonAnniversaryLabel);
+  }
+  else if (property == kABPersonRelatedNamesProperty)
+  {
+    return (__bridge NSString *)(kABPersonMotherLabel);
+  }
+  else if (property == kABPersonSocialProfileProperty)
+  {
+    return (__bridge NSString *)(kABPersonSocialProfileServiceFacebook);
+  }
+  else
+  {
+    return (__bridge NSString *)(kABOtherLabel);
+  }
+}
+
++ (NSString *)defaultLocalizedLabelForABPropertyID: (ABPropertyID)property
+{
+  NSString *defaultLabel = [AKLabelViewController defaultLabelForABPropertyID: property];
+  return CFBridgingRelease(ABAddressBookCopyLocalizedLabel((__bridge CFStringRef)(defaultLabel)));
+}
+
+- (id)initWithPropertyID: (ABPropertyID)property andIdentifier: (NSInteger)identifier andSelectedLabel: (NSString *)selectedLabel andCompletionHandler: (AKLabelViewCompletionHandler)handler
 {
   self = [self init];
   if (self)
   {
-    NSString *home = CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABHomeLabel));
-    NSString *work = CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABWorkLabel));
-    NSString *other = CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABOtherLabel));
-
-    self.dataSource = [[NSMutableArray alloc] init];
+    self.property = property;
+    self.identifier = identifier;
+    self.handler = handler;
+    self.selectedLabel = selectedLabel;
     
+    self.labels = [[NSMutableArray alloc] init];
+    NSMutableArray *standardLabels = [[NSMutableArray alloc] init];
+    [self.labels addObject: standardLabels];
+
+    NSArray *label = nil;
+    CFStringRef abLabel = NULL;
     if (property == kABPersonPhoneProperty)
     {
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonPhoneMobileLabel))];
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonPhoneIPhoneLabel))];
-      [self.dataSource addObject: home];
-      [self.dataSource addObject: work];
-      [self.dataSource addObject: other];
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonPhoneMainLabel))];
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonPhoneHomeFAXLabel))];
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonPhoneWorkFAXLabel))];
+      abLabel = kABPersonPhoneMobileLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonPhoneIPhoneLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABHomeLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABWorkLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABOtherLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonPhoneMainLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonPhoneHomeFAXLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonPhoneWorkFAXLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
       if ((SYSTEM_VERSION_GREATER_THAN(@"5.0")))
       {
-        [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonPhoneOtherFAXLabel))];
+        abLabel = kABPersonPhoneOtherFAXLabel;
+        label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+        [standardLabels addObject: label];
       }
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonPhonePagerLabel))];
+      abLabel = kABPersonPhonePagerLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
     }
     else if (property == kABPersonURLProperty)
     {
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonHomePageLabel))];
-      [self.dataSource addObject: home];
-      [self.dataSource addObject: work];
-      [self.dataSource addObject: other];
+      abLabel = kABPersonHomePageLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABHomeLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABWorkLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABOtherLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
     }
     else if (property == kABPersonDateProperty)
     {
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonAnniversaryLabel))];
-      [self.dataSource addObject: other];
+      abLabel = kABPersonAnniversaryLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABOtherLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+    }
+    else if (property == kABPersonSocialProfileProperty)
+    {
+      abLabel = kABPersonSocialProfileServiceFacebook;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonSocialProfileServiceTwitter;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonSocialProfileServiceFlickr;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonSocialProfileServiceLinkedIn;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonSocialProfileServiceMyspace;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonSocialProfileServiceSinaWeibo;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
     }
     else if (property == kABPersonRelatedNamesProperty)
     {
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonMotherLabel))];
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonFatherLabel))];
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonParentLabel))];
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonBrotherLabel))];
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonSisterLabel))];
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonChildLabel))];
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonFriendLabel))];
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonSpouseLabel))];
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonPartnerLabel))];
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonAssistantLabel))];
-      [self.dataSource addObject: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABPersonManagerLabel))];
-      [self.dataSource addObject: other];
+      abLabel = kABPersonMotherLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonFatherLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonParentLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonBrotherLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonSisterLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonChildLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonFriendLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonSpouseLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonParentLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonAssistantLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABPersonManagerLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABOtherLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
     }
     else
     {
-      [self.dataSource addObject: home];
-      [self.dataSource addObject: work];
-      [self.dataSource addObject: other];
+      abLabel = kABHomeLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABWorkLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
+      abLabel = kABOtherLabel;
+      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      [standardLabels addObject: label];
     }
   }
   return self;
- 
 }
 
 - (void)viewDidLoad
@@ -142,14 +275,12 @@
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-  NSInteger ret = 1;
-  
-  return ret;
+  return [self.labels count];
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-  return [self.dataSource count];
+  return [[self.labels objectAtIndex: section] count];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -161,7 +292,18 @@
     cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
   }
 
-  [cell.textLabel setText: [self.dataSource objectAtIndex: indexPath.row]];
+  NSString *label = [[[self.labels objectAtIndex: indexPath.section] objectAtIndex: indexPath.row] objectAtIndex: 0];
+  [cell.textLabel setText: label];
+
+  NSString *abLabel = (NSString *)([[[self.labels objectAtIndex: indexPath.section] objectAtIndex: indexPath.row] objectAtIndex: 1]);
+  if ([abLabel compare: self.selectedLabel] == NSOrderedSame)
+  {
+    [cell setAccessoryType: UITableViewCellAccessoryCheckmark];
+  }
+  else
+  {
+    [cell setAccessoryType: UITableViewCellAccessoryNone];
+  }
 
   return (UITableViewCell *)cell;
 }
@@ -198,6 +340,11 @@
   {
     UITableViewCell *cell = [tableView cellForRowAtIndexPath: indexPath];
     [cell setAccessoryType: UITableViewCellAccessoryCheckmark];
+
+    NSString *abLabel = (NSString *)([[[self.labels objectAtIndex: indexPath.section] objectAtIndex: indexPath.row] objectAtIndex: 1]);
+
+    if (self.handler) self.handler(self.property, self.identifier, abLabel);
+
     double delayInSeconds = 0.3;
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
     dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
