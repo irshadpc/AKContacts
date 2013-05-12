@@ -33,9 +33,6 @@
 
 typedef void (^AKLabelViewCompletionHandler)(ABPropertyID property, NSInteger identifier, NSString *label);
 
-+ (NSString *)defaultLabelForABPropertyID: (ABPropertyID)property;
-+ (NSString *)defaultLocalizedLabelForABPropertyID: (ABPropertyID)property;
-
 - (id)initWithPropertyID: (ABPropertyID)property andIdentifier: (NSInteger)identifier andSelectedLabel: (NSString *)selectedLabel andCompletionHandler: (AKLabelViewCompletionHandler)handler;
 
 @end

@@ -42,48 +42,6 @@
 
 @implementation AKLabelViewController
 
-+ (NSString *)defaultLabelForABPropertyID: (ABPropertyID)property
-{
-  if (property == kABPersonPhoneProperty)
-  {
-    return (__bridge NSString *)(kABPersonPhoneMobileLabel);
-  }
-  else if (property == kABPersonEmailProperty)
-  {
-    return (__bridge NSString *)(kABWorkLabel);
-  }
-  else if (property == kABPersonAddressProperty)
-  {
-    return (__bridge NSString *)(kABHomeLabel);
-  }
-  else if (property == kABPersonURLProperty)
-  {
-    return (__bridge NSString *)(kABPersonHomePageLabel);
-  }
-  else if (property == kABPersonDateProperty)
-  {
-    return (__bridge NSString *)(kABPersonAnniversaryLabel);
-  }
-  else if (property == kABPersonRelatedNamesProperty)
-  {
-    return (__bridge NSString *)(kABPersonMotherLabel);
-  }
-  else if (property == kABPersonSocialProfileProperty)
-  {
-    return (__bridge NSString *)(kABPersonSocialProfileServiceFacebook);
-  }
-  else
-  {
-    return (__bridge NSString *)(kABOtherLabel);
-  }
-}
-
-+ (NSString *)defaultLocalizedLabelForABPropertyID: (ABPropertyID)property
-{
-  NSString *defaultLabel = [AKLabelViewController defaultLabelForABPropertyID: property];
-  return CFBridgingRelease(ABAddressBookCopyLocalizedLabel((__bridge CFStringRef)(defaultLabel)));
-}
-
 - (id)initWithPropertyID: (ABPropertyID)property andIdentifier: (NSInteger)identifier andSelectedLabel: (NSString *)selectedLabel andCompletionHandler: (AKLabelViewCompletionHandler)handler
 {
   self = [self init];

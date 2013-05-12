@@ -55,6 +55,48 @@ NSString *const kLabel = @"Label";
 
 #pragma mark - Class methods
 
++ (NSString *)defaultLabelForABPropertyID: (ABPropertyID)property
+{
+  if (property == kABPersonPhoneProperty)
+  {
+    return (__bridge NSString *)(kABPersonPhoneMobileLabel);
+  }
+  else if (property == kABPersonEmailProperty)
+  {
+    return (__bridge NSString *)(kABWorkLabel);
+  }
+  else if (property == kABPersonAddressProperty)
+  {
+    return (__bridge NSString *)(kABHomeLabel);
+  }
+  else if (property == kABPersonURLProperty)
+  {
+    return (__bridge NSString *)(kABPersonHomePageLabel);
+  }
+  else if (property == kABPersonDateProperty)
+  {
+    return (__bridge NSString *)(kABPersonAnniversaryLabel);
+  }
+  else if (property == kABPersonRelatedNamesProperty)
+  {
+    return (__bridge NSString *)(kABPersonMotherLabel);
+  }
+  else if (property == kABPersonSocialProfileProperty)
+  {
+    return (__bridge NSString *)(kABPersonSocialProfileServiceFacebook);
+  }
+  else
+  {
+    return (__bridge NSString *)(kABOtherLabel);
+  }
+}
+
++ (NSString *)defaultLocalizedLabelForABPropertyID: (ABPropertyID)property
+{
+  NSString *defaultLabel = [AKRecord defaultLabelForABPropertyID: property];
+  return CFBridgingRelease(ABAddressBookCopyLocalizedLabel((__bridge CFStringRef)(defaultLabel)));
+}
+
 + (NSString *)localizedNameForLabel: (CFStringRef)label
 {
   return (NSString *)CFBridgingRelease(ABAddressBookCopyLocalizedLabel(label));
@@ -241,35 +283,15 @@ NSString *const kLabel = @"Label";
 
 - (NSString *)localizedLabelForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier
 {
-  if (self.recordRef == nil && self.recordID < 0) return nil; // Lazy init of recordRef
-  
-  __block NSString *ret = nil;
-  
-  dispatch_block_t block = ^{
-    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(_recordRef, property);
-    if (multiValueRecord)
-    {
-      CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
-      if (index != -1)
-      {
-        CFStringRef label = ABMultiValueCopyLabelAtIndex(multiValueRecord, index);
-        if (label)
-        {
-          ret = (NSString *)CFBridgingRelease(ABAddressBookCopyLocalizedLabel(label));
-          CFRelease(label);
-        }
-        else
-        {
-          ret = (NSString *)CFBridgingRelease(ABAddressBookCopyLocalizedLabel(kABOtherLabel));
-        }
-      }
-      CFRelease(multiValueRecord);
-    }
-  };
-  
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
-  else dispatch_sync(dispatch_get_main_queue(), block);
-  
+  NSString *ret = [self labelForMultiValueProperty: property andIdentifier: identifier];
+  if (ret == nil)
+  {
+    ret = [AKRecord defaultLocalizedLabelForABPropertyID: property];
+  }
+  else
+  {
+    ret = (NSString *)CFBridgingRelease(ABAddressBookCopyLocalizedLabel((__bridge CFStringRef)(ret)));
+  }
   return ret;
 }
 
