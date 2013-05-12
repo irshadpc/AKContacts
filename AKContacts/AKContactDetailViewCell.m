@@ -29,6 +29,7 @@
 #import "AKContactDetailViewCell.h"
 #import "AKContact.h"
 #import "AKContactViewController.h"
+#import "AKLabelViewController.h"
 #import "AKAddressBook.h"
 
 @interface AKContactDetailViewCell ()
@@ -118,11 +119,11 @@
       [self setIdentifier: [[identifiers objectAtIndex: row] integerValue]];
       
       text = [contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
-      label = [contact labelForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
+      label = [contact localizedLabelForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
     }
     else
     {
-      label = [[AKContact localizedNameForLabel: kABOtherLabel] lowercaseString];
+      label = [[AKLabelViewController defaultLocalizedLabelForABPropertyID: self.abPropertyID] lowercaseString];
     }
 
     [self.textField setKeyboardType: (self.abPropertyID == kABPersonPhoneProperty) ? UIKeyboardTypePhonePad : UIKeyboardTypeDefault];
@@ -161,13 +162,13 @@
       text = (date) ? [NSDateFormatter localizedStringFromDate: date
                                                      dateStyle: NSDateFormatterLongStyle
                                                      timeStyle: NSDateFormatterNoStyle] : nil;
-      label = [contact labelForMultiValueProperty: kABPersonDateProperty andIdentifier: self.identifier];
+      label = [contact localizedLabelForMultiValueProperty: kABPersonDateProperty andIdentifier: self.identifier];
 
       [self setSelectionStyle: UITableViewCellSelectionStyleNone];
     }
     else
     {
-      label = [[AKContact localizedNameForLabel: kABOtherLabel] lowercaseString];
+      label = [[AKLabelViewController defaultLocalizedLabelForABPropertyID: self.abPropertyID] lowercaseString];
       placeholder = [AKContact localizedNameForProperty: self.abPropertyID];
     }
     [self.textField setInputView: [self datePickerInputViewWithDate: (date) ? date : [NSDate date]]];
@@ -187,7 +188,7 @@
     }
     else
     {
-      label = [AKContact localizedNameForLabel: kABPersonSocialProfileServiceFacebook];
+      label = [[AKLabelViewController defaultLocalizedLabelForABPropertyID: self.abPropertyID] lowercaseString];
     }
   }
   else if (self.abPropertyID == kABPersonInstantMessageProperty)
@@ -204,7 +205,7 @@
     }
     else
     {
-      label = [[AKContact localizedNameForLabel: kABPersonInstantMessageServiceSkype] lowercaseString];
+      label = [[AKLabelViewController defaultLocalizedLabelForABPropertyID: self.abPropertyID] lowercaseString];
     }
   }
 
@@ -272,7 +273,7 @@
   {
     NSInteger identifier = self.identifier;
     NSString *value = ([textField.text length] > 0) ? textField.text : nil;
-    [contact setValue: value forMultiValueProperty: self.abPropertyID andIdentifier: &identifier];
+    [contact setValue: value andLabel: nil forMultiValueProperty: self.abPropertyID andIdentifier: &identifier];
     if (identifier != self.identifier)
     {
       [self setIdentifier: identifier];
@@ -395,7 +396,7 @@
     else if (self.abPropertyID == kABPersonDateProperty)
     {
       NSInteger identifier = self.identifier;
-      [contact setValue: datePicker.date forMultiValueProperty: kABPersonDateProperty andIdentifier: &identifier];
+      [contact setValue: datePicker.date andLabel: nil forMultiValueProperty: kABPersonDateProperty andIdentifier: &identifier];
     }
   }
   else if (button.tag == UIBarButtonSystemItemCancel)
