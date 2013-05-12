@@ -66,16 +66,16 @@
 - (NSArray *)identifiersForProperty: (ABPropertyID) property;
 
 /**
- * Return a value for an idenfifier from an ABMultiValue type
+ * Return a value of an idenfifier for an ABMultiValue type
  * Return type can be NSString, NSDate, NSDictionary
  **/
 - (id)valueForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier;
-- (void)setValue: (id)value forMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger *)identifier;
-
 /**
- * Return a label for an identifier from an ABMultiValue type
+ * Return a label of an identifier for an ABMultiValue type
  **/
-- (NSString*)labelForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier;
-//- (void)setLabelForMultiValueProperty: (ABPropertyID)propoerty;
+- (NSString *)labelForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier;
+- (NSString *)localizedLabelForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier;
+
+- (void)setValue: (id)value andLabel: (NSString *)label forMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger *)identifier;
 
 @end

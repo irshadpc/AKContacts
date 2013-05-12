@@ -227,6 +227,31 @@ NSString *const kLabel = @"Label";
       CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
       if (index != -1)
       {
+        ret = (NSString *)CFBridgingRelease(ABMultiValueCopyLabelAtIndex(multiValueRecord, index));
+      }
+      CFRelease(multiValueRecord);
+    }
+  };
+  
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
+  
+  return ret;
+}
+
+- (NSString *)localizedLabelForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier
+{
+  if (self.recordRef == nil && self.recordID < 0) return nil; // Lazy init of recordRef
+  
+  __block NSString *ret = nil;
+  
+  dispatch_block_t block = ^{
+    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(_recordRef, property);
+    if (multiValueRecord)
+    {
+      CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
+      if (index != -1)
+      {
         CFStringRef label = ABMultiValueCopyLabelAtIndex(multiValueRecord, index);
         if (label)
         {
@@ -248,7 +273,7 @@ NSString *const kLabel = @"Label";
   return ret;
 }
 
-- (void)setValue: (id)value forMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger *)identifier
+- (void)setValue: (id)value andLabel: (NSString *)label forMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger *)identifier
 {
   if (self.recordRef == nil && self.recordID < 0) return; // Lazy init of recordRef
   
@@ -278,11 +303,12 @@ NSString *const kLabel = @"Label";
         else
         {
           didChange = ABMultiValueReplaceValueAtIndex(mutableRecord, (__bridge CFTypeRef)(value), index);
+          ABMultiValueReplaceLabelAtIndex(mutableRecord, (__bridge CFStringRef)(label), index);
         }
       }
       else
       {
-        didChange = ABMultiValueAddValueAndLabel(mutableRecord, (__bridge CFTypeRef)(value), kABPersonPhoneMobileLabel, identifier);
+        didChange = ABMultiValueAddValueAndLabel(mutableRecord, (__bridge CFTypeRef)(value), (__bridge CFStringRef)(label), identifier);
       }
       if (didChange == YES)
       {
