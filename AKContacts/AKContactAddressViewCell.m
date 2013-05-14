@@ -32,7 +32,7 @@
 #import "AKAddressBook.h"
 
 typedef NS_ENUM(NSInteger, AddressTag) {
-  kAddressStreet = 256,
+  kAddressStreet = 1<<8,
   kAddressCity,
   kAddressState,
   kAddressZIP,
@@ -40,7 +40,7 @@ typedef NS_ENUM(NSInteger, AddressTag) {
 };
 
 typedef NS_ENUM(NSInteger, SeparatorTag) {
-  kVertical1 = 512,
+  kVertical1 = 1<<9,
   kVertical2,
   kHorizontal1,
   kHorizontal2,
@@ -53,10 +53,6 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 @end
 
 @implementation AKContactAddressViewCell
-
-@synthesize identifier = _identifier;
-
-@synthesize parent = _parent;
 
 -(id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
@@ -261,16 +257,20 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   {
     NSDictionary *newAddress = [[NSDictionary alloc] initWithObjectsAndKeys: textField.text, key, nil];
     NSInteger identifier = self.identifier;
-    [contact setValue: newAddress andLabel: nil forMultiValueProperty: kABPersonAddressProperty andIdentifier: &identifier];
+    NSString *label = [AKContact defaultLabelForABPropertyID: kABPersonAddressProperty];
+    [contact setValue: newAddress andLabel: label forMultiValueProperty: kABPersonAddressProperty andIdentifier: &identifier];
     [self setIdentifier: identifier];
     address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.identifier];
   }
-
-  NSMutableDictionary *mutableAddress = [address mutableCopy];
-  [mutableAddress setObject: textField.text forKey: key];
-  address = [mutableAddress copy];
-  NSInteger identifier = self.identifier;
-  [contact setValue: address andLabel: nil forMultiValueProperty: kABPersonAddressProperty andIdentifier: &identifier];
+  else
+  {
+    NSMutableDictionary *mutableAddress = [address mutableCopy];
+    [mutableAddress setObject: textField.text forKey: key];
+    address = [mutableAddress copy];
+    NSInteger identifier = self.identifier;
+    NSString *label = [contact labelForMultiValueProperty: kABPersonAddressProperty andIdentifier: identifier];
+    [contact setValue: address andLabel: label forMultiValueProperty: kABPersonAddressProperty andIdentifier: &identifier];
+  }
 }
 
 -(BOOL)textFieldShouldReturn:(UITextField *)textField
