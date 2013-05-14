@@ -35,7 +35,7 @@
   
 }
 
-@property (nonatomic) AKContactViewController *parent;
+@property (nonatomic, strong) AKContactViewController *parent;
 
 -(void)configureCellForProperty: (ABPropertyID)property atRow: (NSInteger)row;
 

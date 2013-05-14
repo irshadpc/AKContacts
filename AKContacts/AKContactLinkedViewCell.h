@@ -32,7 +32,7 @@
 
 @interface AKContactLinkedViewCell : UITableViewCell
 
-@property (nonatomic) AKContactViewController *parent;
+@property (nonatomic, strong) AKContactViewController *parent;
 
 -(void)configureCellAtRow:(NSInteger)row;
 
