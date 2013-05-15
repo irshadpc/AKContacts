@@ -29,8 +29,5 @@
 #import <UIKit/UIKit.h>
 
 @interface AKContactsViewController : UIViewController
-{
-
-}
 
 @end

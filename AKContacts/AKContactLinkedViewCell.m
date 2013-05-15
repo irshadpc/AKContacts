@@ -50,7 +50,7 @@
     // Configure the view for the selected state
 }
 
--(void)configureCellAtRow:(NSInteger)row
+- (void)configureCellAtRow:(NSInteger)row
 {
   [self.textLabel setText: nil];
   [self.detailTextLabel setText: nil];
