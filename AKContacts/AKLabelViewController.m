@@ -165,9 +165,6 @@
       abLabel = kABPersonSpouseLabel;
       label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
       [standardLabels addObject: label];
-      abLabel = kABPersonParentLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
-      [standardLabels addObject: label];
       abLabel = kABPersonAssistantLabel;
       label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
       [standardLabels addObject: label];
@@ -296,10 +293,10 @@
   }
   else
   {
-    UITableViewCell *cell = [tableView cellForRowAtIndexPath: indexPath];
-    [cell setAccessoryType: UITableViewCellAccessoryCheckmark];
-
     NSString *abLabel = (NSString *)([[[self.labels objectAtIndex: indexPath.section] objectAtIndex: indexPath.row] objectAtIndex: 1]);
+    [self setSelectedLabel: abLabel];
+    
+    [self.tableView reloadData];
 
     if (self.handler) self.handler(self.property, self.identifier, abLabel);
 
