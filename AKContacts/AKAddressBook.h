@@ -40,24 +40,27 @@ FOUNDATION_EXPORT const BOOL ShowGroups;
 @class AKGroup;
 @class AKSource;
 
-typedef enum {
+typedef NS_ENUM(NSInteger, AddressBookStatus)
+{
   kAddressBookOffline = 0,
   kAddressBookInitializing,
   kAddressBookLoading,
   kAddressBookOnline
-} AddressBookStatus;
+};
 
-typedef enum {
+typedef NS_ENUM(NSInteger, SourceTypes)
+{
   kSourceAggregate = -1,
-} Sources;
+};
 
 /**
  * Add custom groups with negative IDs to avoid 
  * ID collision with groups from address book
  **/
-typedef enum {
+typedef NS_ENUM(NSInteger, GroupTypes)
+{
   kGroupAggregate = -1,
-} Groups;
+};
 
 @protocol AKAddressBookDelegate <NSObject>
 - (void)setProgress: (CGFloat)progress;
