@@ -31,9 +31,7 @@
 
 @class AKContactViewController;
 
-@interface AKContactAddressViewCell : UITableViewCell <UITextFieldDelegate> {
-  
-}
+@interface AKContactAddressViewCell : UITableViewCell <UITextFieldDelegate> 
 
 @property (nonatomic, strong) AKContactViewController *parent;
 

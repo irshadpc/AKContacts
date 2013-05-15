@@ -30,9 +30,7 @@
 
 @class AKContactViewController;
 
-@interface AKContactButtonsViewCell : UITableViewCell {
-  
-}
+@interface AKContactButtonsViewCell : UITableViewCell 
 
 @property (nonatomic, strong) AKContactViewController *parent;
 

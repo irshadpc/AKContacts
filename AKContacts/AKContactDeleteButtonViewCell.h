@@ -31,9 +31,7 @@
 
 @class AKContactViewController;
 
-@interface AKContactDeleteButtonViewCell : UITableViewCell {
-  
-}
+@interface AKContactDeleteButtonViewCell : UITableViewCell 
 
 @property (nonatomic, strong) AKContactViewController *parent;
 

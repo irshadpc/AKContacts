@@ -31,9 +31,7 @@
 
 @class AKContactViewController;
 
-@interface AKContactSwitchViewCell : UITableViewCell {
-  
-}
+@interface AKContactSwitchViewCell : UITableViewCell 
 
 @property (nonatomic, strong) AKContactViewController *parent;
 
