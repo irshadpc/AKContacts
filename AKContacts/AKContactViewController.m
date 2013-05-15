@@ -519,26 +519,14 @@ static const float defaultCellHeight = 44.f;
           [self setWillAddAddress: YES];
           [self.tableView reloadRowsAtIndexPaths: [NSArray arrayWithObject: indexPath] withRowAnimation: UITableViewRowAnimationBottom];
         }
+        else
+        {
+          [self showLabelPickerModalViewForIndexPath: indexPath];
+        }
       }
       else
       {
-        AKLabelViewCompletionHandler handler = ^(ABPropertyID property, NSInteger identifier, NSString *label){
-          
-          
-          
-        };
-        ABPropertyID property = [AKContactViewController abPropertyIDforSection: section];
-        NSArray *identifiers = [self.contact identifiersForProperty: property];
-        NSInteger identifier = (indexPath.row < [identifiers count]) ? [[identifiers objectAtIndex: indexPath.row] integerValue] : NSNotFound;
-        NSString *label = (identifier != NSNotFound) ? [self.contact labelForMultiValueProperty: property andIdentifier: identifier] : [AKRecord defaultLabelForABPropertyID: property];
-    
-        AKLabelViewController *labelView = [[AKLabelViewController alloc] initWithPropertyID: property andIdentifier: identifier andSelectedLabel: label andCompletionHandler: handler];
-        UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: labelView];
-
-        if ([self.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
-          [self.navigationController presentViewController: navigationController animated: YES completion: nil];
-        else
-          [self.navigationController presentModalViewController: navigationController animated: YES];
+        [self showLabelPickerModalViewForIndexPath: indexPath];
       }
     }
   }
@@ -605,6 +593,48 @@ static const float defaultCellHeight = 44.f;
     }
   }
   [self.tableView deselectRowAtIndexPath: indexPath animated: YES];
+}
+
+- (void)showLabelPickerModalViewForIndexPath: (NSIndexPath *)indexPath
+{
+  NSInteger section = [[self.sections objectAtIndex: indexPath.section] integerValue];
+  
+  ABPropertyID property = [AKContactViewController abPropertyIDforSection: section];
+  NSArray *identifiers = [self.contact identifiersForProperty: property];
+  NSInteger identifier = (indexPath.row < [identifiers count]) ? [[identifiers objectAtIndex: indexPath.row] integerValue] : NSNotFound;
+  
+  AKLabelViewCompletionHandler handler = ^(ABPropertyID property, NSInteger identifier, NSString *label){
+    
+    id value = [self.contact valueForMultiValueProperty: property andIdentifier: identifier];
+    if (value == nil)
+    {
+        if (property == kABPersonAddressProperty)
+          value = [[NSDictionary alloc] init];
+        else if (property == kABPersonDateProperty)
+          value = [NSDate date];
+        else
+          value = @"";
+    }
+    [self.contact setValue: value andLabel: label forMultiValueProperty: property andIdentifier: &identifier];
+    
+    NSString *lab = [self.contact labelForMultiValueProperty: property andIdentifier: identifier];
+    NSLog(@"%@", lab);
+    
+    UITableViewCell *cell = [self.tableView cellForRowAtIndexPath: indexPath];
+    [cell setTag: identifier];
+    [cell.textLabel setText: [self.contact localizedLabelForMultiValueProperty: property andIdentifier: identifier]];
+  };
+
+  NSString *label = (identifier != NSNotFound) ? [self.contact labelForMultiValueProperty: property andIdentifier: identifier] : [AKRecord defaultLabelForABPropertyID: property];
+  
+  AKLabelViewController *labelView = [[AKLabelViewController alloc] initWithPropertyID: property andIdentifier: identifier andSelectedLabel: label andCompletionHandler: handler];
+  UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: labelView];
+  
+  if ([self.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
+    [self.navigationController presentViewController: navigationController animated: YES completion: nil];
+  else
+    [self.navigationController presentModalViewController: navigationController animated: YES];
+
 }
 
 #pragma mark - Button Delegate Methods
