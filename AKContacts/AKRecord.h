@@ -29,9 +29,7 @@
 #import <Foundation/Foundation.h>
 #import <AddressBook/AddressBook.h>
 
-@interface AKRecord : NSObject {
-
-}
+@interface AKRecord : NSObject
 
 @property (assign, nonatomic) ABRecordRef recordRef;
 @property (assign, nonatomic) ABRecordID recordID;

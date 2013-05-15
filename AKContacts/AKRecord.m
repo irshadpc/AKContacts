@@ -30,28 +30,11 @@
 #import "AKAddressBook.h"
 #import "AKContact.h"
 
-NSString *const kIdentifier = @"Identifier";
-NSString *const kValue = @"Value";
-NSString *const kLabel = @"Label";
-
 @interface AKRecord ()
-
-@property (nonatomic, strong) NSMutableDictionary *createDict;
-@property (nonatomic, strong) NSMutableDictionary *updateDict;
-@property (nonatomic, strong) NSMutableDictionary *deleteDict;
 
 @end
 
-
 @implementation AKRecord
-
-@synthesize createDict = _createDict;
-@synthesize updateDict = _updateDict;
-@synthesize deleteDict = _deleteDict;
-
-@synthesize recordRef = _recordRef;
-@synthesize recordID = _recordID;
-@synthesize age = _age;
 
 #pragma mark - Class methods
 
@@ -263,6 +246,7 @@ NSString *const kLabel = @"Label";
   __block NSString *ret = nil;
   
   dispatch_block_t block = ^{
+
     ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(_recordRef, property);
     if (multiValueRecord)
     {
@@ -270,6 +254,10 @@ NSString *const kLabel = @"Label";
       if (index != -1)
       {
         ret = (NSString *)CFBridgingRelease(ABMultiValueCopyLabelAtIndex(multiValueRecord, index));
+      }
+      else
+      {
+        ret = [AKRecord defaultLabelForABPropertyID: property];
       }
       CFRelease(multiValueRecord);
     }
@@ -286,7 +274,7 @@ NSString *const kLabel = @"Label";
   NSString *ret = [self labelForMultiValueProperty: property andIdentifier: identifier];
   if (ret == nil)
   {
-    ret = [AKRecord defaultLocalizedLabelForABPropertyID: property];
+      ret = [AKRecord defaultLocalizedLabelForABPropertyID: property];
   }
   else
   {
