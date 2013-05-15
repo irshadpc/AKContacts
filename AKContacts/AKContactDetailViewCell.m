@@ -34,7 +34,6 @@
 @interface AKContactDetailViewCell ()
 
 @property (nonatomic, assign) ABPropertyID abPropertyID;
-@property (nonatomic, assign) NSInteger identifier;
 @property (nonatomic, strong) UITextField *textField;
 @property (nonatomic, strong) UITextView *textView;
 @property (nonatomic, strong) UIView *separator;
@@ -47,14 +46,6 @@
 @end
 
 @implementation AKContactDetailViewCell
-
-@synthesize abPropertyID = _abPropertyID;
-@synthesize identifier = _identifier;
-@synthesize textField = _textField;
-@synthesize textView = _textView;
-@synthesize separator = _separator;
-
-@synthesize parent;
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
@@ -91,13 +82,13 @@
 - (void)configureCellForProperty:(ABPropertyID)property atRow:(NSInteger)row
 {
   [self setAbPropertyID: property];
-  [self setIdentifier: NSNotFound];
+  [self setTag: NSNotFound];
   [self.textLabel setText: nil];
   [self.detailTextLabel setText: nil];
   [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
   [self.textField setInputView: nil];
   [self.textField setInputAccessoryView: nil];
-
+  
   AKContact *contact = self.parent.contact;
 
   NSString *text = nil;
@@ -112,24 +103,17 @@
       self.abPropertyID == kABPersonEmailProperty ||
       self.abPropertyID == kABPersonURLProperty)
   {
-    if (row < [contact countForProperty: self.abPropertyID])
-    {
-      NSArray *identifiers = [contact identifiersForProperty: self.abPropertyID];
-      [self setIdentifier: [[identifiers objectAtIndex: row] integerValue]];
+    NSArray *identifiers = [contact identifiersForProperty: self.abPropertyID];
+    [self setTag: (row < [contact countForProperty: self.abPropertyID]) ? [[identifiers objectAtIndex: row] integerValue] : NSNotFound];
       
-      text = [contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
-      label = [contact localizedLabelForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
-    }
-    else
-    {
-      label = [[AKRecord defaultLocalizedLabelForABPropertyID: self.abPropertyID] lowercaseString];
-    }
+    text = [contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.tag];
+    label = [contact localizedLabelForMultiValueProperty: self.abPropertyID andIdentifier: self.tag];
 
     [self.textField setKeyboardType: (self.abPropertyID == kABPersonPhoneProperty) ? UIKeyboardTypePhonePad : UIKeyboardTypeDefault];
   }
   else if (self.abPropertyID == kABPersonNoteProperty)
   {
-    label = [[AKContact localizedNameForProperty: self.abPropertyID] lowercaseString];
+    label = [AKContact localizedNameForProperty: self.abPropertyID];
 
     text =  [contact valueForProperty: kABPersonNoteProperty];
     [self.textView setText: text];
@@ -142,7 +126,7 @@
     text = (date) ? [NSDateFormatter localizedStringFromDate: date
                                                    dateStyle: NSDateFormatterLongStyle
                                                    timeStyle: NSDateFormatterNoStyle] : nil;
-    label = [[AKContact localizedNameForProperty: self.abPropertyID] lowercaseString];
+    label = [AKContact localizedNameForProperty: self.abPropertyID];
 
     [self.textField setInputView: [self datePickerInputViewWithDate: (date) ? date : [NSDate date]]];
     [self.textField setInputAccessoryView: [self datePickerInputAccessoryView]];
@@ -152,66 +136,47 @@
   else if (self.abPropertyID == kABPersonDateProperty)
   {
     NSDate *date = nil;
-    if (row < [contact countForProperty: kABPersonDateProperty])
-    {
-      NSArray *identifiers = [contact identifiersForProperty: self.abPropertyID];
-      [self setIdentifier: [[identifiers objectAtIndex: row] integerValue]];
+    
+    NSArray *identifiers = [contact identifiersForProperty: self.abPropertyID];
+    [self setTag: (row < [contact countForProperty: kABPersonDateProperty]) ? [[identifiers objectAtIndex: row] integerValue] : NSNotFound];
 
-      date = (NSDate *)[contact valueForMultiValueProperty: kABPersonDateProperty andIdentifier: self.identifier];
-      text = (date) ? [NSDateFormatter localizedStringFromDate: date
-                                                     dateStyle: NSDateFormatterLongStyle
-                                                     timeStyle: NSDateFormatterNoStyle] : nil;
-      label = [contact localizedLabelForMultiValueProperty: kABPersonDateProperty andIdentifier: self.identifier];
+    date = (NSDate *)[contact valueForMultiValueProperty: kABPersonDateProperty andIdentifier: self.tag];
+    text = (date) ? [NSDateFormatter localizedStringFromDate: date
+                                                   dateStyle: NSDateFormatterLongStyle
+                                                   timeStyle: NSDateFormatterNoStyle] : nil;
+    label = [contact localizedLabelForMultiValueProperty: kABPersonDateProperty andIdentifier: self.tag];
 
-      [self setSelectionStyle: UITableViewCellSelectionStyleNone];
-    }
-    else
-    {
-      label = [[AKRecord defaultLocalizedLabelForABPropertyID: self.abPropertyID] lowercaseString];
-      placeholder = [AKContact localizedNameForProperty: self.abPropertyID];
-    }
+    [self setSelectionStyle: UITableViewCellSelectionStyleNone];
+
     [self.textField setInputView: [self datePickerInputViewWithDate: (date) ? date : [NSDate date]]];
     [self.textField setInputAccessoryView: [self datePickerInputAccessoryView]];
   }
   else if (self.abPropertyID == kABPersonSocialProfileProperty)
   {
-    if (row < [contact countForProperty: self.abPropertyID])
-    {
-      NSArray *identifiers = [contact identifiersForProperty: self.abPropertyID];
-      [self setIdentifier: [[identifiers objectAtIndex: row] integerValue]];
+    NSArray *identifiers = [contact identifiersForProperty: self.abPropertyID];
+    [self setTag: (row < [contact countForProperty: self.abPropertyID]) ? [[identifiers objectAtIndex: row] integerValue] : NSNotFound];
       
-      NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
+    NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.tag];
       
-      text = [dict objectForKey: (NSString *)kABPersonSocialProfileUsernameKey];
-      label = [dict objectForKey: (NSString *)kABPersonSocialProfileServiceKey];
-    }
-    else
-    {
-      label = [[AKRecord defaultLocalizedLabelForABPropertyID: self.abPropertyID] lowercaseString];
-    }
+    text = [dict objectForKey: (NSString *)kABPersonSocialProfileUsernameKey];
+    label = [dict objectForKey: (NSString *)kABPersonSocialProfileServiceKey];
   }
   else if (self.abPropertyID == kABPersonInstantMessageProperty)
   {
-    if (row < [contact countForProperty: self.abPropertyID])
-    {
-      NSArray *identifiers = [contact identifiersForProperty: self.abPropertyID];
-      [self setIdentifier: [[identifiers objectAtIndex: row] integerValue]];
+    NSArray *identifiers = [contact identifiersForProperty: self.abPropertyID];
+    [self setTag: (row < [contact countForProperty: self.abPropertyID]) ? [[identifiers objectAtIndex: row] integerValue] : NSNotFound];
 
-      NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
+    NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.tag];
 
-      text = [dict objectForKey: (NSString *)kABPersonInstantMessageUsernameKey];
-      label = [dict objectForKey: (NSString *)kABPersonInstantMessageServiceKey];
-    }
-    else
-    {
-      label = [[AKRecord defaultLocalizedLabelForABPropertyID: self.abPropertyID] lowercaseString];
-    }
+    text = [dict objectForKey: (NSString *)kABPersonInstantMessageUsernameKey];
+    label = [dict objectForKey: (NSString *)kABPersonInstantMessageServiceKey];
   }
 
   placeholder = (text) ? text : [AKContact localizedNameForProperty: self.abPropertyID];
 
   [self.textField setPlaceholder: placeholder];
   [self.textField setText: text];
+  if ([label compare: @"iPhone"] != NSOrderedSame) label = [label lowercaseString];
   [self.textLabel setText: label];
 }
 
@@ -263,19 +228,20 @@
 
   AKContact *contact = self.parent.contact;
   
-  NSString *oldValue = [contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.identifier];
+  NSString *oldValue = [contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.tag];
   if ([textField.text isEqualToString: oldValue] || [textField.text length] == 0)
     return;
 
   if (self.abPropertyID == kABPersonPhoneProperty ||
         self.abPropertyID == kABPersonEmailProperty)
   {
-    NSInteger identifier = self.identifier;
+    NSInteger identifier = self.tag;
     NSString *value = ([textField.text length] > 0) ? textField.text : nil;
-    [contact setValue: value andLabel: nil forMultiValueProperty: self.abPropertyID andIdentifier: &identifier];
-    if (identifier != self.identifier)
+    NSString *label = [contact labelForMultiValueProperty: self.abPropertyID andIdentifier: identifier];
+    [contact setValue: value andLabel: label forMultiValueProperty: self.abPropertyID andIdentifier: &identifier];
+    if (identifier != self.tag)
     {
-      [self setIdentifier: identifier];
+      [self setTag: identifier];
     }
   }
 }
@@ -394,7 +360,7 @@
     }
     else if (self.abPropertyID == kABPersonDateProperty)
     {
-      NSInteger identifier = self.identifier;
+      NSInteger identifier = self.tag;
       [contact setValue: datePicker.date andLabel: nil forMultiValueProperty: kABPersonDateProperty andIdentifier: &identifier];
     }
   }
@@ -411,7 +377,7 @@
     else if (self.abPropertyID == kABPersonDateProperty)
     {
       NSDate *date = (NSDate *)[contact valueForMultiValueProperty: kABPersonDateProperty
-                                                     andIdentifier: self.identifier];
+                                                     andIdentifier: self.tag];
       NSString *text = (date) ? [NSDateFormatter localizedStringFromDate: date
                                                                dateStyle: NSDateFormatterLongStyle
                                                                timeStyle: NSDateFormatterNoStyle] : nil;

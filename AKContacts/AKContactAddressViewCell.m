@@ -48,8 +48,6 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
 @interface AKContactAddressViewCell ()
 
-@property (nonatomic, assign) NSInteger identifier;
-
 @end
 
 @implementation AKContactAddressViewCell
@@ -73,7 +71,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
 -(void)configureCellAtRow:(NSInteger)row
 {
-  [self setIdentifier: NSNotFound];
+  [self setTag: NSNotFound];
   [self.textLabel setText: nil];
   [self.detailTextLabel setText: nil];
   [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
@@ -91,10 +89,10 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   if (row < [contact countForProperty: kABPersonAddressProperty])
   {
     NSArray *addressIdentifiers = [contact identifiersForProperty: kABPersonAddressProperty];
-    [self setIdentifier: [[addressIdentifiers objectAtIndex: row] integerValue]];
+    [self setTag: [[addressIdentifiers objectAtIndex: row] integerValue]];
 
     NSInteger numRows = 0;
-    NSString *address = [contact addressForIdentifier: self.identifier andNumRows: &numRows];
+    NSString *address = [contact addressForIdentifier: self.tag andNumRows: &numRows];
 
     [self.detailTextLabel setText: address];
     [self.detailTextLabel setLineBreakMode: NSLineBreakByWordWrapping];
@@ -102,7 +100,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
     [self.detailTextLabel setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
 
-    [self.textLabel setText: [contact localizedLabelForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.identifier]];
+    [self.textLabel setText: [contact localizedLabelForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.tag]];
   }
   else
   {
@@ -110,7 +108,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
      [[AKRecord defaultLocalizedLabelForABPropertyID: kABPersonAddressProperty] lowercaseString] : NSLocalizedString(@"add new address", @"")];
   }
 
-  if ((self.parent.editing == YES && self.identifier != NSNotFound) ||
+  if ((self.parent.editing == YES && self.tag != NSNotFound) ||
       (self.parent.editing == YES && self.parent.willAddAddress == YES))
   {
     [self.contentView addSubview: [AKContactAddressViewCell separatorWithTag: kHorizontal1]];
@@ -165,7 +163,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     view = [self.contentView viewWithTag: kHorizontal2];
     [view setFrame: CGRectMake(80.f, 40.f, self.contentView.bounds.size.width - 80.f, 1.f)];
     
-    if (self.parent.willAddAddress == NO && self.identifier == NSNotFound)
+    if (self.parent.willAddAddress == NO && self.tag == NSNotFound)
     { // Add new address frame
       CGFloat width = [self.textLabel.text sizeWithFont: self.textLabel.font].width;
       CGRect frame = self.textLabel.frame;
@@ -184,7 +182,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 - (UITextField *)getTextFieldWithTag: (NSInteger)tag
 {
   AKContact *contact = self.parent.contact;
-  NSDictionary *address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.identifier];
+  NSDictionary *address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.tag];
 
   NSString *key = [AKContactAddressViewCell descriptionForAddressTag: tag];
   NSString *text = [address objectForKey: key];
@@ -252,22 +250,22 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
   NSString *key = [AKContactAddressViewCell descriptionForAddressTag: textField.tag];
 
-  NSDictionary *address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.identifier];
+  NSDictionary *address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.tag];
   if (address == nil)
   {
     NSDictionary *newAddress = [[NSDictionary alloc] initWithObjectsAndKeys: textField.text, key, nil];
-    NSInteger identifier = self.identifier;
+    NSInteger identifier = self.tag;
     NSString *label = [AKContact defaultLabelForABPropertyID: kABPersonAddressProperty];
     [contact setValue: newAddress andLabel: label forMultiValueProperty: kABPersonAddressProperty andIdentifier: &identifier];
-    [self setIdentifier: identifier];
-    address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.identifier];
+    [self setTag: identifier];
+    address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.tag];
   }
   else
   {
     NSMutableDictionary *mutableAddress = [address mutableCopy];
     [mutableAddress setObject: textField.text forKey: key];
     address = [mutableAddress copy];
-    NSInteger identifier = self.identifier;
+    NSInteger identifier = self.tag;
     NSString *label = [contact labelForMultiValueProperty: kABPersonAddressProperty andIdentifier: identifier];
     [contact setValue: address andLabel: label forMultiValueProperty: kABPersonAddressProperty andIdentifier: &identifier];
   }
