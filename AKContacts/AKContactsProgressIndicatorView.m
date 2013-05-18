@@ -30,8 +30,8 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-static const CGFloat kStrokeWidth = 6.f;
-static const CGFloat kRadius = 13.f;
+static const CGFloat kStrokeWidth = 2.f;
+static const CGFloat kRadius = 11.f;
 
 @interface AKContactsProgressIndicatorView ()
 
