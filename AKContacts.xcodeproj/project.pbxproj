@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C6140A6D17482C8A00B338CB /* AKLabelViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C6140A6C17482C8A00B338CB /* AKLabelViewCell.m */; };
+		C6140A7017482E0400B338CB /* AKLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = C6140A6F17482E0400B338CB /* AKLabel.m */; };
 		C620080E16B997A900C16121 /* AKContactAddressViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C620080516B997A900C16121 /* AKContactAddressViewCell.m */; };
 		C620080F16B997A900C16121 /* AKContactDetailViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C620080716B997A900C16121 /* AKContactDetailViewCell.m */; };
 		C620081016B997A900C16121 /* AKContactHeaderViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C620080916B997A900C16121 /* AKContactHeaderViewCell.m */; };
@@ -59,6 +61,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C6140A6B17482C8A00B338CB /* AKLabelViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKLabelViewCell.h; sourceTree = "<group>"; };
+		C6140A6C17482C8A00B338CB /* AKLabelViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKLabelViewCell.m; sourceTree = "<group>"; };
+		C6140A6E17482E0300B338CB /* AKLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKLabel.h; sourceTree = "<group>"; };
+		C6140A6F17482E0400B338CB /* AKLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKLabel.m; sourceTree = "<group>"; };
 		C620080416B997A900C16121 /* AKContactAddressViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactAddressViewCell.h; sourceTree = "<group>"; };
 		C620080516B997A900C16121 /* AKContactAddressViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactAddressViewCell.m; sourceTree = "<group>"; };
 		C620080616B997A900C16121 /* AKContactDetailViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactDetailViewCell.h; sourceTree = "<group>"; };
@@ -152,14 +158,32 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		C6140A7117491A7100B338CB /* Labels */ = {
+			isa = PBXGroup;
+			children = (
+				C6140A7217491A7D00B338CB /* Cells */,
+				C637E771173DD219000B7E7B /* AKLabelViewController.h */,
+				C637E772173DD219000B7E7B /* AKLabelViewController.m */,
+			);
+			name = Labels;
+			sourceTree = "<group>";
+		};
+		C6140A7217491A7D00B338CB /* Cells */ = {
+			isa = PBXGroup;
+			children = (
+				C6140A6B17482C8A00B338CB /* AKLabelViewCell.h */,
+				C6140A6C17482C8A00B338CB /* AKLabelViewCell.m */,
+			);
+			name = Cells;
+			sourceTree = "<group>";
+		};
 		C620080316B9972A00C16121 /* Contact */ = {
 			isa = PBXGroup;
 			children = (
+				C6140A7117491A7100B338CB /* Labels */,
 				C65D925A1739E992001D1C15 /* Cells */,
 				C620080C16B997A900C16121 /* AKContactViewController.h */,
 				C620080D16B997A900C16121 /* AKContactViewController.m */,
-				C637E771173DD219000B7E7B /* AKLabelViewController.h */,
-				C637E772173DD219000B7E7B /* AKLabelViewController.m */,
 			);
 			name = Contact;
 			sourceTree = "<group>";
@@ -322,6 +346,8 @@
 		C682DEDD1714E38D00CC4A70 /* DataSources */ = {
 			isa = PBXGroup;
 			children = (
+				C6140A6E17482E0300B338CB /* AKLabel.h */,
+				C6140A6F17482E0400B338CB /* AKLabel.m */,
 				C66951E016B7049C00D030A2 /* AKRecord.h */,
 				C66951E116B7049C00D030A2 /* AKRecord.m */,
 				C6C2066416E39D750033C58A /* AKSource.h */,
@@ -467,6 +493,8 @@
 				F3F072111730552B0044084A /* AKContactsProgressIndicatorView.m in Sources */,
 				C65D925917389671001D1C15 /* AKContactLinkedViewCell.m in Sources */,
 				C637E773173DD219000B7E7B /* AKLabelViewController.m in Sources */,
+				C6140A6D17482C8A00B338CB /* AKLabelViewCell.m in Sources */,
+				C6140A7017482E0400B338CB /* AKLabel.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
