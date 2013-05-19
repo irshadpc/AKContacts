@@ -43,32 +43,28 @@ static const float defaultCellHeight = 44.f;
 /**
  * Touch handler of edit button
  */
--(void)addButtonTouchUpInside: (id)sender;
+- (void)addButtonTouchUpInside: (id)sender;
 /**
  * Touch handler of edit cancel button
  */
--(void)cancelButtonTouchUpInside: (id)sender;
+- (void)cancelButtonTouchUpInside: (id)sender;
 /**
  * Touch gesture recognizer handler attached to tableView in edit mode
  */
--(void)tableViewTouchUpInside: (id)sender;
+- (void)tableViewTouchUpInside: (id)sender;
 /**
  * Reload contents of tableView
  */
--(void)reloadTableViewData;
+- (void)reloadTableViewData;
 /**
  * Keyboard notification handlers
  */
--(void)keyboardDidShow: (NSNotification *)notification;
--(void)keyboardWillHide: (NSNotification *)notification;
+- (void)keyboardDidShow: (NSNotification *)notification;
+- (void)keyboardWillHide: (NSNotification *)notification;
 
 @end
 
 @implementation AKGroupsViewController
-
-@synthesize tableView = _tableView;
-@synthesize tapGestureRecognizer = _tapGestureRecognizer;
-@synthesize firstResponder = _firstResponder;
 
 #pragma mark - View lifecycle
 
@@ -97,25 +93,7 @@ static const float defaultCellHeight = 44.f;
 
 - (void)viewWillAppear:(BOOL)animated
 {
-  [super viewWillAppear:animated];
-  
-  [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardDidShow:)
-                                               name: UIKeyboardDidShowNotification object:nil];
-  [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillHide:)
-                                               name: UIKeyboardWillHideNotification object:nil];
-}
-
-- (void)viewDidAppear:(BOOL)animated
-{
-  [super viewDidAppear:animated];
-}
-
-- (void)viewWillDisappear:(BOOL)animated
-{
-  [super viewWillDisappear:animated];
-  
-  [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardDidShowNotification object: nil];
-  [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillHideNotification object: nil];
+  [super viewWillAppear:animated];  
 }
 
 - (void)viewDidDisappear:(BOOL)animated
@@ -129,8 +107,13 @@ static const float defaultCellHeight = 44.f;
   [self.tableView setEditing: editing animated: YES];
   [self.view endEditing: YES]; // Resign first responders
 
-  if (self.editing)
+  if (self.editing == YES)
   {
+    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardDidShow:)
+                                                 name: UIKeyboardDidShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillHide:)
+                                                 name: UIKeyboardWillHideNotification object:nil];
+
     UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel
                                                                                    target: self
                                                                                    action: @selector(cancelButtonTouchUpInside:)];
@@ -143,6 +126,9 @@ static const float defaultCellHeight = 44.f;
   }
   else
   {
+    [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardDidShowNotification object: nil];
+    [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillHideNotification object: nil];
+
     UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd
                                                                                    target: self
                                                                                    action: @selector(addButtonTouchUpInside:)];
@@ -188,7 +174,7 @@ static const float defaultCellHeight = 44.f;
 
 - (void)addButtonTouchUpInside: (id)sender
 {
-  [[UIApplication sharedApplication] sendAction: @selector(resignFirstResponder) to: nil from: nil forEvent: nil];
+  [self.view endEditing: YES];
 
   [self.tableView beginUpdates];
   [self setEditing: !self.editing animated: YES];
