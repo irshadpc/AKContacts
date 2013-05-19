@@ -35,10 +35,6 @@
 @property (assign, nonatomic) ABRecordID recordID;
 @property (strong, nonatomic) NSDate *age;
 
-+ (NSString *)defaultLabelForABPropertyID: (ABPropertyID)property;
-+ (NSString *)defaultLocalizedLabelForABPropertyID: (ABPropertyID)property;
-+ (NSString *)localizedNameForLabel: (CFStringRef)label;
-
 - (id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef;
 - (NSString *)description;
 /**

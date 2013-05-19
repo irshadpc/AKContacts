@@ -35,6 +35,7 @@
 #import "AKContactDeleteButtonViewCell.h"
 #import "AKContactLinkedViewCell.h"
 #import "AKContact.h"
+#import "AKLabel.h"
 #import "AKLabelViewController.h"
 #import "AKAddressBook.h"
 #import "AKMessenger.h"
@@ -625,7 +626,7 @@ static const float defaultCellHeight = 44.f;
     [cell.textLabel setText: [self.contact localizedLabelForMultiValueProperty: property andIdentifier: identifier]];
   };
 
-  NSString *label = (identifier != NSNotFound) ? [self.contact labelForMultiValueProperty: property andIdentifier: identifier] : [AKRecord defaultLabelForABPropertyID: property];
+  NSString *label = (identifier != NSNotFound) ? [self.contact labelForMultiValueProperty: property andIdentifier: identifier] : [AKLabel defaultLabelForABPropertyID: property];
   
   AKLabelViewController *labelView = [[AKLabelViewController alloc] initWithPropertyID: property andIdentifier: identifier andSelectedLabel: label andCompletionHandler: handler];
   UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: labelView];
