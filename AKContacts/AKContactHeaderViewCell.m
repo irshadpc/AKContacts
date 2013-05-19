@@ -148,7 +148,6 @@ static const int editModeItem = 8;
     [contactNameLabel setBackgroundColor: [UIColor clearColor]];
     [contactNameLabel setText: [contact name]];
     [contactNameLabel setFont: [UIFont boldSystemFontOfSize: 18.f]];
-    [contactNameLabel setTextColor: [UIColor blackColor]];
     
     CGSize constraintSize = CGSizeMake(contactNameLabel.frame.size.width, MAXFLOAT);
     CGSize contactNameSize = [contactNameLabel.text sizeWithFont: contactNameLabel.font constrainedToSize: constraintSize lineBreakMode: NSLineBreakByWordWrapping];
