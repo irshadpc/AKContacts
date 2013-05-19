@@ -29,6 +29,7 @@
 #import "AKContactAddressViewCell.h"
 #import "AKContact.h"
 #import "AKContactViewController.h"
+#import "AKLabel.h"
 #import "AKAddressBook.h"
 
 typedef NS_ENUM(NSInteger, AddressTag) {
@@ -105,7 +106,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   else
   {
     [self.textLabel setText: (self.parent.willAddAddress == YES) ?
-     [[AKRecord defaultLocalizedLabelForABPropertyID: kABPersonAddressProperty] lowercaseString] : NSLocalizedString(@"add new address", @"")];
+     [[AKLabel defaultLocalizedLabelForABPropertyID: kABPersonAddressProperty] lowercaseString] : NSLocalizedString(@"add new address", @"")];
   }
 
   if ((self.parent.editing == YES && self.tag != NSNotFound) ||
@@ -195,7 +196,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   [textField setDelegate: self];
   [textField setTag: tag];
 
-  [textField setPlaceholder: (text) ? text : [AKContact localizedNameForLabel: (__bridge CFStringRef)(key)]];
+  [textField setPlaceholder: (text) ? text : [AKLabel localizedNameForLabel: (__bridge CFStringRef)(key)]];
   [textField setText: text];
 
   UIView *inset = [[UIView alloc] initWithFrame:CGRectMake(.0f, 0.f, 5.f, 10.f)];
@@ -255,7 +256,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   {
     NSDictionary *newAddress = [[NSDictionary alloc] initWithObjectsAndKeys: textField.text, key, nil];
     NSInteger identifier = self.tag;
-    NSString *label = [AKContact defaultLabelForABPropertyID: kABPersonAddressProperty];
+    NSString *label = [AKLabel defaultLabelForABPropertyID: kABPersonAddressProperty];
     [contact setValue: newAddress andLabel: label forMultiValueProperty: kABPersonAddressProperty andIdentifier: &identifier];
     [self setTag: identifier];
     address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.tag];
