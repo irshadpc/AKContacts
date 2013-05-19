@@ -617,10 +617,7 @@ static const float defaultCellHeight = 44.f;
           value = @"";
     }
     [self.contact setValue: value andLabel: label forMultiValueProperty: property andIdentifier: &identifier];
-    
-    NSString *lab = [self.contact labelForMultiValueProperty: property andIdentifier: identifier];
-    NSLog(@"%@", lab);
-    
+
     UITableViewCell *cell = [self.tableView cellForRowAtIndexPath: indexPath];
     [cell setTag: identifier];
     [cell.textLabel setText: [self.contact localizedLabelForMultiValueProperty: property andIdentifier: identifier]];
