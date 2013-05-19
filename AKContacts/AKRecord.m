@@ -29,61 +29,13 @@
 #import "AKRecord.h"
 #import "AKAddressBook.h"
 #import "AKContact.h"
+#import "AKLabel.h"
 
 @interface AKRecord ()
 
 @end
 
 @implementation AKRecord
-
-#pragma mark - Class methods
-
-+ (NSString *)defaultLabelForABPropertyID: (ABPropertyID)property
-{
-  if (property == kABPersonPhoneProperty)
-  {
-    return (__bridge NSString *)(kABPersonPhoneMobileLabel);
-  }
-  else if (property == kABPersonEmailProperty)
-  {
-    return (__bridge NSString *)(kABWorkLabel);
-  }
-  else if (property == kABPersonAddressProperty)
-  {
-    return (__bridge NSString *)(kABHomeLabel);
-  }
-  else if (property == kABPersonURLProperty)
-  {
-    return (__bridge NSString *)(kABPersonHomePageLabel);
-  }
-  else if (property == kABPersonDateProperty)
-  {
-    return (__bridge NSString *)(kABPersonAnniversaryLabel);
-  }
-  else if (property == kABPersonRelatedNamesProperty)
-  {
-    return (__bridge NSString *)(kABPersonMotherLabel);
-  }
-  else if (property == kABPersonSocialProfileProperty)
-  {
-    return (__bridge NSString *)(kABPersonSocialProfileServiceFacebook);
-  }
-  else
-  {
-    return (__bridge NSString *)(kABOtherLabel);
-  }
-}
-
-+ (NSString *)defaultLocalizedLabelForABPropertyID: (ABPropertyID)property
-{
-  NSString *defaultLabel = [AKRecord defaultLabelForABPropertyID: property];
-  return CFBridgingRelease(ABAddressBookCopyLocalizedLabel((__bridge CFStringRef)(defaultLabel)));
-}
-
-+ (NSString *)localizedNameForLabel: (CFStringRef)label
-{
-  return (NSString *)CFBridgingRelease(ABAddressBookCopyLocalizedLabel(label));
-}
 
 #pragma mark - Instance methods
 
@@ -257,7 +209,7 @@
       }
       else
       {
-        ret = [AKRecord defaultLabelForABPropertyID: property];
+        ret = [AKLabel defaultLabelForABPropertyID: property];
       }
       CFRelease(multiValueRecord);
     }
@@ -274,7 +226,7 @@
   NSString *ret = [self labelForMultiValueProperty: property andIdentifier: identifier];
   if (ret == nil)
   {
-      ret = [AKRecord defaultLocalizedLabelForABPropertyID: property];
+      ret = [AKLabel defaultLocalizedLabelForABPropertyID: property];
   }
   else
   {
