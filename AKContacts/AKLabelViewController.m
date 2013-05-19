@@ -340,12 +340,15 @@
     [self commitLabels];
     
     BOOL haveSelected = NO;
-    for (AKLabel *label in [self.labels objectAtIndex: kCustomSection])
+    for (NSArray *labels in self.labels)
     {
-      if (label.selected == YES)
+      for (AKLabel *label in labels)
       {
-        haveSelected = YES;
-        break;
+        if (label.selected == YES)
+        {
+          haveSelected = YES;
+          break;
+        }
       }
     }
     if (haveSelected == NO)
@@ -638,7 +641,7 @@
   }
   [labels removeObjectsInArray: labelsToRemove];
 
-  NSString *key = [NSString stringWithFormat: defaultsLabelKey, kABPersonPhoneProperty];
+  NSString *key = [NSString stringWithFormat: defaultsLabelKey, self.property];
   [[NSUserDefaults standardUserDefaults] setValue: array forKey: key];
 }
 
