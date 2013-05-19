@@ -28,7 +28,7 @@
 
 #import "AKRecord.h"
 
-FOUNDATION_EXPORT NSString *const DefaultsKeySources;
+FOUNDATION_EXPORT NSString *const defaultsSourceKey;
 
 @class AKGroup;
 

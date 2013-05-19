@@ -31,7 +31,7 @@
 #import "AKAddressBook.h"
 #import "AKGroup.h"
 
-NSString *const DefaultsKeySources = @"Sources";
+NSString *const defaultsSourceKey = @"Source_%d";
 
 @interface AKAddressBook ()
 
@@ -205,10 +205,10 @@ NSString *const DefaultsKeySources = @"Sources";
   }
   [self.groups removeObjectsInArray: groupsToRemove];
 
-  [self commitGroupsOder];
+  [self commitGroupsOrder];
 }
 
-- (void)commitGroupsOder
+- (void)commitGroupsOrder
 {
   NSMutableArray *groupsOrder = [[NSMutableArray alloc] init];
 
@@ -217,7 +217,7 @@ NSString *const DefaultsKeySources = @"Sources";
     [groupsOrder addObject: [NSNumber numberWithInteger: group.recordID]];
   }
 
-  NSString *sourceKey = [NSString stringWithFormat: @"source_%d", self.recordID];
+  NSString *sourceKey = [NSString stringWithFormat: defaultsSourceKey, self.recordID];
   [[NSUserDefaults standardUserDefaults] setObject: [NSArray arrayWithArray: groupsOrder]
                                             forKey: sourceKey];
 }
@@ -238,7 +238,7 @@ NSString *const DefaultsKeySources = @"Sources";
 
 - (void)revertGroupsOrder
 {
-  NSString *sourceKey = [NSString stringWithFormat: @"source_%d", self.recordID];
+  NSString *sourceKey = [NSString stringWithFormat: defaultsSourceKey, self.recordID];
   NSArray *order = [[NSUserDefaults standardUserDefaults] arrayForKey: sourceKey];
 
   if (order != nil)
@@ -257,7 +257,7 @@ NSString *const DefaultsKeySources = @"Sources";
     }];
   } else {
 
-    [self commitGroupsOder];
+    [self commitGroupsOrder];
   }
 }
 
@@ -265,7 +265,7 @@ NSString *const DefaultsKeySources = @"Sources";
 {
   AKAddressBook *addressBook = [AKAddressBook sharedInstance];
 
-  NSString *sourceKey = [NSString stringWithFormat: @"source_%d", self.recordID];
+  NSString *sourceKey = [NSString stringWithFormat: defaultsSourceKey, self.recordID];
   NSArray *order = [[NSUserDefaults standardUserDefaults] arrayForKey: sourceKey];
 
   NSMutableArray *indexPaths = [[NSMutableArray alloc] init];
