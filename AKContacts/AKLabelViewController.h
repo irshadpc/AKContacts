@@ -29,9 +29,23 @@
 #import <UIKit/UIKit.h>
 #import "AKAddressBook.h"
 
+typedef NS_ENUM(NSInteger, Sections)
+{
+  kStandardSection = 0,
+  kCustomSection,
+  NUM_SECTIONS
+};
+
 @interface AKLabelViewController : UIViewController
 
 typedef void (^AKLabelViewCompletionHandler)(ABPropertyID property, NSInteger identifier, NSString *label);
+
+@property (nonatomic, assign) ABPropertyID property;
+@property (nonatomic, strong) NSMutableArray *labels;
+/**
+ * UITextField currently being edited
+ */
+@property (nonatomic, strong) UITextField *firstResponder;
 
 - (id)initWithPropertyID: (ABPropertyID)property andIdentifier: (NSInteger)identifier andSelectedLabel: (NSString *)selectedLabel andCompletionHandler: (AKLabelViewCompletionHandler)handler;
 

@@ -27,16 +27,28 @@
 //
 
 #import "AKLabelViewController.h"
+#import "AKLabelViewCell.h"
+#import "AKLabel.h"
 #import "AppDelegate.h"
 
 @interface AKLabelViewController () <UITableViewDataSource, UITableViewDelegate>
 
 @property (nonatomic, strong) UITableView *tableView;
-@property (nonatomic, strong) NSMutableArray *labels;
-@property (nonatomic, assign) ABPropertyID property;
+@property (nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer;
 @property (nonatomic, assign) NSInteger identifier;
 @property (nonatomic, copy) AKLabelViewCompletionHandler handler;
-@property (nonatomic, copy) NSString *selectedLabel;
+
+/**
+ * Keyboard notification handlers
+ */
+- (void)keyboardDidShow: (NSNotification *)notification;
+- (void)keyboardWillHide: (NSNotification *)notification;
+- (void)editButtonTouchUpInside: (id)sender;
+- (void)cancelButtonTouchUpInside: (id)sender;
+/**
+ * Touch gesture recognizer handler attached to tableView in edit mode
+ */
+- (void)tableViewTouchUpInside: (id)sender;
 
 @end
 
@@ -47,146 +59,192 @@
   self = [self init];
   if (self)
   {
-    self.property = property;
-    self.identifier = identifier;
-    self.handler = handler;
-    self.selectedLabel = selectedLabel;
-    
-    self.labels = [[NSMutableArray alloc] init];
-    NSMutableArray *standardLabels = [[NSMutableArray alloc] init];
-    [self.labels addObject: standardLabels];
+    _property = property;
+    _identifier = identifier;
+    _handler = [handler copy];
 
-    NSArray *label = nil;
+    _labels = [[NSMutableArray alloc] init];
+    NSMutableArray *standardLabels = [[NSMutableArray alloc] init];
+    [_labels addObject: standardLabels];
+
+    AKLabel *label = nil;
     CFStringRef abLabel = NULL;
     if (property == kABPersonPhoneProperty)
     {
       abLabel = kABPersonPhoneMobileLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonPhoneIPhoneLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABHomeLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABWorkLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABOtherLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonPhoneMainLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonPhoneHomeFAXLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonPhoneWorkFAXLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       if ((SYSTEM_VERSION_GREATER_THAN(@"5.0")))
       {
         abLabel = kABPersonPhoneOtherFAXLabel;
-        label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+        label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+        [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
         [standardLabels addObject: label];
       }
       abLabel = kABPersonPhonePagerLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
     }
     else if (property == kABPersonURLProperty)
     {
       abLabel = kABPersonHomePageLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABHomeLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABWorkLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABOtherLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
     }
     else if (property == kABPersonDateProperty)
     {
       abLabel = kABPersonAnniversaryLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABOtherLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
     }
     else if (property == kABPersonSocialProfileProperty)
     {
       abLabel = kABPersonSocialProfileServiceFacebook;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonSocialProfileServiceTwitter;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonSocialProfileServiceFlickr;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonSocialProfileServiceLinkedIn;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonSocialProfileServiceMyspace;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonSocialProfileServiceSinaWeibo;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
     }
     else if (property == kABPersonRelatedNamesProperty)
     {
       abLabel = kABPersonMotherLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonFatherLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonParentLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonBrotherLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonSisterLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonChildLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonFriendLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonSpouseLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonAssistantLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABPersonManagerLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABOtherLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
     }
     else
     {
       abLabel = kABHomeLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABWorkLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
       abLabel = kABOtherLabel;
-      label = [[NSArray alloc] initWithObjects: CFBridgingRelease(ABAddressBookCopyLocalizedLabel(abLabel)), abLabel, nil];
+      label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+      [label setSelected: ([selectedLabel compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
       [standardLabels addObject: label];
     }
+    
+    NSString *key = [NSString stringWithFormat: defaultsLabelKey, property];
+    NSMutableArray *tmpLabels = [[[NSUserDefaults standardUserDefaults] arrayForKey: key] mutableCopy];
+    NSMutableArray *customLabels = [[NSMutableArray alloc] init];
+    for (NSString *tmpLabel in tmpLabels)
+    {
+      AKLabel *label = [[AKLabel alloc] initWithLabel: tmpLabel andIsStandard: NO];
+      [label setSelected: ([selectedLabel compare: tmpLabel] == NSOrderedSame) ? YES : NO];
+      [customLabels addObject: label];
+    }
+    [_labels addObject: customLabels];
   }
   return self;
 }
@@ -197,7 +255,7 @@
 
   [self.navigationItem setRightBarButtonItem: self.editButtonItem];
 
-  CGFloat height = ([UIScreen mainScreen].bounds.size.height == 568.0) ? 568.0 : 480.0;
+  CGFloat height = ([UIScreen mainScreen].bounds.size.height == 568.f) ? 568.f : 480.f;
   height -= (self.navigationController.navigationBar.frame.size.height + [UIApplication sharedApplication].statusBarFrame.size.height);
   [self setTableView: [[UITableView alloc] initWithFrame: CGRectMake(0.f, 0.f, 320.f, height)
                                                    style: UITableViewStyleGrouped]];
@@ -205,7 +263,14 @@
   [self.tableView setDelegate: self];
   [self setView: self.tableView];
 
-  UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel target:self action:@selector(cancelButtonTouchUp:)];
+  UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemEdit
+                                                                             target: self
+                                                                             action: @selector(editButtonTouchUpInside:)];
+  [self.navigationItem setRightBarButtonItem: addButton];
+
+  UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel
+                                                                                 target: self
+                                                                                 action: @selector(cancelButtonTouchUpInside:)];
   [self.navigationItem setLeftBarButtonItem: barButtonItem];  
 }
 
@@ -213,18 +278,120 @@
 
 - (void)setEditing:(BOOL)editing animated:(BOOL)animate
 {
-  [super setEditing: editing animated: animate]; // Toggles Done button
+  [super setEditing: editing animated: YES];
   [self.tableView setEditing: editing animated: animate];
-}
 
-- (void)cancelButtonTouchUp: (id)sender
-{
-  if ([self.navigationController respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
-    [self.navigationController dismissViewControllerAnimated: YES completion: nil];
+  if (self.editing == YES)
+  {
+    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardDidShow:)
+                                                 name: UIKeyboardDidShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillHide:)
+                                                 name: UIKeyboardWillHideNotification object:nil];
+
+    NSInteger rows = [[self.labels objectAtIndex: kCustomSection] count];
+    NSIndexPath *indexPath = [NSIndexPath indexPathForRow: rows inSection: kCustomSection];
+    [self.tableView insertRowsAtIndexPaths: [NSArray arrayWithObject: indexPath]
+                          withRowAnimation: UITableViewRowAnimationTop];
+    
+    UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone
+                                                                                   target: self
+                                                                                   action: @selector(editButtonTouchUpInside:)];
+    [self.navigationItem setRightBarButtonItem: barButtonItem];
+  }
   else
-    [self.navigationController dismissModalViewControllerAnimated: YES];
+  {
+    UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemEdit
+                                                                                   target: self
+                                                                                   action: @selector(editButtonTouchUpInside:)];
+    [self.navigationItem setRightBarButtonItem: barButtonItem];
+
+    [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardDidShowNotification object: nil];
+    [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillHideNotification object: nil];
+
+    NSMutableArray *labels = [self.labels objectAtIndex: kCustomSection];
+
+    NSInteger row = 0;
+    for (AKLabel *label in labels)
+    {
+      if (label.status == kLabelStatusDeleting ||
+          label.status == kLabelStatusCreating)
+        continue;
+      row += 1;
+    }
+    NSIndexPath *indexPath = [NSIndexPath indexPathForRow: row inSection: kCustomSection];
+
+    [self.tableView deleteRowsAtIndexPaths: [NSArray arrayWithObject: indexPath]
+                          withRowAnimation: UITableViewRowAnimationTop];
+  }
 }
 
+- (void)editButtonTouchUpInside: (id)sender
+{
+  [self.view endEditing: YES];
+
+  [self.tableView beginUpdates];
+  [self setEditing: !self.editing animated: YES];
+  
+  if (self.editing == NO)
+  {
+    [self.tableView insertRowsAtIndexPaths: [self indexPathsOfCreatedLabels]
+                          withRowAnimation: UITableViewRowAnimationAutomatic];
+    
+    [self commitLabels];
+    
+    BOOL haveSelected = NO;
+    for (AKLabel *label in [self.labels objectAtIndex: kCustomSection])
+    {
+      if (label.selected == YES)
+      {
+        haveSelected = YES;
+        break;
+      }
+    }
+    if (haveSelected == NO)
+    {
+      [self.navigationItem.leftBarButtonItem setEnabled: NO];
+    }
+  }
+  [self.tableView endUpdates];
+}
+
+- (void)cancelButtonTouchUpInside: (id)sender
+{
+  if (self.editing == NO)
+  {
+    if ([self.navigationController respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
+      [self.navigationController dismissViewControllerAnimated: YES completion: nil];
+    else
+      [self.navigationController dismissModalViewControllerAnimated: YES];
+  }
+  else
+  {
+    [self.tableView beginUpdates];
+    [self setEditing: NO animated: YES];
+    
+    NSMutableArray *insertIndexes = [[NSMutableArray alloc] init];
+    
+    NSMutableArray *reloadIndexes = [[NSMutableArray alloc] init];
+    
+    for (AKLabel *akLabel in [self.labels objectAtIndex: kCustomSection])
+    {
+      [insertIndexes addObjectsFromArray: [self indexPathsOfDeletedLabels]];
+      [reloadIndexes addObjectsFromArray: [self indexPathsOfLabelsOutOfPosition]];
+
+      [self revertLabels];
+    }
+
+    [self.tableView reloadRowsAtIndexPaths: reloadIndexes withRowAnimation: UITableViewRowAnimationAutomatic];
+    [self.tableView insertRowsAtIndexPaths: insertIndexes withRowAnimation: UITableViewRowAnimationAutomatic];
+    [self.tableView endUpdates];
+  }
+}
+
+- (void)tableViewTouchUpInside: (id)sender
+{
+  [self.view endEditing: YES];
+}
 
 #pragma mark - Table view data source
 
@@ -235,30 +402,36 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-  return [[self.labels objectAtIndex: section] count];
+  NSInteger count = [[self.labels objectAtIndex: section] count];
+
+  if (section == kCustomSection)
+  {
+    count = 0;
+
+    for (AKLabel *label in [self.labels objectAtIndex: kCustomSection])
+    {
+      if (label.status == kLabelStatusCreating || label.status == kLabelStatusDeleting)
+        continue;
+      count += 1;
+    }
+    if (self.editing) count += 1;
+  }
+
+  return count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
   static NSString *CellIdentifier = @"Cell";
-  
-  UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+
+  AKLabelViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
   if (cell == nil) {
-    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
+    cell = [[AKLabelViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
   }
 
-  NSString *label = [[[self.labels objectAtIndex: indexPath.section] objectAtIndex: indexPath.row] objectAtIndex: 0];
-  [cell.textLabel setText: label];
+  [cell setParent: self];
 
-  NSString *abLabel = (NSString *)([[[self.labels objectAtIndex: indexPath.section] objectAtIndex: indexPath.row] objectAtIndex: 1]);
-  if ([abLabel compare: self.selectedLabel] == NSOrderedSame)
-  {
-    [cell setAccessoryType: UITableViewCellAccessoryCheckmark];
-  }
-  else
-  {
-    [cell setAccessoryType: UITableViewCellAccessoryNone];
-  }
+  [cell configureCellAtIndexPath: indexPath];
 
   return (UITableViewCell *)cell;
 }
@@ -273,6 +446,17 @@
 
 - (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath
 {
+  if (indexPath.section == kCustomSection)
+  {
+    if (indexPath.row < [[self.labels objectAtIndex: kCustomSection] count])
+    {
+      return UITableViewCellEditingStyleDelete;
+    }
+    else
+    {
+      return UITableViewCellEditingStyleInsert;
+    }
+  }
   return UITableViewCellEditingStyleNone;
 }
 
@@ -280,34 +464,145 @@
 {
   if (editingStyle == UITableViewCellEditingStyleDelete)
   {
+    NSInteger row = 0;
+    for (AKLabel *akLabel in [self.labels objectAtIndex: kCustomSection])
+    {
+      NSInteger index = [[self.labels objectAtIndex: kCustomSection] indexOfObject: akLabel];
+      if (akLabel.status == kLabelStatusDeleting)
+      {
+        continue;
+      }
+      else if (index == indexPath.row)
+      {
+        [akLabel setStatus: kLabelStatusDeleting];
+        break;
+      }
+      row += 1;
+    }
+    
+    indexPath = [NSIndexPath indexPathForRow: row inSection: indexPath.section];
+    
+    [tableView deleteRowsAtIndexPaths: [NSArray arrayWithObject:indexPath] withRowAnimation: UITableViewRowAnimationFade];
   }
+}
+
+- (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath
+{
+  NSMutableArray *labels = [self.labels objectAtIndex: kCustomSection];
+
+  [labels exchangeObjectAtIndex: fromIndexPath.row withObjectAtIndex: toIndexPath.row];
+}
+
+- (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath
+{
+  if (indexPath.section == kCustomSection)
+  {
+    if (indexPath.row < [[self.labels objectAtIndex: kCustomSection] count])
+    {
+      return YES;
+    }
+  }
+
+  return NO;
 }
 
 #pragma mark - Table view delegate
 
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+- (NSIndexPath *)tableView:(UITableView *)tableView targetIndexPathForMoveFromRowAtIndexPath:(NSIndexPath *)sourceIndexPath toProposedIndexPath:(NSIndexPath *)proposedDestinationIndexPath
 {
-  if (self.editing == YES)
+  NSInteger row = 1;
+  if (sourceIndexPath.section != proposedDestinationIndexPath.section)
   {
-    
+    if (sourceIndexPath.section < proposedDestinationIndexPath.section)
+    {
+      row = [tableView numberOfRowsInSection: sourceIndexPath.section] - 2;
+    }
   }
   else
   {
-    NSString *abLabel = (NSString *)([[[self.labels objectAtIndex: indexPath.section] objectAtIndex: indexPath.row] objectAtIndex: 1]);
-    [self setSelectedLabel: abLabel];
-    
+    if (proposedDestinationIndexPath.row == [tableView numberOfRowsInSection: sourceIndexPath.section] - 1)
+    {
+      row = [tableView numberOfRowsInSection: sourceIndexPath.section] - 2;
+    }
+    else
+    {
+      row = proposedDestinationIndexPath.row;
+    }
+  }
+  return [NSIndexPath indexPathForRow: row inSection: sourceIndexPath.section];
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+  if (self.editing == NO)
+  {
+    for (NSMutableArray *array in self.labels)
+    {
+      for (AKLabel *akLabel in array)
+      {
+        [akLabel setSelected: NO];
+      }
+    }
+
+    AKLabel *akLabel = [[self.labels objectAtIndex: indexPath.section] objectAtIndex: indexPath.row];
+    [akLabel setSelected: YES];
+
     [self.tableView reloadData];
 
-    if (self.handler) self.handler(self.property, self.identifier, abLabel);
+    if (self.handler) self.handler(self.property, self.identifier, akLabel.label);
 
     double delayInSeconds = 0.3;
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
     dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-      [self cancelButtonTouchUp: nil];
+      [self cancelButtonTouchUpInside: nil];
     });
   }
-  
+
   [tableView deselectRowAtIndexPath: indexPath animated: YES];
+}
+
+#pragma mark - Keyboard
+
+- (void)keyboardDidShow: (NSNotification *)notification
+{
+  UITapGestureRecognizer *recognizer = [[UITapGestureRecognizer alloc] initWithTarget: self
+                                                                               action: @selector(tableViewTouchUpInside:)];
+  [recognizer setCancelsTouchesInView: NO];
+  [self.tableView addGestureRecognizer: recognizer];
+  [self setTapGestureRecognizer: recognizer];
+  
+  NSDictionary* info = [notification userInfo];
+  CGSize kbSize = [[info objectForKey: UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
+  
+  UIEdgeInsets contentInsets = UIEdgeInsetsMake(0.f, 0.f, kbSize.height, 0.f);
+  [self.tableView setContentInset: contentInsets];
+  [self.tableView setScrollIndicatorInsets: contentInsets];
+  
+  CGFloat offset = self.tableView.contentOffset.y;
+  CGRect textFieldFrame = self.firstResponder.frame;
+  CGFloat textFieldOrigin = self.firstResponder.superview.superview.frame.origin.y - offset;
+  CGFloat textFieldBottom = textFieldOrigin + textFieldFrame.origin.y + textFieldFrame.size.height;
+  CGRect visibleFrame = self.view.frame;
+  visibleFrame.size.height -= kbSize.height;
+  
+  CGFloat keyboardTop = visibleFrame.size.height;
+  CGPoint point = CGPointMake(textFieldFrame.origin.x, textFieldBottom);
+  
+  if (CGRectContainsPoint(visibleFrame, point) == NO)
+  {
+    CGFloat posY = fabs(textFieldBottom - keyboardTop) + 10.f + offset;
+    CGPoint scrollPoint = CGPointMake(0.f, posY);
+    [self.tableView setContentOffset: scrollPoint animated: YES];
+  }
+}
+
+- (void)keyboardWillHide: (NSNotification *)notification
+{
+  [self.tableView removeGestureRecognizer: self.tapGestureRecognizer];
+  
+  UIEdgeInsets contentInsets = UIEdgeInsetsZero;
+  [self.tableView setContentInset: contentInsets];
+  [self.tableView setScrollIndicatorInsets: contentInsets];
 }
 
 #pragma mark - Memory management
@@ -316,6 +611,145 @@
 {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - Data Source
+
+- (void)commitLabels
+{
+  NSMutableArray *labels = [self.labels objectAtIndex: kCustomSection];
+  
+  NSMutableArray *labelsToRemove = [[NSMutableArray alloc] init];
+  
+  NSMutableArray *array = [[NSMutableArray alloc] init];
+  for (AKLabel *akLabel in labels)
+  {
+    if (akLabel.status == kLabelStatusDeleting)
+    {
+      [labelsToRemove addObject: akLabel];
+      continue;
+    }
+    else if (akLabel.status == kLabelStatusCreating)
+    {
+      [akLabel setStatus: kLabelStatusNormal];
+    }
+
+    [array addObject: akLabel.label];
+  }
+  [labels removeObjectsInArray: labelsToRemove];
+
+  NSString *key = [NSString stringWithFormat: defaultsLabelKey, kABPersonPhoneProperty];
+  [[NSUserDefaults standardUserDefaults] setValue: array forKey: key];
+}
+
+- (void)revertLabels
+{
+  // Unmark any groups marked for removal
+  
+  NSMutableArray *labels = [self.labels objectAtIndex: kCustomSection];
+
+  for (AKLabel *akLabel in labels)
+  {
+    if (akLabel.status == kLabelStatusDeleting)
+    {
+      akLabel.status = kLabelStatusNormal;
+    }
+  }
+}
+
+- (void)revertGroupsOrder
+{
+  NSMutableArray *labels = [self.labels objectAtIndex: kCustomSection];
+
+  NSString *labelKey = [NSString stringWithFormat: defaultsLabelKey, self.property];
+  NSArray *order = [[NSUserDefaults standardUserDefaults] arrayForKey: labelKey];
+
+  if (order != nil)
+  {
+    [labels sortUsingComparator: ^NSComparisonResult(id obj1, id obj2)
+     {
+       NSString *label1 = [(AKLabel *)obj1 label];
+       NSString *label2 = [(AKLabel *)obj2 label];
+
+       return [label1 compare: label2];
+     }];
+  } else {
+    [self commitLabels];
+  }
+}
+
+- (NSArray *)indexPathsOfLabelsOutOfPosition
+{
+  NSMutableArray *labels = [self.labels objectAtIndex: kCustomSection];
+
+  NSString *labelKey = [NSString stringWithFormat: defaultsLabelKey, self.property];
+  NSArray *order = [[NSUserDefaults standardUserDefaults] arrayForKey: labelKey];
+  
+  NSMutableArray *indexPaths = [[NSMutableArray alloc] init];
+  
+  NSInteger removedLabels = 0;
+  
+  for (AKLabel *akLabel in labels)
+  {
+    if (akLabel.status == kLabelStatusDeleting)
+    {
+      removedLabels += 1;
+    }
+    else
+    {
+      NSInteger index = [order indexOfObject: akLabel.label];
+      
+      NSInteger currentIndex = [labels indexOfObject: akLabel.label];
+      if (currentIndex != NSNotFound && index != NSNotFound && index != currentIndex)
+      {
+        [indexPaths addObject: [NSIndexPath indexPathForRow: currentIndex - removedLabels
+                                                  inSection: kCustomSection]];
+      }
+    }
+  }
+  
+  return [[NSArray alloc] initWithArray: indexPaths];
+}
+
+- (NSArray *)indexPathsOfDeletedLabels
+{
+  NSMutableArray *labels = [self.labels objectAtIndex: kCustomSection];
+  
+  NSMutableArray *indexPaths = [[NSMutableArray alloc] init];
+  
+  for (AKLabel *akLabel in labels)
+  {
+    if (akLabel.status == kLabelStatusDeleting)
+    {
+      [indexPaths addObject: [NSIndexPath indexPathForRow: [labels indexOfObject: akLabel]
+                                                inSection: kCustomSection]];
+    }
+  }
+  return [[NSArray alloc] initWithArray: indexPaths];
+}
+
+- (NSArray *)indexPathsOfCreatedLabels
+{
+  NSMutableArray *labels = [self.labels objectAtIndex: kCustomSection];
+  
+  NSMutableArray *indexPaths = [[NSMutableArray alloc] init];
+  
+  NSInteger removedLabels = 0;
+  
+  for (AKLabel *akLabel in labels)
+  {
+    if (akLabel.status == kLabelStatusCreating)
+    {
+      NSInteger row = [labels count] - removedLabels - 1;
+      NSIndexPath *indexPath = [NSIndexPath indexPathForRow: row inSection: kCustomSection];
+      [indexPaths addObject: indexPath];
+    }
+    else if (akLabel.status == kLabelStatusDeleting)
+    {
+      removedLabels += 1;
+    }
+  }
+  return [[NSArray alloc] initWithArray: indexPaths];
 }
 
 @end
