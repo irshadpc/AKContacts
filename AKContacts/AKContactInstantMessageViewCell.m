@@ -150,6 +150,10 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
   NSString *key = [AKContactInstantMessageViewCell descriptionForInstantMessageTag: tag];
   NSString *text = [service objectForKey: key];
+  if (text == nil && tag == kIMService)
+  {
+    text = (NSString *)kABPersonInstantMessageServiceSkype;
+  }
 
   UITextField *textField = [[UITextField alloc] initWithFrame: CGRectZero];
   [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
