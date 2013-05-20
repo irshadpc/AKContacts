@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		C6140A6D17482C8A00B338CB /* AKLabelViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C6140A6C17482C8A00B338CB /* AKLabelViewCell.m */; };
 		C6140A7017482E0400B338CB /* AKLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = C6140A6F17482E0400B338CB /* AKLabel.m */; };
+		C6140A751749B27B00B338CB /* AKContactInstantMessageViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C6140A741749B27B00B338CB /* AKContactInstantMessageViewCell.m */; };
 		C620080E16B997A900C16121 /* AKContactAddressViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C620080516B997A900C16121 /* AKContactAddressViewCell.m */; };
 		C620080F16B997A900C16121 /* AKContactDetailViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C620080716B997A900C16121 /* AKContactDetailViewCell.m */; };
 		C620081016B997A900C16121 /* AKContactHeaderViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C620080916B997A900C16121 /* AKContactHeaderViewCell.m */; };
@@ -65,6 +66,8 @@
 		C6140A6C17482C8A00B338CB /* AKLabelViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKLabelViewCell.m; sourceTree = "<group>"; };
 		C6140A6E17482E0300B338CB /* AKLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKLabel.h; sourceTree = "<group>"; };
 		C6140A6F17482E0400B338CB /* AKLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKLabel.m; sourceTree = "<group>"; };
+		C6140A731749B27B00B338CB /* AKContactInstantMessageViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactInstantMessageViewCell.h; sourceTree = "<group>"; };
+		C6140A741749B27B00B338CB /* AKContactInstantMessageViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactInstantMessageViewCell.m; sourceTree = "<group>"; };
 		C620080416B997A900C16121 /* AKContactAddressViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactAddressViewCell.h; sourceTree = "<group>"; };
 		C620080516B997A900C16121 /* AKContactAddressViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactAddressViewCell.m; sourceTree = "<group>"; };
 		C620080616B997A900C16121 /* AKContactDetailViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactDetailViewCell.h; sourceTree = "<group>"; };
@@ -191,6 +194,8 @@
 		C65D925A1739E992001D1C15 /* Cells */ = {
 			isa = PBXGroup;
 			children = (
+				C6140A731749B27B00B338CB /* AKContactInstantMessageViewCell.h */,
+				C6140A741749B27B00B338CB /* AKContactInstantMessageViewCell.m */,
 				C620080816B997A900C16121 /* AKContactHeaderViewCell.h */,
 				C620080916B997A900C16121 /* AKContactHeaderViewCell.m */,
 				C620080616B997A900C16121 /* AKContactDetailViewCell.h */,
@@ -495,6 +500,7 @@
 				C637E773173DD219000B7E7B /* AKLabelViewController.m in Sources */,
 				C6140A6D17482C8A00B338CB /* AKLabelViewCell.m in Sources */,
 				C6140A7017482E0400B338CB /* AKLabel.m in Sources */,
+				C6140A751749B27B00B338CB /* AKContactInstantMessageViewCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
