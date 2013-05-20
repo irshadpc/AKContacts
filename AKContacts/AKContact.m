@@ -319,6 +319,16 @@ const int tagNewContact = -368;
   return [rows componentsJoinedByString: @"\n"];
 }
 
+- (NSString *)instantMessageDescriptionForIdentifier: (NSInteger)identifier
+{
+  NSDictionary *instantMessage = [self valueForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: identifier];
+  
+  NSString *username = [instantMessage objectForKey: (NSString *)kABPersonInstantMessageUsernameKey];
+  NSString *service = [instantMessage objectForKey: (NSString *)kABPersonInstantMessageServiceKey];
+
+  return [NSString stringWithFormat: @"%@ (%@)", username, service];
+}
+
 - (NSComparisonResult)compareByName:(AKContact *)otherContact
 {
   return [self.name localizedCaseInsensitiveCompare: otherContact.name];

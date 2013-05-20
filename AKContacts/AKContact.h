@@ -62,6 +62,7 @@ FOUNDATION_EXPORT const int tagNewContact;
 - (UIImage *)picture;
 
 - (NSString *)addressForIdentifier: (NSInteger)identifier andNumRows: (NSInteger *)numRows;
+- (NSString *)instantMessageDescriptionForIdentifier: (NSInteger)identifier;
 
 - (NSComparisonResult)compareByName:(AKContact *)otherContact;
 
