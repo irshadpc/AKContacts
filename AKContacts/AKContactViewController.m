@@ -34,6 +34,7 @@
 #import "AKContactButtonsViewCell.h"
 #import "AKContactDeleteButtonViewCell.h"
 #import "AKContactLinkedViewCell.h"
+#import "AKContactInstantMessageViewCell.h"
 #import "AKContact.h"
 #import "AKLabel.h"
 #import "AKLabelViewController.h"
@@ -287,16 +288,16 @@ static const float defaultCellHeight = 44.f;
   CGFloat offset = self.tableView.contentOffset.y;
   CGRect textFieldFrame = self.firstResponder.frame;
   CGFloat textFieldOrigin = self.firstResponder.superview.superview.frame.origin.y - offset;
-  CGFloat textFieldBottom = textFieldOrigin + textFieldFrame.origin.y + textFieldFrame.size.height;
+  CGFloat cellBottom = textFieldOrigin + self.firstResponder.superview.superview.frame.size.height;
   CGRect visibleFrame = self.view.frame;
   visibleFrame.size.height -= kbSize.height;
-  
+
   CGFloat keyboardTop = visibleFrame.size.height;
-  CGPoint point = CGPointMake(textFieldFrame.origin.x, textFieldBottom);
+  CGPoint point = CGPointMake(textFieldFrame.origin.x, cellBottom);
   
   if (CGRectContainsPoint(visibleFrame, point) == NO)
   {
-    CGFloat posY = fabs(textFieldBottom - keyboardTop) + 10.f + offset;
+    CGFloat posY = fabs(cellBottom - keyboardTop) + 10.f + offset;
     CGPoint scrollPoint = CGPointMake(0.f, posY);
     [self.tableView setContentOffset: scrollPoint animated: YES];
   }
@@ -364,6 +365,9 @@ static const float defaultCellHeight = 44.f;
           return (self.willAddAddress == YES) ? 120.f : defaultCellHeight;
       }
 
+    case kSectionInstantMessage:
+      return (self.editing == YES) ? defaultCellHeight + 40.f : defaultCellHeight;
+
     case kSectionNote:
       return ([self.contact valueForProperty: kABPersonNoteProperty]) ?
         [[self.contact valueForProperty: kABPersonNoteProperty] sizeWithFont: [UIFont systemFontOfSize: [UIFont systemFontSize]]
@@ -392,13 +396,15 @@ static const float defaultCellHeight = 44.f;
     case kSectionBirthday:
     case kSectionDate:
     case kSectionSocialProfile:
-    case kSectionInstantMessage:
     case kSectionNote:
       return [self detailCellViewForProperty: property atRow: indexPath.row];
 
     case kSectionAddress:
       return [self addressCellViewAtRow: indexPath.row];
 
+    case kSectionInstantMessage:
+      return [self instantMessageCellViewAtRow: indexPath.row];
+      
     case kSectionSwitch:
       return [self switchCellViewAtRow: indexPath.row];
 
@@ -811,6 +817,23 @@ static const float defaultCellHeight = 44.f;
   if (cell == nil)
   {
     cell = [[AKContactAddressViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
+  }
+
+  [cell setParent: self];
+
+  [cell configureCellAtRow: row];
+
+  return (UITableViewCell *)cell;
+}
+
+- (UITableViewCell *)instantMessageCellViewAtRow: (NSInteger)row
+{
+  static NSString *CellIdentifier = @"AKContactInstantMessageViewCell";
+  
+  AKContactInstantMessageViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  if (cell == nil)
+  {
+    cell = [[AKContactInstantMessageViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
   }
 
   [cell setParent: self];
