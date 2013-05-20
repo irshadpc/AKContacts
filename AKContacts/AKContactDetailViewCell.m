@@ -86,6 +86,7 @@
   [self.textLabel setText: nil];
   [self.detailTextLabel setText: nil];
   [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
+  [self.textField setKeyboardType: UIKeyboardTypeDefault];
   [self.textField setInputView: nil];
   [self.textField setInputAccessoryView: nil];
   
@@ -159,7 +160,7 @@
     NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.tag];
       
     text = [dict objectForKey: (NSString *)kABPersonSocialProfileUsernameKey];
-    label = [dict objectForKey: (NSString *)kABPersonSocialProfileServiceKey];
+    label = [contact localizedLabelForMultiValueProperty: self.abPropertyID andIdentifier: self.tag];
   }
   else if (self.abPropertyID == kABPersonInstantMessageProperty)
   {
@@ -169,7 +170,7 @@
     NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.tag];
 
     text = [dict objectForKey: (NSString *)kABPersonInstantMessageUsernameKey];
-    label = [dict objectForKey: (NSString *)kABPersonInstantMessageServiceKey];
+    label = [contact localizedLabelForMultiValueProperty: self.abPropertyID andIdentifier: self.tag];
   }
 
   placeholder = (text) ? text : [AKContact localizedNameForProperty: self.abPropertyID];
