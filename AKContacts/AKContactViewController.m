@@ -253,8 +253,8 @@ static const float defaultCellHeight = 44.f;
 {
   [super viewWillAppear:animated];
   
-  [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardDidShow:)
-                                               name: UIKeyboardDidShowNotification object:nil];
+  [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillShow:)
+                                               name: UIKeyboardWillShowNotification object:nil];
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillHide:)
                                                name: UIKeyboardWillHideNotification object:nil];
 }
@@ -263,13 +263,13 @@ static const float defaultCellHeight = 44.f;
 {
   [super viewWillDisappear:animated];
 
-  [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardDidShowNotification object: nil];
+  [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillShowNotification object: nil];
   [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillHideNotification object: nil];
 }
 
 #pragma mark - Keyboard
 
-- (void)keyboardDidShow: (NSNotification *)notification
+- (void)keyboardWillShow: (NSNotification *)notification
 {
   UITapGestureRecognizer *recognizer = [[UITapGestureRecognizer alloc] initWithTarget: self
                                                                                action: @selector(tableViewTouchUpInside:)];

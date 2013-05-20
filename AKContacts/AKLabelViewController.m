@@ -41,7 +41,7 @@
 /**
  * Keyboard notification handlers
  */
-- (void)keyboardDidShow: (NSNotification *)notification;
+- (void)keyboardWillShow: (NSNotification *)notification;
 - (void)keyboardWillHide: (NSNotification *)notification;
 - (void)editButtonTouchUpInside: (id)sender;
 - (void)cancelButtonTouchUpInside: (id)sender;
@@ -283,8 +283,8 @@
 
   if (self.editing == YES)
   {
-    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardDidShow:)
-                                                 name: UIKeyboardDidShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillShow:)
+                                                 name: UIKeyboardWillShowNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillHide:)
                                                  name: UIKeyboardWillHideNotification object:nil];
 
@@ -305,7 +305,7 @@
                                                                                    action: @selector(editButtonTouchUpInside:)];
     [self.navigationItem setRightBarButtonItem: barButtonItem];
 
-    [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardDidShowNotification object: nil];
+    [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillShowNotification object: nil];
     [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillHideNotification object: nil];
 
     NSMutableArray *labels = [self.labels objectAtIndex: kCustomSection];
@@ -566,7 +566,7 @@
 
 #pragma mark - Keyboard
 
-- (void)keyboardDidShow: (NSNotification *)notification
+- (void)keyboardWillShow: (NSNotification *)notification
 {
   UITapGestureRecognizer *recognizer = [[UITapGestureRecognizer alloc] initWithTarget: self
                                                                                action: @selector(tableViewTouchUpInside:)];
