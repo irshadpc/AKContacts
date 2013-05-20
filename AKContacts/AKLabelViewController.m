@@ -249,6 +249,85 @@
   return self;
 }
 
+- (id)initForInstantMessageServiceWithSelectedService: (NSString *)selectedService andCompletionHandler: (AKLabelViewCompletionHandler)handler
+{
+  self = [self init];
+  if (self)
+  {
+    _property = -1 * kABPersonInstantMessageProperty;
+    _handler = [handler copy];
+    
+    _labels = [[NSMutableArray alloc] init];
+    NSMutableArray *standardLabels = [[NSMutableArray alloc] init];
+    [_labels addObject: standardLabels];
+    
+    AKLabel *label = nil;
+    CFStringRef abLabel = NULL;
+    
+    abLabel = kABPersonInstantMessageServiceAIM;
+    label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+    [label setSelected: ([selectedService compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
+    [standardLabels addObject: label];
+    
+    abLabel = kABPersonInstantMessageServiceFacebook;
+    label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+    [label setSelected: ([selectedService compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
+    [standardLabels addObject: label];
+    
+    abLabel = kABPersonInstantMessageServiceGaduGadu;
+    label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+    [label setSelected: ([selectedService compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
+    [standardLabels addObject: label];
+    
+    abLabel = kABPersonInstantMessageServiceGoogleTalk;
+    label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+    [label setSelected: ([selectedService compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
+    [standardLabels addObject: label];
+    
+    abLabel = kABPersonInstantMessageServiceICQ;
+    label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+    [label setSelected: ([selectedService compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
+    [standardLabels addObject: label];
+    
+    abLabel = kABPersonInstantMessageServiceJabber;
+    label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+    [label setSelected: ([selectedService compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
+    [standardLabels addObject: label];
+    
+    abLabel = kABPersonInstantMessageServiceMSN;
+    label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+    [label setSelected: ([selectedService compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
+    [standardLabels addObject: label];
+    
+    abLabel = kABPersonInstantMessageServiceQQ;
+    label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+    [label setSelected: ([selectedService compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
+    [standardLabels addObject: label];
+    
+    abLabel = kABPersonInstantMessageServiceSkype;
+    label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+    [label setSelected: ([selectedService compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
+    [standardLabels addObject: label];
+    
+    abLabel = kABPersonInstantMessageServiceYahoo;
+    label = [[AKLabel alloc] initWithLabel: (__bridge NSString *)(abLabel) andIsStandard: YES];
+    [label setSelected: ([selectedService compare: (__bridge NSString *)(abLabel)] == NSOrderedSame) ? YES : NO];
+    [standardLabels addObject: label];
+    
+    NSString *key = [NSString stringWithFormat: defaultsLabelKey, _property];
+    NSMutableArray *tmpLabels = [[[NSUserDefaults standardUserDefaults] arrayForKey: key] mutableCopy];
+    NSMutableArray *customLabels = [[NSMutableArray alloc] init];
+    for (NSString *tmpLabel in tmpLabels)
+    {
+      AKLabel *label = [[AKLabel alloc] initWithLabel: tmpLabel andIsStandard: NO];
+      [label setSelected: ([selectedService compare: tmpLabel] == NSOrderedSame) ? YES : NO];
+      [customLabels addObject: label];
+    }
+    [_labels addObject: customLabels];
+  }
+  return self;
+}
+
 - (void)viewDidLoad
 {
   [super viewDidLoad];

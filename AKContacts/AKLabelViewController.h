@@ -47,6 +47,13 @@ typedef void (^AKLabelViewCompletionHandler)(ABPropertyID property, NSInteger id
  */
 @property (nonatomic, strong) UITextField *firstResponder;
 
+/**
+ *
+ */
 - (id)initWithPropertyID: (ABPropertyID)property andIdentifier: (NSInteger)identifier andSelectedLabel: (NSString *)selectedLabel andCompletionHandler: (AKLabelViewCompletionHandler)handler;
+/**
+ *
+ */
+- (id)initForInstantMessageServiceWithSelectedService: (NSString *)selectedService andCompletionHandler: (AKLabelViewCompletionHandler)handler;
 
 @end
