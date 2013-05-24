@@ -59,6 +59,7 @@
   self = [self init];
   if (self)
   {
+    self.title = NSLocalizedString(@"Label", @"");
     _property = property;
     _identifier = identifier;
     _handler = [handler copy];
@@ -254,6 +255,7 @@
   self = [self init];
   if (self)
   {
+    self.title = NSLocalizedString(@"Service", @"");
     _property = -1 * kABPersonInstantMessageProperty;
     _handler = [handler copy];
     
