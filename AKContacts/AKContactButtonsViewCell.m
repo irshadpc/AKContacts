@@ -31,6 +31,7 @@
 #import "AKContactViewController.h"
 #import "AKContact.h"
 #import "AKMessenger.h"
+#import "AKGroupSelectViewController.h"
 
 typedef NS_ENUM(NSInteger, ButtonTags) {
     kButtonText = 1,
@@ -138,12 +139,13 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
   }
   else
   {
-    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle: NSLocalizedString(@"Feature Not Implemented", @"")
-                                                        message: nil
-                                                       delegate: self
-                                              cancelButtonTitle: NSLocalizedString(@"OK", @"")
-                                              otherButtonTitles: nil];
-    [alertView show];
+    AKGroupSelectViewController *groupSelectView = [[AKGroupSelectViewController alloc] init];
+    UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: groupSelectView];
+
+    if ([self.parent.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
+      [self.parent.navigationController presentViewController: navigationController animated: YES completion: nil];
+    else
+      [self.parent.navigationController presentModalViewController: navigationController animated: YES];
   }
 }
 
