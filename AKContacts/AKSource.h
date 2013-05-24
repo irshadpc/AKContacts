@@ -30,6 +30,11 @@
 
 FOUNDATION_EXPORT NSString *const defaultsSourceKey;
 
+typedef NS_ENUM(NSInteger, SourceTypes)
+{
+  kSourceAggregate = -1,
+};
+
 @class AKGroup;
 
 @interface AKSource : AKRecord
