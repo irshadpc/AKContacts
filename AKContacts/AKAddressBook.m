@@ -211,7 +211,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
   if (_dateAddressBookLoaded) 
   {
-    NSTimeInterval elapsed = fabs([_dateAddressBookLoaded timeIntervalSinceNow]);
+    NSTimeInterval elapsed = fabs([self.dateAddressBookLoaded timeIntervalSinceNow]);
     NSLog(@"Elasped since last AB load: %f", elapsed);
     if (elapsed < 5.0) return;
   }
@@ -293,15 +293,13 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   NSAssert(dispatch_get_specific(IsOnMainQueueKey) == NULL, @"Must not be dispatched on main queue");
 
   _sources = [[NSMutableArray alloc] init];
-  
-  [self setSourceID: kSourceAggregate];
-  
+
   NSArray *sources = (NSArray *)CFBridgingRelease(ABAddressBookCopyArrayOfAllSources(addressBook));
 
   if ([sources count] > 1)
   {
     AKSource *aggregatorSource = [[AKSource alloc] initWithABRecordID: kSourceAggregate];
-    [_sources addObject: aggregatorSource];
+    [self.sources addObject: aggregatorSource];
   }
 
   ABRecordRef source = ABAddressBookCopyDefaultSource(addressBook);
@@ -319,8 +317,9 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     AKSource *source = [[AKSource alloc] initWithABRecordID: recordID];
     [source setIsDefault: (defaultSourceID == recordID) ? YES : NO];
 
-    [_sources addObject: source];
+    [self.sources addObject: source];
   }
+  [self setSourceID: (sources.count > 1) ? kSourceAggregate : defaultSourceID];
 }
 
 - (void)loadGroupsWithABAddressBookRef: (ABAddressBookRef)addressBook 
@@ -501,7 +500,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 - (NSInteger)displayedContactsCount 
 {
   NSInteger ret = 0;
-  for (NSMutableArray *section in [_contactIdentifiers allValues]) 
+  for (NSMutableArray *section in [self.contactIdentifiers allValues])
   {
     ret += [section count];
   }
