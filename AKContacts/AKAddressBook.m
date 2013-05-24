@@ -445,13 +445,13 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
         }
       }
 
-      if ([mainAggregateGroup.memberIDs indexOfObject: contactID] == NSNotFound &&
+      if ([mainAggregateGroup.memberIDs member: contactID] == nil &&
           [linkedRecords indexOfObject: contactID] == NSNotFound)
       {
         [mainAggregateGroup.memberIDs addObject: contactID];
       }
 
-      if ([aggregateGroup.memberIDs indexOfObject: contactID] == NSNotFound)
+      if ([aggregateGroup.memberIDs member: contactID] == nil)
       {
         [aggregateGroup.memberIDs addObject: contactID];
       }
@@ -564,7 +564,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     if (source.recordID == kSourceAggregate) continue;
 
     AKGroup *group = [source groupForGroupId: kGroupAggregate];
-    if ([group.memberIDs indexOfObject: contactId] != NSNotFound)
+    if ([group.memberIDs member: contactId] != nil)
     {
       ret = source;
       break;
@@ -641,7 +641,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
   AKSource *source = [self sourceForSourceId: _sourceID];
   AKGroup *group = [source groupForGroupId: _groupID];
-  NSMutableArray *groupMembers = [group memberIDs];
+  NSMutableSet *groupMembers = [group memberIDs];
 
   if ([groupMembers count] == self.contactsCount)
   { // Speed up for aggregate group
@@ -659,7 +659,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       NSMutableArray *recordsToRemove = [[NSMutableArray alloc] init];
       for (NSNumber *contactID in sectionArray)
       {
-        if ([groupMembers indexOfObject: contactID] == NSNotFound)
+        if ([groupMembers member: contactID] == nil)
           [recordsToRemove addObject: contactID];
       }
       [sectionArray removeObjectsInArray: recordsToRemove];

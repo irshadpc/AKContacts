@@ -48,20 +48,6 @@ typedef NS_ENUM(NSInteger, AddressBookStatus)
   kAddressBookOnline
 };
 
-typedef NS_ENUM(NSInteger, SourceTypes)
-{
-  kSourceAggregate = -1,
-};
-
-/**
- * Add custom groups with negative IDs to avoid 
- * ID collision with groups from address book
- **/
-typedef NS_ENUM(NSInteger, GroupTypes)
-{
-  kGroupAggregate = -1,
-};
-
 @protocol AKAddressBookDelegate <NSObject>
 - (void)setProgress: (CGFloat)progress;
 @end
