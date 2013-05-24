@@ -59,11 +59,6 @@ static const int manyContacts = 20;
 
 @implementation AKContactsViewController
 
-@synthesize tableView = _tableView;
-@synthesize searchBar = _searchBar;
-
-@synthesize searchTerm = _searchTerm;
-
 #pragma mark - View lifecycle
 
 - (void)loadView
