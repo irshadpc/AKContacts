@@ -228,7 +228,7 @@ static const float defaultCellHeight = 44.f;
 - (void)reloadTableViewData
 {
   dispatch_async(dispatch_get_main_queue(), ^(void){
-    [_tableView reloadData];
+    [self.tableView reloadData];
   });
 }
 

@@ -67,7 +67,7 @@ NSString *const DefaultsKeyGroups = @"Groups";
 
 - (NSInteger)count
 {
-  return [_memberIDs count];
+  return [self.memberIDs count];
 }
 
 - (void)addMemberWithID: (ABRecordID)recordID
