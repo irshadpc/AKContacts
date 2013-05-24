@@ -30,15 +30,23 @@
 
 FOUNDATION_EXPORT NSString *const DefaultsKeyGroups;
 
-FOUNDATION_EXPORT const int createGroupTag;
-FOUNDATION_EXPORT const int deleteGroupTag;
+/**
+ * Add custom groups with negative IDs to avoid
+ * ID collision with groups from address book
+ **/
+typedef NS_ENUM(NSInteger, GroupTypes)
+{
+  kGroupAggregate = -1,
+  kGroupWillCreate = -128,
+  kGroupWillDelete = -256,
+};
 
 @interface AKGroup : AKRecord
 
 /**
- * List of contactIDs the group contains
+ * Set of contactIDs the group contains
  **/
-@property (nonatomic, strong) NSMutableArray *memberIDs;
+@property (nonatomic, strong) NSMutableSet *memberIDs;
 /**
  * Temporary storage for new group name 
  * before storing in AB database
@@ -50,5 +58,8 @@ FOUNDATION_EXPORT const int deleteGroupTag;
  * Return the member count of the group
  **/
 - (NSInteger)count;
+
+- (void)addMemberWithID: (ABRecordID)recordID;
+- (void)removeMemberWithID: (NSInteger)recordID;
 
 @end

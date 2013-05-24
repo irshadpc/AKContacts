@@ -28,17 +28,12 @@
 //
 
 #import "AKGroup.h"
+#import "AKContact.h"
 #import "AKAddressBook.h"
 
 NSString *const DefaultsKeyGroups = @"Groups";
 
-const int createGroupTag = -128;
-const int deleteGroupTag = -256;
-
 @implementation AKGroup
-
-@synthesize memberIDs = _memberIDs;
-@synthesize provisoryName = _provisoryName;
 
 - (id)initWithABRecordID: (ABRecordID) recordID
 {
@@ -46,7 +41,7 @@ const int deleteGroupTag = -256;
   if (self)
   {
     super.recordID = recordID;
-    _memberIDs = [[NSMutableArray alloc] init];
+    _memberIDs = [[NSMutableSet alloc] init];
   }
   return  self;
 }
@@ -73,6 +68,68 @@ const int deleteGroupTag = -256;
 - (NSInteger)count
 {
   return [_memberIDs count];
+}
+
+- (void)addMemberWithID: (ABRecordID)recordID
+{
+  dispatch_block_t block = ^{
+    
+    NSNumber *identifier = [NSNumber numberWithInteger: recordID];
+    if ([self.memberIDs member: identifier] == nil)
+    {
+      AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+      AKContact *contact = [addressBook contactForContactId: recordID];
+
+      CFErrorRef error = NULL;
+      BOOL changed = ABGroupAddMember(self.recordRef, contact.recordRef, &error);
+      if (error != NULL)
+      {
+        NSLog(@"%ld", CFErrorGetCode(error));
+      }
+
+      if (changed == YES)
+      {
+        ABAddressBookSave(addressBook.addressBookRef, &error);
+        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+      }
+      
+      [self.memberIDs addObject: identifier];
+    }
+  };
+  
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_async(dispatch_get_main_queue(), block);
+}
+
+- (void)removeMemberWithID: (NSInteger)recordID
+{
+  dispatch_block_t block = ^{
+    
+    NSNumber *identifier = [NSNumber numberWithInteger: recordID];
+    if ([self.memberIDs member: identifier] == nil)
+    {
+      AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+      AKContact *contact = [addressBook contactForContactId: recordID];
+      
+      CFErrorRef error = NULL;
+      BOOL changed = ABGroupRemoveMember(self.recordRef, contact.recordRef, &error);
+      if (error != NULL)
+      {
+        NSLog(@"%ld", CFErrorGetCode(error));
+      }
+      
+      if (changed == YES)
+      {
+        ABAddressBookSave(addressBook.addressBookRef, &error);
+        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+      }
+      
+      [self.memberIDs addObject: identifier];
+    }
+  };
+  
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_async(dispatch_get_main_queue(), block);
 }
 
 @end
