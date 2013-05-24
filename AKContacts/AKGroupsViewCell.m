@@ -83,15 +83,15 @@
 
   NSString *text = nil;
   NSString *placeholder = NSLocalizedString(@"New Group", @"");;
-  NSInteger tag = createGroupTag;
+  NSInteger tag = kGroupWillCreate;
 
   if (indexPath.row < [source.groups count])
   {
     AKGroup *group = [source.groups objectAtIndex: indexPath.row];
-    if (group.recordID == deleteGroupTag) {
+    if (group.recordID == kGroupWillDelete) {
       for (NSInteger i = indexPath.row; i < [source.groups count]; ++i)
       {
-        if (group.recordID != deleteGroupTag)
+        if (group.recordID != kGroupWillDelete)
         {
           group = [source.groups objectAtIndex: i];
           break;
@@ -146,7 +146,7 @@
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
 
-  if (textField.tag != createGroupTag && textField.text.length == 0)
+  if (textField.tag != kGroupWillCreate && textField.text.length == 0)
   {
     [textField setText: textField.placeholder];
   }
@@ -155,12 +155,12 @@
     AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
     AKSource *source = [akAddressBook.sources objectAtIndex: self.indexPath.section];
 
-    if (textField.tag == createGroupTag)
+    if (textField.tag == kGroupWillCreate)
     {
-      AKGroup *group = [source groupForGroupId: createGroupTag];
+      AKGroup *group = [source groupForGroupId: kGroupWillCreate];
       if (group == nil)
       {
-        group = [[AKGroup alloc] initWithABRecordID: createGroupTag];
+        group = [[AKGroup alloc] initWithABRecordID: kGroupWillCreate];
         [source.groups addObject: group];
       }
       [group setProvisoryName: textField.text];

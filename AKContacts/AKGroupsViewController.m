@@ -154,8 +154,8 @@ static const float defaultCellHeight = 44.f;
         NSInteger groups = 0;
         for (AKGroup *group in source.groups)
         {
-          if (group.recordID == deleteGroupTag ||
-              group.recordID == createGroupTag)
+          if (group.recordID == kGroupWillDelete ||
+              group.recordID == kGroupWillCreate)
             continue;
           groups += 1;
         }
@@ -297,7 +297,7 @@ static const float defaultCellHeight = 44.f;
   
   for (AKGroup *group in source.groups)
   {
-    if (group.recordID == createGroupTag || group.recordID == deleteGroupTag)
+    if (group.recordID == kGroupWillCreate || group.recordID == kGroupWillDelete)
       continue;
     ret += 1;
   }
@@ -356,13 +356,13 @@ static const float defaultCellHeight = 44.f;
     NSInteger row = 0;
     for (AKGroup *group in source.groups)
     {
-      if (group.recordID == deleteGroupTag)
+      if (group.recordID == kGroupWillDelete)
       {
         continue;
       }
       else if (group.recordID == groupID)
       {
-        [group setRecordID: deleteGroupTag];
+        [group setRecordID: kGroupWillDelete];
         break;
       }
       row += 1;

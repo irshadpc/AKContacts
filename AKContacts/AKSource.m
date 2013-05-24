@@ -164,7 +164,7 @@ NSString *const defaultsSourceKey = @"Source_%d";
   
   for (AKGroup *group in self.groups)
   {
-    if (group.recordID == createGroupTag)
+    if (group.recordID == kGroupWillCreate)
     {
       CFErrorRef error = NULL;
       ABRecordRef record = ABGroupCreateInSource(self.recordRef);
@@ -192,7 +192,7 @@ NSString *const defaultsSourceKey = @"Source_%d";
       ABAddressBookSave(addressBook.addressBookRef, &error);
       if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
     }
-    else if (group.recordID == deleteGroupTag)
+    else if (group.recordID == kGroupWillDelete)
     {
       [groupsToRemove addObject: group];
       CFErrorRef error = NULL;
@@ -228,7 +228,7 @@ NSString *const defaultsSourceKey = @"Source_%d";
   
   for (AKGroup *group in self.groups)
   {
-    if (group.recordID == deleteGroupTag)
+    if (group.recordID == kGroupWillDelete)
     {
       [group setRecordID: ABRecordGetRecordID(group.recordRef)];
     }
@@ -274,7 +274,7 @@ NSString *const defaultsSourceKey = @"Source_%d";
   
   for (AKGroup *group in self.groups)
   {
-    if (group.recordID == deleteGroupTag)
+    if (group.recordID == kGroupWillDelete)
     {
       removedGroups += 1;
     }
@@ -302,7 +302,7 @@ NSString *const defaultsSourceKey = @"Source_%d";
   
   for (AKGroup *group in self.groups)
   {
-    if (group.recordID == deleteGroupTag)
+    if (group.recordID == kGroupWillDelete)
     {
       [indexPaths addObject: [NSIndexPath indexPathForRow: [self.groups indexOfObject: group]
                                                 inSection: [addressBook.sources indexOfObject: self]]];
@@ -321,13 +321,13 @@ NSString *const defaultsSourceKey = @"Source_%d";
   
   for (AKGroup *group in self.groups)
   {
-    if (group.recordID == createGroupTag)
+    if (group.recordID == kGroupWillCreate)
     {
       NSInteger row = [self.groups count] - removedGroups - 1;
       NSIndexPath *indexPath = [NSIndexPath indexPathForRow: row inSection: [addressBook.sources indexOfObject: self]];
       [indexPaths addObject: indexPath];
     }
-    else if (group.recordID == deleteGroupTag)
+    else if (group.recordID == kGroupWillDelete)
     {
       removedGroups += 1;
     }
