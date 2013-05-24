@@ -86,22 +86,6 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 
 @implementation AKAddressBook
 
-@synthesize ab_queue = _ab_queue;
-@synthesize ab_semaphore = _ab_semaphore;
-@synthesize ab_timer = _ab_timer;
-@synthesize ab_timer_suspended = _ab_timer_suspended;
-@synthesize dateAddressBookLoaded = _dateAddressBookLoaded;
-
-@synthesize addressBookRef = _addressBookRef;
-@synthesize status = _status;
-@synthesize sources = _sources;
-@synthesize contacts = _contacts;
-@synthesize allContactIdentifiers = _allContactIdentifiers;
-@synthesize keys = _keys;
-@synthesize contactIdentifiers = _contactIdentifiers;
-@synthesize sourceID = _sourceID;
-@synthesize groupID = _groupID;
-
 #pragma mark - Address Book Changed Callback
 
 void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, void *context) 

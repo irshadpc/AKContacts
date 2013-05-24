@@ -47,8 +47,6 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
 
 @implementation AKContactButtonsViewCell
 
-@synthesize parent;
-
 -(id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
   
   self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];

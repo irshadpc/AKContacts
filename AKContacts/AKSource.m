@@ -45,9 +45,6 @@ NSString *const defaultsSourceKey = @"Source_%d";
 
 @implementation AKSource
 
-@synthesize groups = _groups;
-@synthesize isDefault = _isDefault;
-
 - (id)initWithABRecordID: (ABRecordID) recordID
 {
   self = [super init];

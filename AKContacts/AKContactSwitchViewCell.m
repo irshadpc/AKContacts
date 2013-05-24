@@ -38,10 +38,6 @@
 
 @implementation AKContactSwitchViewCell
 
-@synthesize identifier;
-
-@synthesize parent;
-
 -(id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
   
   self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];

@@ -41,9 +41,6 @@
 
 @implementation AKMessenger
 
-@synthesize contactID = _contactID;
-@synthesize delegate = _delegate;
-
 #pragma mark - Class methods
 
 + (AKMessenger *)sharedInstance

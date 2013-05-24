@@ -44,10 +44,6 @@ static const int editModeItem = 8;
 
 @implementation AKContactHeaderViewCell
 
-@synthesize abPropertyID = _abPropertyID;
-
-@synthesize parent = _parent;
-
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
   
   self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];

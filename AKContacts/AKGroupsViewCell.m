@@ -41,10 +41,6 @@
 
 @implementation AKGroupsViewCell
 
-@synthesize parent = _parent;
-@synthesize textField = _textField;
-@synthesize indexPath = _indexPath;
-
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
