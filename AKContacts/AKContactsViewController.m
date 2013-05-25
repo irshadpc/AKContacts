@@ -40,12 +40,22 @@
 static const float defaultCellHeight = 44.f;
 static const int manyContacts = 20;
 
-@interface AKContactsViewController () <UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate, AKContactViewControllerDelegate>
+typedef NS_ENUM(NSInteger, ActionSheetButtons)
+{
+  kButtonNewContact = 0,
+  kButtonExistingContact,
+  kButtonCancel,
+  NUM_ACTIONSHEET_BUTTONS
+};
+
+@interface AKContactsViewController () <UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate, UIActionSheetDelegate, AKContactViewControllerDelegate>
 
 @property (nonatomic, strong) UITableView *tableView;
 @property (nonatomic, strong) UISearchBar *searchBar;
 @property (nonatomic, strong) NSString *searchTerm;
 
+- (void)presentNewContactViewController;
+- (void)presentAddToGroupActionSheet;
 - (void)addButtonTouchUp: (id)sender;
 - (void)reloadTableViewData;
 - (void)toggleBackButton;
@@ -150,6 +160,7 @@ static const int manyContacts = 20;
   [[AKAddressBook sharedInstance] resetSearch];
   [self reloadTableViewData];
   AKContactViewController *contactView = [[AKContactViewController alloc] initWithContactID: contactID];
+  [contactView setDelegate: self];
   [self.navigationController pushViewController: contactView animated: NO];
 }
 
@@ -161,7 +172,7 @@ static const int manyContacts = 20;
 
 #pragma mark - Custom methods
 
-- (void)addButtonTouchUp: (id)sender
+- (void)presentNewContactViewController
 {
   AKContactViewController *contactView = [[AKContactViewController alloc] initWithContactID: tagNewContact];
   [contactView setDelegate: self];
@@ -171,6 +182,36 @@ static const int manyContacts = 20;
     [self.navigationController presentViewController: navigationController animated: YES completion: nil];
   else
     [self.navigationController presentModalViewController: navigationController animated: YES];
+}
+
+- (void)presentAddToGroupActionSheet
+{
+  NSString *title = NSLocalizedString(@"Add to Group:", @"");
+  UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle: title
+                                                           delegate: self
+                                                  cancelButtonTitle: nil
+                                             destructiveButtonTitle: nil
+                                                  otherButtonTitles: nil];
+  NSString *label = NSLocalizedString(@"New Contact", @"");
+  [actionSheet addButtonWithTitle: label];
+  label = NSLocalizedString(@"Existing Contact", @"");
+  [actionSheet addButtonWithTitle: label];
+  label = NSLocalizedString(@"Cancel", @"");
+  [actionSheet addButtonWithTitle: label];
+  [actionSheet setCancelButtonIndex: (actionSheet.numberOfButtons - 1)];
+  [actionSheet showInView: self.view];
+}
+
+- (void)addButtonTouchUp: (id)sender
+{
+  if ([AKAddressBook sharedInstance].groupID < 0)
+  {
+    [self presentNewContactViewController];
+  }
+  else
+  {
+    [self presentAddToGroupActionSheet];
+  }
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
@@ -536,6 +577,20 @@ static const int manyContacts = 20;
   [searchBar resignFirstResponder];
   [[AKAddressBook sharedInstance] resetSearch];
   [self reloadTableViewData];
+}
+
+#pragma mark - UIActionsheet Delegate
+
+- (void)actionSheet:(UIActionSheet *)actionSheet didDismissWithButtonIndex:(NSInteger)buttonIndex
+{
+  if (buttonIndex == kButtonNewContact)
+  {
+    [self presentNewContactViewController];
+  }
+  else if (buttonIndex == kButtonExistingContact)
+  {
+    
+  }
 }
 
 #pragma mark - Memory management
