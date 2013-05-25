@@ -134,7 +134,7 @@ static const float defaultCellHeight = 44.f;
   self = [self init];
   if (self)
   {
-    _contact = (contactID != tagNewContact) ? [[AKAddressBook sharedInstance] contactForContactId: contactID] : nil;
+    _contact = (contactID != tagNewContact) ? [[AKAddressBook sharedInstance] contactForContactId: contactID] : [[AKContact alloc] initWithABRecordID: tagNewContact];
     _parentLinkedContactID = NSNotFound;
   }
   return self;
@@ -222,7 +222,7 @@ static const float defaultCellHeight = 44.f;
 
   [self.navigationItem setRightBarButtonItem: self.editButtonItem];
   
-  if (self.contact == nil)
+  if (self.contact.recordID == tagNewContact)
   {
     [self.sections removeObject: [NSNumber numberWithInteger: kSectionDeleteButton]];
     [self setEditing: YES animated: NO];
@@ -659,11 +659,13 @@ static const float defaultCellHeight = 44.f;
     
     [self.view endEditing: YES]; // Resign first responders
 
-    [self.contact commit];
+    ABRecordID contactID = self.contact.recordID;
+    
+    [self.contact commit]; // ContactID changes from tagNewContact here
 
     [self setWillAddAddress: NO];
 
-    if (self.contact == nil)
+    if (contactID == tagNewContact)
     {
       if ([self.delegate respondsToSelector: @selector(modalViewDidDismissWithContactID:)])
         [self.delegate modalViewDidDismissWithContactID: self.contact.recordID];
@@ -754,7 +756,7 @@ static const float defaultCellHeight = 44.f;
 
   [self.contact revert];
 
-  if (self.contact == nil)
+  if (self.contact.recordID == tagNewContact)
   {
     [[AKAddressBook sharedInstance].contacts removeObjectForKey: [NSNumber numberWithInteger: tagNewContact]];
     if ([self.navigationController respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])

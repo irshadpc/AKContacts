@@ -45,7 +45,7 @@
 @interface AKContactViewController : UIViewController <UITableViewDataSource, UITableViewDelegate> 
 
 @property (nonatomic, strong) UITableView *tableView;
-@property (nonatomic, unsafe_unretained) AKContact *contact;
+@property (nonatomic, strong) AKContact *contact;
 @property (nonatomic, unsafe_unretained) id <AKContactViewControllerDelegate> delegate;
 /**
  * Set to YES when add new address row is
