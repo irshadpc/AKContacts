@@ -28,6 +28,7 @@
 
 #import "AKContact.h"
 #import "AKAddressBook.h"
+#import "AKGroup.h"
 #import "AKSource.h"
 
 const int tagNewContact = -368;
@@ -355,6 +356,13 @@ const int tagNewContact = -368;
     [addressBook.contacts removeObjectForKey: [NSNumber numberWithInteger: tagNewContact]];
     
     [addressBook insertRecordID: self.recordID inDictionary: [addressBook allContactIdentifiers] withAddressBookRef: addressBookRef];
+    
+    if (addressBook.groupID >= 0)
+    { // Add to group
+      AKSource *source = [addressBook sourceForSourceId: addressBook.sourceID];
+      AKGroup *group = [source groupForGroupId: addressBook.groupID];
+      [group addMemberWithID: self.recordID];
+    }
   }
 }
 
