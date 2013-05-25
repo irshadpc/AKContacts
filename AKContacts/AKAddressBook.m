@@ -53,21 +53,21 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 
 @interface AKAddressBook ()
 
-@property (nonatomic, assign, readonly) dispatch_queue_t ab_queue;
+@property (assign, nonatomic, readonly) dispatch_queue_t ab_queue;
 
-@property (nonatomic, assign, readonly) dispatch_semaphore_t ab_semaphore;
+@property (assign, nonatomic, readonly) dispatch_semaphore_t ab_semaphore;
 
-@property (nonatomic, assign) dispatch_source_t ab_timer;
-@property (nonatomic, assign) BOOL ab_timer_suspended;
+@property (assign, nonatomic) dispatch_source_t ab_timer;
+@property (assign, nonatomic) BOOL ab_timer_suspended;
 
-@property (nonatomic, assign) NSInteger contactsCount;
+@property (assign, nonatomic) NSInteger contactsCount;
 
 /**
  * ABAddressBookRegisterExternalChangeCallback tends to fire multiple times
  * for a single change, so we store the last date when the addressbook
  * is reloaded and skip callbacks that fire too close to this date
  */
-@property (nonatomic, strong) NSDate *dateAddressBookLoaded;
+@property (strong, nonatomic) NSDate *dateAddressBookLoaded;
 
 -(void)reloadAddressBook;
 -(void)loadSourcesWithABAddressBookRef: (ABAddressBookRef)addressBook;
@@ -619,26 +619,29 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (void)resetSearch 
 {
-  [self setContactIdentifiers: [[NSMutableDictionary alloc] initWithCapacity: [self.allContactIdentifiers count]]];
-  [self setKeys: [[NSMutableArray alloc] init]];
+  [self setKeys: [[NSMutableArray alloc] initWithObjects: UITableViewIndexSearch, nil]];
 
   AKSource *source = [self sourceForSourceId: _sourceID];
   AKGroup *group = [source groupForGroupId: _groupID];
   NSMutableSet *groupMembers = [group memberIDs];
 
+  NSArray *keyArray = [[self.allContactIdentifiers allKeys] sortedArrayUsingSelector: @selector(compare:)];
+  
   if ([groupMembers count] == self.contactsCount)
   { // Speed up for aggregate group
-    [self setContactIdentifiers: [self.allContactIdentifiers mutableCopy]];
+    NSMutableDictionary *contactIdentifiers = [NSKeyedUnarchiver unarchiveObjectWithData: [NSKeyedArchiver archivedDataWithRootObject: self.allContactIdentifiers]]; // Mutable deep copy
+    [self setContactIdentifiers: contactIdentifiers];
+    [self.keys addObjectsFromArray: keyArray];
   }
   else
   {
-    for (NSString *key in self.allContactIdentifiers)
+    [self setContactIdentifiers: [[NSMutableDictionary alloc] initWithCapacity: [self.allContactIdentifiers count]]];
+
+    for (NSString *key in keyArray)
     {
       NSArray *arrayForKey = [self.allContactIdentifiers objectForKey: key];
-      NSMutableArray *sectionArray = [[NSMutableArray alloc] initWithCapacity: [arrayForKey count]];
-      [self.contactIdentifiers setObject: sectionArray forKey: key];
-      [sectionArray addObjectsFromArray: [self.allContactIdentifiers objectForKey: key]];
-      
+      NSMutableArray *sectionArray = [NSKeyedUnarchiver unarchiveObjectWithData: [NSKeyedArchiver archivedDataWithRootObject: arrayForKey]];
+
       NSMutableArray *recordsToRemove = [[NSMutableArray alloc] init];
       for (NSNumber *contactID in sectionArray)
       {
@@ -646,48 +649,55 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
           [recordsToRemove addObject: contactID];
       }
       [sectionArray removeObjectsInArray: recordsToRemove];
+      if ([sectionArray count] > 0)
+      {
+        [self.contactIdentifiers setObject: sectionArray forKey: key];
+        [self.keys addObject: key];
+      }
     }
   }
 
-  [self.keys addObject: UITableViewIndexSearch];
-  [self.keys addObjectsFromArray: [[self.allContactIdentifiers allKeys] sortedArrayUsingSelector: @selector(compare:)]];
   // Little hack to move # to the end of the list
-  if ([self.keys count] > 0) 
+  if ([self.keys count] > 1)
   {
     [self.keys addObject: [self.keys objectAtIndex: 1]];
     [self.keys removeObjectAtIndex: 1];
   }
-
-  // Remove empty keys
-  NSMutableArray *emptyKeys = [[NSMutableArray alloc] init];
-  for (NSString *key in [self.contactIdentifiers allKeys]) 
-  {
-    NSMutableArray *array = [self.contactIdentifiers objectForKey: key];
-    if ([array count] == 0)
-      [emptyKeys addObject: key];
-  }
-  [self.contactIdentifiers removeObjectsForKeys: emptyKeys];
-  [self.keys removeObjectsInArray: emptyKeys];
 }
 
 - (void)handleSearchForTerm: (NSString *)searchTerm 
 {
+  static NSInteger previousTermLength = 1;
+  
   dispatch_block_t block = ^{
 
     dispatch_semaphore_wait(self.ab_semaphore, DISPATCH_TIME_FOREVER);
 
     NSMutableArray *sectionsToRemove = [[NSMutableArray alloc ]init];
-    [self resetSearch];
 
-    for (NSString *key in self.keys) 
+    if (previousTermLength >= [searchTerm length])
     {
+      [self resetSearch];
+    }
+    previousTermLength = [searchTerm length];
+
+    for (NSString *key in self.keys)
+    {
+      if ([key isEqualToString: UITableViewIndexSearch])
+        continue;
+
       NSMutableArray *array = [self.contactIdentifiers valueForKey: key];
       NSMutableArray *toRemove = [[NSMutableArray alloc] init];
       for (NSNumber *identifier in array) 
       {
-        NSString *name = [[self contactForContactId: [identifier integerValue]] searchName];
-        
-        if ([name rangeOfString: searchTerm options: NSCaseInsensitiveSearch].location == NSNotFound)
+        AKContact *contact = [self contactForContactId: [identifier integerValue]];
+        NSString *firstName = [contact valueForProperty: kABPersonFirstNameProperty];
+        NSString *lastName = [contact valueForProperty: kABPersonLastNameProperty];
+
+        BOOL firstNameMatches = (firstName && [firstName rangeOfString: searchTerm options: NSCaseInsensitiveSearch|NSDiacriticInsensitiveSearch|NSAnchoredSearch].location != NSNotFound);
+        BOOL lastNameMatches = (lastName && [lastName rangeOfString: searchTerm options: NSCaseInsensitiveSearch|NSDiacriticInsensitiveSearch|NSAnchoredSearch].location != NSNotFound);
+
+        if (firstNameMatches == NO && lastNameMatches == NO)
           [toRemove addObject: identifier];
       }
 
