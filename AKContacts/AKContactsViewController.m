@@ -63,6 +63,11 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
  */
 - (void)modalViewDidDismissWithContactID: (NSInteger)contactID;
 - (void)recordDidRemoveWithContactID: (NSInteger)contactID;
+/**
+ * Keyboard notification handlers
+ */
+- (void)keyboardWillShow: (NSNotification *)notification;
+- (void)keyboardWillHide: (NSNotification *)notification;
 
 @end
 
@@ -130,6 +135,11 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
     if (self.tableView.tableHeaderView && self.tableView.contentOffset.y <= self.searchBar.frame.size.height)
       self.tableView.contentOffset = CGPointMake(0.f, self.searchBar.frame.size.height);
   }
+  
+  [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillShow:)
+                                               name: UIKeyboardWillShowNotification object:nil];
+  [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillHide:)
+                                               name: UIKeyboardWillHideNotification object:nil];
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -518,6 +528,25 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
     [[AKAddressBook sharedInstance] setDelegate: activity];
   }
   return cell;
+}
+
+#pragma mark - Keyboard 
+
+- (void)keyboardWillShow: (NSNotification *)notification
+{
+  NSDictionary* info = [notification userInfo];
+  CGSize kbSize = [[info objectForKey: UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
+  
+  UIEdgeInsets contentInsets = UIEdgeInsetsMake(0.f, 0.f, kbSize.height, 0.f);
+  [self.tableView setContentInset: contentInsets];
+  [self.tableView setScrollIndicatorInsets: contentInsets];
+}
+
+- (void)keyboardWillHide: (NSNotification *)notification
+{
+  UIEdgeInsets contentInsets = UIEdgeInsetsZero;
+  [self.tableView setContentInset: contentInsets];
+  [self.tableView setScrollIndicatorInsets: contentInsets];
 }
 
 #pragma mark - Search Bar delegate
