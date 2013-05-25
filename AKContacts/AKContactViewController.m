@@ -54,7 +54,7 @@ typedef NS_ENUM(NSInteger, SectionID) {
   kSectionInstantMessage,
   kSectionNote,
   kSectionButtons,
-  kSectionLinked,
+  kSectionLinkedRecords,
   kSectionDeleteButton,
 };
 
@@ -159,7 +159,7 @@ static const float defaultCellHeight = 44.f;
       
     case kSectionDeleteButton: return 0;
       
-    case kSectionLinked: return [[self.contact linkedContactIDs] count];
+    case kSectionLinkedRecords: return [[self.contact linkedContactIDs] count];
     // If custom section does not default to having one element add case here
     default: return 1;
   }
@@ -171,7 +171,7 @@ static const float defaultCellHeight = 44.f;
   {
     case kSectionSwitch:
     case kSectionButtons:
-    case kSectionLinked:
+    case kSectionLinkedRecords:
       return NO;
     default:
       return YES;
@@ -206,7 +206,7 @@ static const float defaultCellHeight = 44.f;
   [self.sections addObject: [NSNumber numberWithInteger: kSectionInstantMessage]];
   [self.sections addObject: [NSNumber numberWithInteger: kSectionNote]];
   [self.sections addObject: [NSNumber numberWithInteger: kSectionButtons]];
-  [self.sections addObject: [NSNumber numberWithInteger: kSectionLinked]];
+  [self.sections addObject: [NSNumber numberWithInteger: kSectionLinkedRecords]];
   [self.sections addObject: [NSNumber numberWithInteger: kSectionDeleteButton]];
   [self setSectionIdentifiers: [self.sections copy]];
 
@@ -411,7 +411,7 @@ static const float defaultCellHeight = 44.f;
     case kSectionButtons:
       return [self buttonsCellViewAtRow: indexPath.row];
 
-    case kSectionLinked:
+    case kSectionLinkedRecords:
       return [self linkedCellViewAtRow: indexPath.row];
 
     case kSectionDeleteButton:
@@ -427,7 +427,7 @@ static const float defaultCellHeight = 44.f;
   section = [[self.sections objectAtIndex: section] integerValue];
 
   switch (section) {
-    case kSectionLinked:
+    case kSectionLinkedRecords:
       return (self.editing) ? nil : NSLocalizedString(@"Linked Contacts", @"");
     default: return nil;
   }
@@ -442,7 +442,7 @@ static const float defaultCellHeight = 44.f;
     case kSectionHeader:
     case kSectionDeleteButton:
     case kSectionButtons:
-    case kSectionLinked:
+    case kSectionLinkedRecords:
       return NO;
     default:
       return YES;
@@ -583,7 +583,7 @@ static const float defaultCellHeight = 44.f;
         [[UIApplication sharedApplication] openURL: [NSURL URLWithString: [dict objectForKey: (NSString *)kABPersonSocialProfileURLKey]]];
       }
     }
-    else if (section == kSectionLinked)
+    else if (section == kSectionLinkedRecords)
     {
       NSInteger recordId = [[[self.contact linkedContactIDs] objectAtIndex: indexPath.row] integerValue];
       
@@ -697,7 +697,7 @@ static const float defaultCellHeight = 44.f;
       }
       else
       {
-        if (section.integerValue != kSectionDeleteButton || self.contact != nil)
+        if (section.integerValue != kSectionDeleteButton || self.contact.recordID != tagNewContact)
         {
           [insertSections addObject: section];
         }
