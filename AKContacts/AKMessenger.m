@@ -55,22 +55,27 @@
 
 - (void)sendTextWithRecipient: (NSString *)recipient
 {
-    recipient = [[recipient componentsSeparatedByCharactersInSet:
-                            [[NSCharacterSet decimalDigitCharacterSet] invertedSet]]
-                           componentsJoinedByString: @""];
-  NSURL *URL = [[NSURL alloc] initWithString: [NSString stringWithFormat: @"heywire:%@", recipient]];
-
-  UIApplication *application = [UIApplication sharedApplication];
-  if ([application canOpenURL: URL])
+  if ([MFMessageComposeViewController canSendText])
   {
-    [application openURL: URL];
+    MFMessageComposeViewController *messageVC = [[MFMessageComposeViewController alloc] init];
+    [messageVC setMessageComposeDelegate: self];
+    [messageVC setRecipients: [[NSArray alloc] initWithObjects: recipient, nil]];
+    
+    if ([self.delegate respondsToSelector: @selector(presentModalComposeMessageViewController:)])
+    {
+      [self.delegate presentModalComposeMessageViewController: messageVC];
+    }
+    else
+    {
+      NSLog(@"AKMessengerDelegate should respond to presentModalComposeMessageViewController: selector");
+    }
   }
   else
   {
-    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle: @"HeyWire Free Texting Not Installed"
-                                                        message: @"Please install/update the latest version of HeyWire to enable free texting."
-                                                       delegate: nil
-                                              cancelButtonTitle: @"OK"
+    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle: NSLocalizedString(@"Cannot Sent Text", @"")
+                                                        message: @"This device cannot send text messages."
+                                                       delegate: self
+                                              cancelButtonTitle: NSLocalizedString(@"OK", @"")
                                               otherButtonTitles: nil];
     [alertView show];
   }
@@ -169,7 +174,7 @@
   }
 }
 
-#pragma mark - MFMailComposeViewControllerDelegate
+#pragma mark - MFMessageComposeViewControllerDelegate
 
 - (void)messageComposeViewController:(MFMessageComposeViewController *)controller didFinishWithResult:(MessageComposeResult)result
 {

@@ -30,6 +30,7 @@
 
 @protocol AKMessengerDelegate <NSObject>
 - (void)presentModalComposeEmailViewController: (UIViewController *)viewController;
+- (void)presentModalComposeMessageViewController: (UIViewController *)viewController;
 - (void)presentActionSheet: (UIActionSheet *)actionSheet;
 - (void)dismissModalViewController;
 @end

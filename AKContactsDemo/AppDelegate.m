@@ -75,6 +75,11 @@
   [self.navigationController presentModalViewController: viewController animated: YES];
 }
 
+- (void)presentModalComposeMessageViewController: (UIViewController *)viewController
+{
+  [self.navigationController presentModalViewController: viewController animated: YES];
+}
+
 - (void)presentActionSheet: (UIActionSheet *)actionSheet
 {
   [actionSheet showInView: self.navigationController.view];
