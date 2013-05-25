@@ -103,7 +103,7 @@ static const int editModeItem = 8;
       [button.layer setCornerRadius: 5.f];
       [button.layer setBorderColor: [[UIColor colorWithRed:130.f/255.f green:138.f/255.f blue:154.f/255.f alpha: 1.f] CGColor]];
       [button.layer setBorderWidth: 1.5f];
-      [button setTitle: @"add\nphoto" forState: UIControlStateNormal];
+      [button setTitle: NSLocalizedString(@"add\nphoto", @"") forState: UIControlStateNormal];
       [button.titleLabel setLineBreakMode: NSLineBreakByWordWrapping];
       [button.titleLabel setFont: [UIFont boldSystemFontOfSize: 12.f]];
       [button.titleLabel setNumberOfLines: 2];

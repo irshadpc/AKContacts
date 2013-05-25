@@ -288,7 +288,7 @@ const int tagNewContact = -368;
   else
   {
     NSInteger kind = [(NSNumber *)[self valueForProperty: kABPersonKindProperty] integerValue];
-    ret = [UIImage imageNamed: (kind == [(NSNumber *)kABPersonKindOrganization integerValue]) ? @"Company.png" : @"Contact"];
+    ret = [UIImage imageNamed: (kind == [(NSNumber *)kABPersonKindOrganization integerValue]) ? @"Company.png" : @"Contact.png"];
   }
   return ret;
 }

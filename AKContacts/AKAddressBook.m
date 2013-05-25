@@ -640,7 +640,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     for (NSString *key in keyArray)
     {
       NSArray *arrayForKey = [self.allContactIdentifiers objectForKey: key];
-      NSMutableArray *sectionArray = [NSKeyedUnarchiver unarchiveObjectWithData: [NSKeyedArchiver archivedDataWithRootObject: arrayForKey]];
+      NSMutableArray *sectionArray = [NSKeyedUnarchiver unarchiveObjectWithData: [NSKeyedArchiver archivedDataWithRootObject: arrayForKey]]; // Mutable deep copy
 
       NSMutableArray *recordsToRemove = [[NSMutableArray alloc] init];
       for (NSNumber *contactID in sectionArray)
