@@ -626,9 +626,4 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   // Release any cached data, images, etc that aren't in use.
 }
 
-- (void)dealloc
-{
-  NSLog(@"Dealloc");
-}
-
 @end
