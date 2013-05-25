@@ -13,7 +13,7 @@
 
 @interface AKGroupSelectViewController () <UITableViewDataSource, UITableViewDelegate>
 
-@property (nonatomic, strong) UITableView *tableView;
+@property (strong, nonatomic) UITableView *tableView;
 
 @end
 

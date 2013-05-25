@@ -37,8 +37,8 @@ static const int editModeItem = 8;
 
 @interface AKContactHeaderViewCell ()
 
-@property (nonatomic, assign) ABPropertyID abPropertyID;
-@property (nonatomic, strong) UITextField *textField;
+@property (assign, nonatomic) ABPropertyID abPropertyID;
+@property (strong, nonatomic) UITextField *textField;
 
 @end
 

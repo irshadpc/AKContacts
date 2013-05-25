@@ -33,10 +33,10 @@
 
 @interface AKLabelViewController () <UITableViewDataSource, UITableViewDelegate>
 
-@property (nonatomic, strong) UITableView *tableView;
-@property (nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer;
-@property (nonatomic, assign) NSInteger identifier;
-@property (nonatomic, copy) AKLabelViewCompletionHandler handler;
+@property (strong, nonatomic) UITableView *tableView;
+@property (strong, nonatomic) UITapGestureRecognizer *tapGestureRecognizer;
+@property (assign, nonatomic) NSInteger identifier;
+@property (copy, nonatomic) AKLabelViewCompletionHandler handler;
 
 /**
  * Keyboard notification handlers

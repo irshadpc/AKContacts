@@ -34,7 +34,7 @@ NSString *const defaultsLabelKey = @"Label_%d";
 
 @interface AKLabel ()
 
-@property (nonatomic, assign) BOOL standard;
+@property (assign, nonatomic) BOOL standard;
 
 @end
 

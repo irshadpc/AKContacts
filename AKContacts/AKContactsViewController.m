@@ -50,9 +50,8 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
 @interface AKContactsViewController () <UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate, UIActionSheetDelegate, AKContactViewControllerDelegate>
 
-@property (nonatomic, strong) UITableView *tableView;
-@property (nonatomic, strong) UISearchBar *searchBar;
-@property (nonatomic, strong) NSString *searchTerm;
+@property (strong, nonatomic) UITableView *tableView;
+@property (strong, nonatomic) UISearchBar *searchBar;
 
 - (void)presentNewContactViewController;
 - (void)presentAddToGroupActionSheet;
@@ -87,8 +86,6 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   
   [self setView: [[UIView alloc] init]];
   [self.view addSubview: self.tableView];
-  
-  [self setSearchTerm: nil];
 }
 
 -(void)viewDidLoad
@@ -122,7 +119,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
   [self toggleBackButton];
 
-  if ([self.searchTerm length] > 0)
+  if ([self.searchBar.text length] > 0)
   {
     [self.searchBar becomeFirstResponder];
   }
@@ -433,7 +430,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView
 {
-  if ([self.searchTerm length] > 0)
+  if ([self.searchBar.text length] > 0)
   {
     if (self.tableView.contentOffset.y >= self.searchBar.frame.size.height)
     {
@@ -559,20 +556,17 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 {
   if ([searchTerm length] == 0)
   {
-    [self setSearchTerm: nil];
     [[AKAddressBook sharedInstance] resetSearch];
     [self.tableView reloadData];
   }
   else
   {
-    [self setSearchTerm: searchTerm];
     [[AKAddressBook sharedInstance] handleSearchForTerm: searchTerm];
   }
 }
 
 - (void)searchBarCancelButtonClicked:(UISearchBar *)searchBar
 {
-  [self setSearchTerm: nil];
   [searchBar setText: nil];
   [searchBar resignFirstResponder];
   [[AKAddressBook sharedInstance] resetSearch];
@@ -605,6 +599,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
 - (void)dealloc
 {
+  NSLog(@"Dealloc");
 }
 
 @end

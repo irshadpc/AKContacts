@@ -40,12 +40,12 @@ typedef NS_ENUM(NSInteger, Sections)
 
 typedef void (^AKLabelViewCompletionHandler)(ABPropertyID property, NSInteger identifier, NSString *label);
 
-@property (nonatomic, assign) ABPropertyID property;
-@property (nonatomic, strong) NSMutableArray *labels;
+@property (assign, nonatomic) ABPropertyID property;
+@property (strong, nonatomic) NSMutableArray *labels;
 /**
  * UITextField currently being edited
  */
-@property (nonatomic, strong) UITextField *firstResponder;
+@property (strong, nonatomic) UITextField *firstResponder;
 
 /**
  *

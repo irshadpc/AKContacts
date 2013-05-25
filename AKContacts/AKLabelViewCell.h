@@ -32,7 +32,7 @@
 
 @interface AKLabelViewCell : UITableViewCell <UITextFieldDelegate>
 
-@property (nonatomic, strong) AKLabelViewController *parent;
+@property (strong, nonatomic) AKLabelViewController *parent;
 
 - (void)configureCellAtIndexPath: (NSIndexPath *)indexPath;
 

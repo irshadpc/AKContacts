@@ -44,22 +44,22 @@
 
 @interface AKContactViewController : UIViewController <UITableViewDataSource, UITableViewDelegate> 
 
-@property (nonatomic, strong) UITableView *tableView;
-@property (nonatomic, strong) AKContact *contact;
-@property (nonatomic, unsafe_unretained) id <AKContactViewControllerDelegate> delegate;
+@property (strong, nonatomic) UITableView *tableView;
+@property (strong, nonatomic) AKContact *contact;
+@property (unsafe_unretained, nonatomic) id <AKContactViewControllerDelegate> delegate;
 /**
  * Set to YES when add new address row is
  * selected in the contact edit view
  */
-@property (nonatomic, assign) BOOL willAddAddress;
+@property (assign, nonatomic) BOOL willAddAddress;
 /**
  * UITextField currently being edited
  */
-@property (nonatomic, strong) UIView *firstResponder;
+@property (strong, nonatomic) UIView *firstResponder;
 /**
  * Set to YES when displaying a linked contact
  */
-@property (nonatomic, assign) NSInteger parentLinkedContactID;
+@property (assign, nonatomic) NSInteger parentLinkedContactID;
 /**
  * Create a person view with a contactID
  */

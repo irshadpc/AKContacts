@@ -54,7 +54,7 @@ typedef NS_ENUM(NSInteger, AddressBookStatus)
 
 @interface AKAddressBook : NSObject
 
-@property (nonatomic, assign) id <AKAddressBookDelegate> delegate;
+@property (assign, nonatomic) id <AKAddressBookDelegate> delegate;
 
 @property (assign, nonatomic) ABAddressBookRef addressBookRef;
 

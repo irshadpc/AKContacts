@@ -35,7 +35,7 @@ static const CGFloat kRadius = 11.f;
 
 @interface AKContactsProgressIndicatorView ()
 
-@property (nonatomic, assign) CAShapeLayer *spinLayer;
+@property (assign, nonatomic) CAShapeLayer *spinLayer;
 
 @end
 

@@ -36,7 +36,7 @@
 
 @interface AKMessenger : NSObject
 
-@property (nonatomic, assign) id <AKMessengerDelegate> delegate;
+@property (assign, nonatomic) id <AKMessengerDelegate> delegate;
 
 + (AKMessenger *)sharedInstance;
 

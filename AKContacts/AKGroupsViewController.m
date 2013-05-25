@@ -37,8 +37,8 @@ static const float defaultCellHeight = 44.f;
 
 @interface AKGroupsViewController () <UITableViewDataSource, UITableViewDelegate>
 
-@property (nonatomic, strong) UITableView *tableView;
-@property (nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer;
+@property (strong, nonatomic) UITableView *tableView;
+@property (strong, nonatomic) UITapGestureRecognizer *tapGestureRecognizer;
 
 /**
  * Touch handler of edit button

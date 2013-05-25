@@ -46,12 +46,12 @@ typedef NS_ENUM(NSInteger, GroupTypes)
 /**
  * Set of contactIDs the group contains
  **/
-@property (nonatomic, strong) NSMutableSet *memberIDs;
+@property (strong, nonatomic) NSMutableSet *memberIDs;
 /**
  * Temporary storage for new group name 
  * before storing in AB database
  **/
-@property (nonatomic, strong) NSString *provisoryName;
+@property (copy, nonatomic) NSString *provisoryName;
 
 - (id)initWithABRecordID: (ABRecordID) recordID;
 /**

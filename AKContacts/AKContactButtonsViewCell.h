@@ -32,7 +32,7 @@
 
 @interface AKContactButtonsViewCell : UITableViewCell 
 
-@property (nonatomic, strong) AKContactViewController *parent;
+@property (unsafe_unretained, nonatomic) AKContactViewController *parent;
 
 -(void)configureCellAtRow: (NSInteger)row;
 

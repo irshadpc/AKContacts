@@ -33,10 +33,10 @@
 
 @interface AKContactDetailViewCell ()
 
-@property (nonatomic, assign) ABPropertyID abPropertyID;
-@property (nonatomic, strong) UITextField *textField;
-@property (nonatomic, strong) UITextView *textView;
-@property (nonatomic, strong) UIView *separator;
+@property (assign, nonatomic) ABPropertyID abPropertyID;
+@property (strong, nonatomic) UITextField *textField;
+@property (strong, nonatomic) UITextView *textView;
+@property (strong, nonatomic) UIView *separator;
 
 - (UIView *)datePickerInputViewWithDate: (NSDate *)date;
 - (UIView *)datePickerInputAccessoryView;

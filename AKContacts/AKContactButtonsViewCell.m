@@ -40,8 +40,8 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
 
 @interface AKContactButtonsViewCell ()
 
-@property (nonatomic, strong) UIButton *textButton;
-@property (nonatomic, strong) UIButton *groupButton;
+@property (strong, nonatomic) UIButton *textButton;
+@property (strong, nonatomic) UIButton *groupButton;
 
 @end
 

@@ -35,7 +35,7 @@
 
 @interface AKMessenger () <MFMessageComposeViewControllerDelegate, MFMailComposeViewControllerDelegate, UIActionSheetDelegate>
 
-@property (nonatomic, assign) NSInteger contactID;
+@property (assign, nonatomic) NSInteger contactID;
 
 @end
 

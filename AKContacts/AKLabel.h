@@ -42,9 +42,9 @@ typedef NS_ENUM(NSInteger, LabelStatus)
 
 @interface AKLabel : NSObject
 
-@property (nonatomic, copy) NSString *label;
-@property (nonatomic, assign) BOOL selected;
-@property (nonatomic, assign) LabelStatus status;
+@property (copy, nonatomic) NSString *label;
+@property (assign, nonatomic) BOOL selected;
+@property (assign, nonatomic) LabelStatus status;
 
 + (NSString *)defaultLabelForABPropertyID: (ABPropertyID)property;
 + (NSString *)defaultLocalizedLabelForABPropertyID: (ABPropertyID)property;

@@ -34,8 +34,8 @@
 
 @interface AKGroupsViewCell ()
 
-@property (nonatomic, strong) UITextField *textField;
-@property (nonatomic, strong) NSIndexPath *indexPath;
+@property (strong, nonatomic) UITextField *textField;
+@property (strong, nonatomic) NSIndexPath *indexPath;
 
 @end
 

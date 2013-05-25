@@ -62,9 +62,9 @@ static const float defaultCellHeight = 44.f;
 
 @interface AKContactViewController ()
 
-@property (nonatomic, strong) NSMutableArray *sections;
-@property (nonatomic, strong) NSArray *sectionIdentifiers;
-@property (nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer;
+@property (strong, nonatomic) NSMutableArray *sections;
+@property (strong, nonatomic) NSArray *sectionIdentifiers;
+@property (strong, nonatomic) UITapGestureRecognizer *tapGestureRecognizer;
 
 /**
  * Return the ABPropertyID of a section
@@ -595,6 +595,7 @@ static const float defaultCellHeight = 44.f;
       }
       else
       {
+        self.delegate = nil;
         [self.navigationController popViewControllerAnimated: YES];
       }
     }

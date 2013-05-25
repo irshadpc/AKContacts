@@ -32,7 +32,7 @@
 
 @interface AKContactSwitchViewCell ()
 
-@property (nonatomic, assign) NSInteger identifier;
+@property (assign, nonatomic) NSInteger identifier;
 
 @end
 

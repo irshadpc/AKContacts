@@ -42,8 +42,8 @@ typedef NS_ENUM(NSInteger, SourceTypes)
 /**
  * From the docs: Each record in the address book database can belong to only one source.
  **/
-@property (nonatomic, strong) NSMutableArray *groups;
-@property (nonatomic, assign) BOOL isDefault;
+@property (strong, nonatomic) NSMutableArray *groups;
+@property (assign, nonatomic) BOOL isDefault;
 
 - (id)initWithABRecordID: (ABRecordID) recordID;
 /**

@@ -36,6 +36,6 @@
 /**
  * UITextField currently being edited
  */
-@property (nonatomic, strong) UITextField *firstResponder;
+@property (strong, nonatomic) UITextField *firstResponder;
 
 @end

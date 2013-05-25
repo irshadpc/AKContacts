@@ -33,7 +33,7 @@
 
 @interface AKContactDeleteButtonViewCell : UITableViewCell 
 
-@property (nonatomic, strong) AKContactViewController *parent;
+@property (unsafe_unretained, nonatomic) AKContactViewController *parent;
 
 -(void)configureCell;
 
