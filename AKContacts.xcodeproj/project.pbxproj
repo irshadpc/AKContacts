@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C600EB18174C6199000DEB84 /* AKGroupSelectViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C600EB17174C6199000DEB84 /* AKGroupSelectViewController.m */; };
+		C600EB18174C6199000DEB84 /* AKGroupPickerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C600EB17174C6199000DEB84 /* AKGroupPickerViewController.m */; };
 		C6140A6D17482C8A00B338CB /* AKLabelViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C6140A6C17482C8A00B338CB /* AKLabelViewCell.m */; };
 		C6140A7017482E0400B338CB /* AKLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = C6140A6F17482E0400B338CB /* AKLabel.m */; };
 		C6140A751749B27B00B338CB /* AKContactInstantMessageViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C6140A741749B27B00B338CB /* AKContactInstantMessageViewCell.m */; };
@@ -40,6 +40,8 @@
 		C682DEFB171DF9A300CC4A70 /* AKContactDeleteButtonViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C682DEFA171DF9A300CC4A70 /* AKContactDeleteButtonViewCell.m */; };
 		C682DF03171E28C100CC4A70 /* ButtonDelete.png in Resources */ = {isa = PBXBuildFile; fileRef = C682DF01171E28C100CC4A70 /* ButtonDelete.png */; };
 		C682DF04171E28C100CC4A70 /* ButtonDelete@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C682DF02171E28C100CC4A70 /* ButtonDelete@2x.png */; };
+		C6AD931C1751998E00474CCB /* AKContactPickerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C6AD931B1751998E00474CCB /* AKContactPickerViewController.m */; };
+		C6AD931F1751A28200474CCB /* AKBadge.m in Sources */ = {isa = PBXBuildFile; fileRef = C6AD931E1751A28100474CCB /* AKBadge.m */; };
 		C6C2066016E1828F0033C58A /* AKGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2065F16E1828F0033C58A /* AKGroup.m */; };
 		C6C2066316E18A810033C58A /* AKGroupsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2066216E18A810033C58A /* AKGroupsViewController.m */; };
 		C6C2066616E39D790033C58A /* AKSource.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2066516E39D760033C58A /* AKSource.m */; };
@@ -63,8 +65,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		C600EB16174C6199000DEB84 /* AKGroupSelectViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKGroupSelectViewController.h; sourceTree = "<group>"; };
-		C600EB17174C6199000DEB84 /* AKGroupSelectViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKGroupSelectViewController.m; sourceTree = "<group>"; };
+		C600EB16174C6199000DEB84 /* AKGroupPickerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKGroupPickerViewController.h; sourceTree = "<group>"; };
+		C600EB17174C6199000DEB84 /* AKGroupPickerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKGroupPickerViewController.m; sourceTree = "<group>"; };
 		C6140A6B17482C8A00B338CB /* AKLabelViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKLabelViewCell.h; sourceTree = "<group>"; };
 		C6140A6C17482C8A00B338CB /* AKLabelViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKLabelViewCell.m; sourceTree = "<group>"; };
 		C6140A6E17482E0300B338CB /* AKLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKLabel.h; sourceTree = "<group>"; };
@@ -117,6 +119,10 @@
 		C682DEFA171DF9A300CC4A70 /* AKContactDeleteButtonViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactDeleteButtonViewCell.m; sourceTree = "<group>"; };
 		C682DF01171E28C100CC4A70 /* ButtonDelete.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ButtonDelete.png; path = AKContacts/Images/ButtonDelete.png; sourceTree = "<group>"; };
 		C682DF02171E28C100CC4A70 /* ButtonDelete@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "ButtonDelete@2x.png"; path = "AKContacts/Images/ButtonDelete@2x.png"; sourceTree = "<group>"; };
+		C6AD931A1751998E00474CCB /* AKContactPickerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactPickerViewController.h; sourceTree = "<group>"; };
+		C6AD931B1751998E00474CCB /* AKContactPickerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactPickerViewController.m; sourceTree = "<group>"; };
+		C6AD931D1751A28100474CCB /* AKBadge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKBadge.h; sourceTree = "<group>"; };
+		C6AD931E1751A28100474CCB /* AKBadge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKBadge.m; sourceTree = "<group>"; };
 		C6C2065E16E1828D0033C58A /* AKGroup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKGroup.h; sourceTree = "<group>"; };
 		C6C2065F16E1828F0033C58A /* AKGroup.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKGroup.m; sourceTree = "<group>"; };
 		C6C2066116E18A800033C58A /* AKGroupsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKGroupsViewController.h; sourceTree = "<group>"; };
@@ -190,8 +196,6 @@
 				C65D925A1739E992001D1C15 /* Cells */,
 				C620080C16B997A900C16121 /* AKContactViewController.h */,
 				C620080D16B997A900C16121 /* AKContactViewController.m */,
-				C600EB16174C6199000DEB84 /* AKGroupSelectViewController.h */,
-				C600EB17174C6199000DEB84 /* AKGroupSelectViewController.m */,
 			);
 			name = Contact;
 			sourceTree = "<group>";
@@ -338,6 +342,8 @@
 				C65D925C1739E9DA001D1C15 /* Cells */,
 				C6C2066116E18A800033C58A /* AKGroupsViewController.h */,
 				C6C2066216E18A810033C58A /* AKGroupsViewController.m */,
+				C6AD931D1751A28100474CCB /* AKBadge.h */,
+				C6AD931E1751A28100474CCB /* AKBadge.m */,
 			);
 			name = Groups;
 			sourceTree = "<group>";
@@ -345,6 +351,7 @@
 		C682DEDC1714B54000CC4A70 /* Contacts */ = {
 			isa = PBXGroup;
 			children = (
+				C6AD93191751985900474CCB /* Group Picker */,
 				C65D925B1739E9BC001D1C15 /* Cells */,
 				C66951D716B702F800D030A2 /* AKContactsViewController.h */,
 				C66951D816B702F800D030A2 /* AKContactsViewController.m */,
@@ -368,6 +375,17 @@
 				C66951D616B702F800D030A2 /* AKContact.m */,
 			);
 			name = DataSources;
+			sourceTree = "<group>";
+		};
+		C6AD93191751985900474CCB /* Group Picker */ = {
+			isa = PBXGroup;
+			children = (
+				C600EB16174C6199000DEB84 /* AKGroupPickerViewController.h */,
+				C600EB17174C6199000DEB84 /* AKGroupPickerViewController.m */,
+				C6AD931A1751998E00474CCB /* AKContactPickerViewController.h */,
+				C6AD931B1751998E00474CCB /* AKContactPickerViewController.m */,
+			);
+			name = "Group Picker";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -506,7 +524,9 @@
 				C6140A6D17482C8A00B338CB /* AKLabelViewCell.m in Sources */,
 				C6140A7017482E0400B338CB /* AKLabel.m in Sources */,
 				C6140A751749B27B00B338CB /* AKContactInstantMessageViewCell.m in Sources */,
-				C600EB18174C6199000DEB84 /* AKGroupSelectViewController.m in Sources */,
+				C600EB18174C6199000DEB84 /* AKGroupPickerViewController.m in Sources */,
+				C6AD931C1751998E00474CCB /* AKContactPickerViewController.m in Sources */,
+				C6AD931F1751A28200474CCB /* AKBadge.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
