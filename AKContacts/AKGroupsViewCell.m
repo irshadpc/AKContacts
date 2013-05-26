@@ -28,6 +28,7 @@
 
 #import "AKGroupsViewCell.h"
 #import "AKAddressBook.h"
+#import "AKBadge.h"
 #import "AKGroup.h"
 #import "AKGroupsViewController.h"
 #import "AKSource.h"
@@ -36,6 +37,7 @@
 
 @property (strong, nonatomic) UITextField *textField;
 @property (strong, nonatomic) NSIndexPath *indexPath;
+@property (strong, nonatomic) AKBadge *akBadge;
 
 @end
 
@@ -57,11 +59,16 @@
     return self;
 }
 
+- (void)setEditing:(BOOL)editing animated:(BOOL)animated
+{
+  [super setEditing: editing animated: animated];
+
+  self.akBadge.hidden = editing;
+}
+
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated
 {
-    [super setSelected:selected animated:animated];
-
-    // Configure the view for the selected state
+  [super setSelected:selected animated:animated];
 }
 
 - (void)configureCellAtIndexPath: (NSIndexPath *)indexPath
@@ -71,6 +78,7 @@
   [self setTag: NSNotFound];
   [self.textLabel setTextAlignment: NSTextAlignmentLeft];
   [self setSelectionStyle: UITableViewCellSelectionStyleNone];
+  [self.akBadge removeFromSuperview];
 
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
 
@@ -97,6 +105,14 @@
     
     tag = group.recordID;
     text = [group valueForProperty: kABGroupNameProperty];
+    
+    if ([group count] > 0)
+    {
+      self.akBadge = [AKBadge badgeWithText: [NSString stringWithFormat: @"%d", [group count]]];
+      [self.akBadge setFrame: CGRectMake(250.f - (self.akBadge.frame.size.width / 2), 9.f, self.akBadge.frame.size.width, self.akBadge.frame.size.height)];
+      [self.contentView addSubview: self.akBadge];
+    }
+
     if (group.recordID == kGroupAggregate)
     {
       NSMutableArray *groupAggregateName = [[NSMutableArray alloc] initWithObjects: NSLocalizedString(@"All", @""),
@@ -125,7 +141,7 @@
                             self.contentView.bounds.size.width - 20.f,
                             self.contentView.bounds.size.height);
   [self.textField setFrame: frame];
-  [self.textField setEnabled: (self.parent.editing && self.tag != kGroupAggregate)];
+  [self.textField setEnabled: (self.parent.editing && self.tag != kGroupAggregate)];  
 }
 
 #pragma mark - UITextField delegate
