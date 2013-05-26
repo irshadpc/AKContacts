@@ -55,7 +55,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
 - (void)presentNewContactViewController;
 - (void)presentAddToGroupActionSheet;
-- (void)addButtonTouchUp: (id)sender;
+- (void)addButtonTouchUpInside: (id)sender;
 - (void)reloadTableViewData;
 - (void)toggleBackButton;
 /**
@@ -105,7 +105,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
   UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd
                                                                              target: self
-                                                                             action: @selector(addButtonTouchUp:)];
+                                                                             action: @selector(addButtonTouchUpInside:)];
   [self.navigationItem setRightBarButtonItem: addButton];
 }
 
@@ -209,7 +209,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   [actionSheet showInView: self.view];
 }
 
-- (void)addButtonTouchUp: (id)sender
+- (void)addButtonTouchUpInside: (id)sender
 {
   if ([AKAddressBook sharedInstance].groupID < 0)
   {
