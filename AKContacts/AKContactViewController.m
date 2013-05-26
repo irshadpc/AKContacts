@@ -651,7 +651,7 @@ static const float defaultCellHeight = 44.f;
 
   if (self.editing)
   {
-    UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel target:self action:@selector(cancelButtonTouchUp:)];
+    UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel target:self action:@selector(cancelButtonTouchUpInside:)];
     [self.navigationItem setLeftBarButtonItem: barButtonItem];
   }
   else
@@ -751,7 +751,7 @@ static const float defaultCellHeight = 44.f;
   [self.tableView endUpdates];
 }
 
-- (void)cancelButtonTouchUp: (id)sender
+- (void)cancelButtonTouchUpInside: (id)sender
 {
   [self.view endEditing: YES]; // Resign first responders
 
