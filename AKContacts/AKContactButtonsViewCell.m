@@ -31,7 +31,7 @@
 #import "AKContactViewController.h"
 #import "AKContact.h"
 #import "AKMessenger.h"
-#import "AKGroupSelectViewController.h"
+#import "AKGroupPickerViewController.h"
 
 typedef NS_ENUM(NSInteger, ButtonTags) {
     kButtonText = 1,
@@ -137,7 +137,7 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
   }
   else
   {
-    AKGroupSelectViewController *groupSelectView = [[AKGroupSelectViewController alloc] init];
+    AKGroupPickerViewController *groupSelectView = [[AKGroupPickerViewController alloc] initWithContactID: self.parent.contact.recordID];
     UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: groupSelectView];
 
     if ([self.parent.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
