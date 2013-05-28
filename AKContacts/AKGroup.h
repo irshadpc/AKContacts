@@ -48,6 +48,10 @@ typedef NS_ENUM(NSInteger, GroupTypes)
  **/
 @property (strong, nonatomic) NSMutableSet *memberIDs;
 /**
+ * Set of contactIDs being removed from the group
+ **/
+@property (strong, nonatomic) NSMutableSet *deleteMemberIDs;
+/**
  * Temporary storage for new group name 
  * before storing in AB database
  **/
@@ -61,5 +65,7 @@ typedef NS_ENUM(NSInteger, GroupTypes)
 
 - (void)addMemberWithID: (ABRecordID)recordID;
 - (void)removeMemberWithID: (NSInteger)recordID;
+- (void)commit;
+- (void)revert;
 
 @end

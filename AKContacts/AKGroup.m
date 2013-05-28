@@ -81,18 +81,12 @@ NSString *const DefaultsKeyGroups = @"Groups";
       AKContact *contact = [addressBook contactForContactId: recordID];
 
       CFErrorRef error = NULL;
-      BOOL changed = ABGroupAddMember(self.recordRef, contact.recordRef, &error);
+      ABGroupAddMember(self.recordRef, contact.recordRef, &error);
       if (error != NULL)
       {
         NSLog(@"%ld", CFErrorGetCode(error));
       }
 
-      if (changed == YES)
-      {
-        ABAddressBookSave(addressBook.addressBookRef, &error);
-        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-      }
-      
       [self.memberIDs addObject: identifier];
     }
   };
@@ -106,30 +100,47 @@ NSString *const DefaultsKeyGroups = @"Groups";
   dispatch_block_t block = ^{
     
     NSNumber *identifier = [NSNumber numberWithInteger: recordID];
-    if ([self.memberIDs member: identifier] == nil)
+    if ([self.memberIDs member: identifier] != nil)
     {
       AKAddressBook *addressBook = [AKAddressBook sharedInstance];
       AKContact *contact = [addressBook contactForContactId: recordID];
       
       CFErrorRef error = NULL;
-      BOOL changed = ABGroupRemoveMember(self.recordRef, contact.recordRef, &error);
+      ABGroupRemoveMember(self.recordRef, contact.recordRef, &error);
       if (error != NULL)
       {
         NSLog(@"%ld", CFErrorGetCode(error));
       }
-      
-      if (changed == YES)
+
+      if (self.deleteMemberIDs == nil)
       {
-        ABAddressBookSave(addressBook.addressBookRef, &error);
-        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+        self.deleteMemberIDs = [[NSMutableSet alloc] init];
       }
-      
-      [self.memberIDs addObject: identifier];
+      [self.deleteMemberIDs addObject: identifier];
+
+      [self.memberIDs removeObject: identifier];
     }
   };
   
   if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_async(dispatch_get_main_queue(), block);
+}
+
+- (void)commit
+{
+  if (self.deleteMemberIDs != nil)
+  {
+    [self setDeleteMemberIDs: nil];
+  }
+}
+
+- (void)revert
+{
+  if (self.deleteMemberIDs != nil)
+  {
+    [self.memberIDs addObjectsFromArray: self.deleteMemberIDs.allObjects];
+    [self setDeleteMemberIDs: nil];
+  }
 }
 
 @end
