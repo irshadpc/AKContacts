@@ -346,7 +346,7 @@ const int tagNewContact = -368;
     if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
   }
 
-  if(self.recordID == tagNewContact)
+  if (self.recordID == tagNewContact)
   {
     super.recordID = ABRecordGetRecordID(self.recordRef);
     
