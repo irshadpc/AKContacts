@@ -8,8 +8,11 @@
 
 #import "AKGroupPickerViewController.h"
 #import "AKAddressBook.h"
-#import "AKSource.h"
+#import "AKContact.h"
 #import "AKGroup.h"
+#import "AKSource.h"
+
+NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDidDismissNotification";
 
 @interface AKGroupPickerViewController () <UITableViewDataSource, UITableViewDelegate>
 
@@ -69,6 +72,19 @@
 
 - (void)cancelButtonTouchUpInside: (id)sender
 {
+  AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+  AKContact *contact = [addressBook contactForContactId: self.contactID];
+
+  [contact revert];
+
+  for (AKSource *source in addressBook.sources)
+  {
+    for (AKGroup *group in source.groups)
+    {
+      [group revert];
+    }
+  }
+
   if ([self.navigationController respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
     [self.navigationController dismissViewControllerAnimated: YES completion: nil];
   else
@@ -77,6 +93,27 @@
 
 - (void)doneButtonTouchUpInside: (id)sender
 {
+  AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+  AKContact *contact = [addressBook contactForContactId: self.contactID];
+
+  [contact commit];
+  
+  for (AKSource *source in addressBook.sources)
+  {
+    for (AKGroup *group in source.groups)
+    {
+      [group commit];
+    }
+  }
+
+  [addressBook resetSearch];
+
+  [[NSNotificationCenter defaultCenter] postNotificationName: AKGroupPickerViewDidDismissNotification object: nil];
+
+  if ([self.navigationController respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
+    [self.navigationController dismissViewControllerAnimated: YES completion: nil];
+  else
+    [self.navigationController dismissModalViewControllerAnimated: YES];
   
 }
 
@@ -125,13 +162,21 @@
 {
   UITableViewCell *cell = [tableView cellForRowAtIndexPath: indexPath];
 
+  AKSource *source = [[AKAddressBook sharedInstance].sources objectAtIndex: indexPath.section];
+  
+  AKGroup *group = [[source groups] objectAtIndex: indexPath.row + 1];
+  
   if (cell.accessoryType == UITableViewCellAccessoryNone)
   {
     [cell setAccessoryType: UITableViewCellAccessoryCheckmark];
+
+    [group addMemberWithID: self.contactID];
   }
   else
   {
     [cell setAccessoryType: UITableViewCellAccessoryNone];
+    
+    [group removeMemberWithID: self.contactID];
   }
 
   [tableView deselectRowAtIndexPath: indexPath animated: YES];
