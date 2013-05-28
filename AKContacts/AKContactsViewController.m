@@ -33,6 +33,7 @@
 #import "AKContactViewController.h"
 #import "AKAddressBook.h"
 #import "AKSource.h"
+#import "AKGroupPickerViewController.h"
 
 #import <AddressBook/AddressBook.h>
 #import <AddressBookUI/AddressBookUI.h>
@@ -107,6 +108,8 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
                                                                              target: self
                                                                              action: @selector(addButtonTouchUpInside:)];
   [self.navigationItem setRightBarButtonItem: addButton];
+  
+  [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AKGroupPickerViewDidDismissNotification object: nil];
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -137,9 +140,9 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   }
   
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillShow:)
-                                               name: UIKeyboardWillShowNotification object:nil];
+                                               name: UIKeyboardWillShowNotification object: nil];
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillHide:)
-                                               name: UIKeyboardWillHideNotification object:nil];
+                                               name: UIKeyboardWillHideNotification object: nil];
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -152,7 +155,9 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   [super viewWillDisappear:animated];
 
   [[AKAddressBook sharedInstance] removeObserver: self forKeyPath: @"status"];
-  [[NSNotificationCenter defaultCenter] removeObserver: self];
+  [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillShowNotification object: nil];
+  [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillHideNotification object: nil];
+  [[NSNotificationCenter defaultCenter] removeObserver: self name: AddressBookSearchDidFinishNotification object: nil];
 }
 
 - (void)viewDidDisappear:(BOOL)animated
@@ -624,6 +629,11 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   [super didReceiveMemoryWarning];
   
   // Release any cached data, images, etc that aren't in use.
+}
+
+- (void)dealloc
+{
+  [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 
 @end
