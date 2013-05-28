@@ -36,7 +36,6 @@
 @property(strong, nonatomic) UIColor *frameColor;
 
 @property(assign, nonatomic) CGFloat cornerRoundness;
-@property(assign, nonatomic) CGFloat scaleFactor;
 
 @end
 
@@ -52,14 +51,12 @@
   self = [super initWithFrame:CGRectMake(0.f, 0.f, 25.f, 25.f)];
 	if(self != nil)
   {
-    _scaleFactor = [[UIScreen mainScreen] scale];
 		self.backgroundColor = [UIColor clearColor];
 		_textColor = [UIColor whiteColor];
 
 		_frameColor = [UIColor whiteColor];
 		_insetColor = [UIColor redColor];
 		_cornerRoundness = 0.4;
-		_scaleFactor = 1.0;
 		[self autoBadgeSizeWithText: text];
 
   }
@@ -76,11 +73,11 @@
   {
 		flexSpace = [text length];
 		rectWidth = 25 + (stringSize.width + flexSpace); rectHeight = 25;
-		retValue = CGSizeMake(rectWidth*self.scaleFactor, rectHeight*self.scaleFactor);
+		retValue = CGSizeMake(rectWidth, rectHeight);
 	}
   else
   {
-		retValue = CGSizeMake(25 * self.scaleFactor, 25 * self.scaleFactor);
+		retValue = CGSizeMake(25.f, 25.f);
 	}
 	self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, retValue.width, retValue.height);
 	self.text = text;
@@ -161,10 +158,6 @@
 	
   CGContextBeginPath(context);
 	CGFloat lineSize = 2.f;
-	if (self.scaleFactor > 1.f)
-  {
-		lineSize += self.scaleFactor * .25f;
-	}
 	CGContextSetLineWidth(context, lineSize);
 	CGContextSetStrokeColorWithColor(context, [self.frameColor CGColor]);
 	CGContextAddArc(context, maxX-radius, minY+radius, radius, M_PI+(M_PI/2), 0, 0);
@@ -189,7 +182,7 @@
 	if ([self.text length] > 0)
   {
 		[self.textColor set];
-		CGFloat sizeOfFont = 13.5f * self.scaleFactor;
+		CGFloat sizeOfFont = 13.5f;
 		if ([self.text length] < 2)
     {
 			sizeOfFont += sizeOfFont * .2f;
