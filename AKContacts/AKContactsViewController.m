@@ -34,6 +34,7 @@
 #import "AKAddressBook.h"
 #import "AKSource.h"
 #import "AKGroupPickerViewController.h"
+#import "AKContactPickerViewController.h"
 
 #import <AddressBook/AddressBook.h>
 #import <AddressBookUI/AddressBookUI.h>
@@ -55,6 +56,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 @property (strong, nonatomic) UISearchBar *searchBar;
 
 - (void)presentNewContactViewController;
+- (void)presentContactPickerViewController;
 - (void)presentAddToGroupActionSheet;
 - (void)addButtonTouchUpInside: (id)sender;
 - (void)reloadTableViewData;
@@ -190,6 +192,17 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   [contactView setDelegate: self];
   UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: contactView];
   
+  if ([self.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
+    [self.navigationController presentViewController: navigationController animated: YES completion: nil];
+  else
+    [self.navigationController presentModalViewController: navigationController animated: YES];
+}
+
+- (void)presentContactPickerViewController
+{
+  AKContactPickerViewController *contactView = [[AKContactPickerViewController alloc] init];
+  UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: contactView];
+
   if ([self.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
     [self.navigationController presentViewController: navigationController animated: YES completion: nil];
   else
@@ -617,7 +630,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   }
   else if (buttonIndex == kButtonExistingContact)
   {
-    
+    [self presentContactPickerViewController];
   }
 }
 
