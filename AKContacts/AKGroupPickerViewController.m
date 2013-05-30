@@ -25,7 +25,7 @@ NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDid
 
 - (id)initWithContactID: (NSInteger)contactID
 {
-  self = [self init];
+  self = [super init];
   if (self)
   {
     _contactID = contactID;
