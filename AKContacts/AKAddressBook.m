@@ -628,7 +628,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   NSArray *keyArray = [[self.allContactIdentifiers allKeys] sortedArrayUsingSelector: @selector(compare:)];
   
   if ([groupMembers count] == self.contactsCount)
-  { // Speed up for aggregate group
+  { // Shortcut for aggregate group
     NSMutableDictionary *contactIdentifiers = [NSKeyedUnarchiver unarchiveObjectWithData: [NSKeyedArchiver archivedDataWithRootObject: self.allContactIdentifiers]]; // Mutable deep copy
     [self setContactIdentifiers: contactIdentifiers];
     [self.keys addObjectsFromArray: keyArray];
@@ -657,9 +657,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     }
   }
 
-  // Little hack to move # to the end of the list
-  if ([self.keys count] > 1)
-  {
+  if ([self.keys count] > 1 && [[self.keys objectAtIndex: 1] isEqualToString: @"#"])
+  { // Little hack to move # to the end of the list
     [self.keys addObject: [self.keys objectAtIndex: 1]];
     [self.keys removeObjectAtIndex: 1];
   }
