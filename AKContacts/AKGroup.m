@@ -132,6 +132,15 @@ NSString *const DefaultsKeyGroups = @"Groups";
   {
     [self setDeleteMemberIDs: nil];
   }
+
+  ABAddressBookRef addressBookRef = [AKAddressBook sharedInstance].addressBookRef;
+
+  if (ABAddressBookHasUnsavedChanges(addressBookRef))
+  {
+    CFErrorRef error = NULL;
+    ABAddressBookSave(addressBookRef, &error);
+    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+  }
 }
 
 - (void)revert
@@ -140,6 +149,13 @@ NSString *const DefaultsKeyGroups = @"Groups";
   {
     [self.memberIDs addObjectsFromArray: self.deleteMemberIDs.allObjects];
     [self setDeleteMemberIDs: nil];
+  }
+
+  ABAddressBookRef addressBookRef = [AKAddressBook sharedInstance].addressBookRef;
+
+  if (ABAddressBookHasUnsavedChanges(addressBookRef))
+  {
+    ABAddressBookRevert(addressBookRef);
   }
 }
 
