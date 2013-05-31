@@ -29,6 +29,7 @@
 #import "AKGroupsViewController.h"
 #import "AKGroupsViewCell.h"
 #import "AKGroupPickerViewController.h"
+#import "AKContactPickerViewController.h"
 #import "AKContactsViewController.h"
 #import "AKGroup.h"
 #import "AKSource.h"
@@ -92,6 +93,8 @@ static const float defaultCellHeight = 44.f;
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AddressBookDidLoadNotification object: nil];
 
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AKGroupPickerViewDidDismissNotification object: nil];
+
+  [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AKContactPickerViewDidDismissNotification object: nil];
 }
 
 - (void)setEditing:(BOOL)editing animated:(BOOL)animate
