@@ -12,6 +12,8 @@
 #import "AKGroup.h"
 #import "AKSource.h"
 
+NSString *const AKContactPickerViewDidDismissNotification = @"AKContactPickerViewDidDismissNotification";
+
 @interface AKContactPickerViewController () <UITableViewDataSource, UITableViewDelegate>
 
 @property (strong, nonatomic) UITableView *tableView;
@@ -23,6 +25,10 @@
  * Identifiers of displayed contacts
  **/
 @property (strong, nonatomic) NSMutableDictionary *contactIdentifiers;
+/**
+ * Identifiers of contacts changed
+ **/
+@property (strong, nonatomic) NSMutableArray *changedContactIDs;
 
 @end
 
@@ -32,17 +38,20 @@
 
 - (void)loadView
 {
-  [self loadContacts];
-
   CGFloat height = ([UIScreen mainScreen].bounds.size.height == 568.f) ? 568.f : 480.f;
   height -= (self.navigationController.navigationBar.frame.size.height + [UIApplication sharedApplication].statusBarFrame.size.height);
   [self setTableView: [[UITableView alloc] initWithFrame: CGRectMake(0.f, 0.f, 320.f, height)
                                                    style: UITableViewStylePlain]];
+
+  [self loadContacts];
+
   [self.tableView setDataSource: self];
   [self.tableView setDelegate: self];
-  
+
   [self setView: [[UIView alloc] init]];
   [self.view addSubview: self.tableView];
+
+  [self setChangedContactIDs: [[NSMutableArray alloc] init]];
 }
 
 - (void)viewDidLoad
@@ -110,6 +119,13 @@
 
 - (void)cancelButtonTouchUpInside: (id)sender
 {
+  AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+
+  AKSource *source = [akAddressBook sourceForSourceId: akAddressBook.sourceID];
+  AKGroup *group = [source groupForGroupId: akAddressBook.groupID];
+
+  [group revert];
+
   if ([self.navigationController respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
     [self.navigationController dismissViewControllerAnimated: YES completion: nil];
   else
@@ -118,6 +134,17 @@
 
 - (void)doneButtonTouchUpInside: (id)sender
 {
+  AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+
+  AKSource *source = [akAddressBook sourceForSourceId: akAddressBook.sourceID];
+  AKGroup *group = [source groupForGroupId: akAddressBook.groupID];
+
+  [group commit];
+
+  [akAddressBook resetSearch];
+
+  [[NSNotificationCenter defaultCenter] postNotificationName: AKContactPickerViewDidDismissNotification object: nil];
+
   if ([self.navigationController respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
     [self.navigationController dismissViewControllerAnimated: YES completion: nil];
   else
@@ -150,6 +177,9 @@
 
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
 
+  AKSource *source = [akAddressBook sourceForSourceId: akAddressBook.sourceID];
+  AKGroup *group = [source groupForGroupId: akAddressBook.groupID];
+  
   NSString *key = nil;
   if ([self.keys count] > indexPath.section)
     key = [self.keys objectAtIndex: indexPath.section];
@@ -162,7 +192,7 @@
   [cell setTag: [contact recordID]];
   [cell setSelectionStyle: UITableViewCellSelectionStyleBlue];
 
-  [cell setAccessoryView: nil];
+  [cell setAccessoryType: ([group.memberIDs member: [NSNumber numberWithInteger: contact.recordID]]) ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone];
   if (![contact name])
   {
     cell.textLabel.font = [UIFont italicSystemFontOfSize: 20.f];
@@ -188,13 +218,26 @@
 {
   UITableViewCell *cell = [tableView cellForRowAtIndexPath: indexPath];
 
+  AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+
+  AKSource *source = [akAddressBook sourceForSourceId: akAddressBook.sourceID];
+  AKGroup *group = [source groupForGroupId: akAddressBook.groupID];
+
+  NSInteger contactID = cell.tag;
+
+  [self.changedContactIDs addObject: [NSNumber numberWithInteger: contactID]];
+
   if (cell.accessoryType == UITableViewCellAccessoryNone)
   {
     [cell setAccessoryType: UITableViewCellAccessoryCheckmark];
+    
+    [group addMemberWithID: contactID];
   }
   else
   {
     [cell setAccessoryType: UITableViewCellAccessoryNone];
+    
+    [group removeMemberWithID: contactID];
   }
   
   [tableView deselectRowAtIndexPath: indexPath animated: YES];

@@ -8,6 +8,8 @@
 
 #import <UIKit/UIKit.h>
 
+FOUNDATION_EXPORT NSString *const AKContactPickerViewDidDismissNotification;
+
 @interface AKContactPickerViewController : UIViewController
 
 @end
