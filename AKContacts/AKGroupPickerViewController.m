@@ -72,12 +72,9 @@ NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDid
 
 - (void)cancelButtonTouchUpInside: (id)sender
 {
-  AKAddressBook *addressBook = [AKAddressBook sharedInstance];
-  AKContact *contact = [addressBook contactForContactId: self.contactID];
+  AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
 
-  [contact revert];
-
-  for (AKSource *source in addressBook.sources)
+  for (AKSource *source in akAddressBook.sources)
   {
     for (AKGroup *group in source.groups)
     {
@@ -93,12 +90,9 @@ NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDid
 
 - (void)doneButtonTouchUpInside: (id)sender
 {
-  AKAddressBook *addressBook = [AKAddressBook sharedInstance];
-  AKContact *contact = [addressBook contactForContactId: self.contactID];
+  AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
 
-  [contact commit];
-  
-  for (AKSource *source in addressBook.sources)
+  for (AKSource *source in akAddressBook.sources)
   {
     for (AKGroup *group in source.groups)
     {
@@ -106,7 +100,7 @@ NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDid
     }
   }
 
-  [addressBook resetSearch];
+  [akAddressBook resetSearch];
 
   [[NSNotificationCenter defaultCenter] postNotificationName: AKGroupPickerViewDidDismissNotification object: nil];
 
