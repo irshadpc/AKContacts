@@ -80,6 +80,38 @@ static const int editModeItem = 8;
 
   AKContact *contact = self.parent.contact;
 
+  if (row == 0)
+  {
+    CGFloat posX = (self.parent.editing == YES) ? -80.f : 0.f;
+    UIButton *button = [[UIButton alloc] initWithFrame: CGRectMake(posX, 0.f, 64.f, 64.f)];
+    [button setUserInteractionEnabled: (self.parent.editing == YES)];
+    [self.contentView addSubview: button];
+    if (contact.pictureData == nil && self.parent.editing == YES)
+    {
+      [button.layer setMasksToBounds: YES];
+      [button.layer setCornerRadius: 5.f];
+      [button.layer setBorderColor: [UIColor colorWithRed: 130.f/255.f green: 138.f/255.f blue: 154.f/255.f alpha: 1.f].CGColor];
+      [button.layer setBorderWidth: 1.5f];
+      [button setTitle: NSLocalizedString(@"add\nphoto", @"") forState: UIControlStateNormal];
+      [button.titleLabel setLineBreakMode: NSLineBreakByWordWrapping];
+      [button.titleLabel setFont: [UIFont boldSystemFontOfSize: 12.f]];
+      [button.titleLabel setNumberOfLines: 2];
+      [button.titleLabel setTextAlignment: NSTextAlignmentCenter];
+      [button setTitleColor: [UIColor colorWithRed:81.f/255.f green:102.f/255.f blue:145.f/255.f alpha: 1.f] forState: UIControlStateNormal];
+    }
+    else
+    {
+      [button setImage: [contact picture] forState: UIControlStateNormal];
+      [button setContentMode: UIViewContentModeScaleAspectFit];
+      [button.layer setBorderColor: [[UIColor whiteColor] CGColor]];
+      [button.layer setBorderWidth: 4.f];
+      [button.layer setShadowColor: [UIColor grayColor].CGColor];
+      [button.layer setShadowOffset: CGSizeMake(0, 1)];
+      [button.layer setShadowOpacity: 1];
+      [button.layer setShadowRadius: 1.0];
+    }
+  }
+  
   if ([self.parent isEditing])
   {
     UITextField *textField = [[UITextField alloc] initWithFrame: CGRectZero];
@@ -96,19 +128,6 @@ static const int editModeItem = 8;
     if (row == 0)
     {
       [self setAbPropertyID: kABPersonLastNameProperty];
-
-      UIButton *button = [[UIButton alloc] initWithFrame: CGRectMake(-80.f, 0.f, 64.f, 64.f)];
-      [self.contentView addSubview: button];
-      [button.layer setMasksToBounds: YES];
-      [button.layer setCornerRadius: 5.f];
-      [button.layer setBorderColor: [[UIColor colorWithRed:130.f/255.f green:138.f/255.f blue:154.f/255.f alpha: 1.f] CGColor]];
-      [button.layer setBorderWidth: 1.5f];
-      [button setTitle: NSLocalizedString(@"add\nphoto", @"") forState: UIControlStateNormal];
-      [button.titleLabel setLineBreakMode: NSLineBreakByWordWrapping];
-      [button.titleLabel setFont: [UIFont boldSystemFontOfSize: 12.f]];
-      [button.titleLabel setNumberOfLines: 2];
-      [button.titleLabel setTextAlignment: NSTextAlignmentCenter];
-      [button setTitleColor: [UIColor colorWithRed:81.f/255.f green:102.f/255.f blue:145.f/255.f alpha: 1.f] forState: UIControlStateNormal];
     }
     else if (row == 1)
     {
@@ -130,15 +149,7 @@ static const int editModeItem = 8;
   {
     [self.backgroundView setHidden: YES]; // Hide background in default mode
     [self.parent.tableView setSeparatorStyle: UITableViewCellSeparatorStyleNone];
-    
-    UIImageView *contactImageView = [[UIImageView alloc] initWithFrame: CGRectMake(0.f, 0.f, 64.f, 64.f)];
-    [self.contentView addSubview: contactImageView];
-    [contactImageView.layer setMasksToBounds: YES];
-    [contactImageView.layer setCornerRadius: 5.f];
-    [contactImageView.layer setBorderColor: [[UIColor grayColor] CGColor]];
-    [contactImageView.layer setBorderWidth: 1.f];
-    [contactImageView setImage: [contact picture]];
-    
+
     UILabel *contactNameLabel = [[UILabel alloc] initWithFrame: CGRectMake(80.f, 0.f, 210.f, 23.f)];
     [self.contentView addSubview: contactNameLabel];
     [contactNameLabel setBackgroundColor: [UIColor clearColor]];
