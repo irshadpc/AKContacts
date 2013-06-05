@@ -40,6 +40,10 @@
 		C682DEFB171DF9A300CC4A70 /* AKContactDeleteButtonViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C682DEFA171DF9A300CC4A70 /* AKContactDeleteButtonViewCell.m */; };
 		C682DF03171E28C100CC4A70 /* ButtonDelete.png in Resources */ = {isa = PBXBuildFile; fileRef = C682DF01171E28C100CC4A70 /* ButtonDelete.png */; };
 		C682DF04171E28C100CC4A70 /* ButtonDelete@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C682DF02171E28C100CC4A70 /* ButtonDelete@2x.png */; };
+		C6AA1A94175EC49600772EB3 /* Contact.png in Resources */ = {isa = PBXBuildFile; fileRef = C6AA1A92175EC49600772EB3 /* Contact.png */; };
+		C6AA1A95175EC49600772EB3 /* Contact@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C6AA1A93175EC49600772EB3 /* Contact@2x.png */; };
+		C6AA1A98175ECF9800772EB3 /* Company.png in Resources */ = {isa = PBXBuildFile; fileRef = C6AA1A96175ECF9800772EB3 /* Company.png */; };
+		C6AA1A99175ECF9800772EB3 /* Company@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C6AA1A97175ECF9800772EB3 /* Company@2x.png */; };
 		C6AD931C1751998E00474CCB /* AKContactPickerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C6AD931B1751998E00474CCB /* AKContactPickerViewController.m */; };
 		C6AD931F1751A28200474CCB /* AKBadge.m in Sources */ = {isa = PBXBuildFile; fileRef = C6AD931E1751A28100474CCB /* AKBadge.m */; };
 		C6C2066016E1828F0033C58A /* AKGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2065F16E1828F0033C58A /* AKGroup.m */; };
@@ -119,6 +123,10 @@
 		C682DEFA171DF9A300CC4A70 /* AKContactDeleteButtonViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactDeleteButtonViewCell.m; sourceTree = "<group>"; };
 		C682DF01171E28C100CC4A70 /* ButtonDelete.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ButtonDelete.png; path = AKContacts/Images/ButtonDelete.png; sourceTree = "<group>"; };
 		C682DF02171E28C100CC4A70 /* ButtonDelete@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "ButtonDelete@2x.png"; path = "AKContacts/Images/ButtonDelete@2x.png"; sourceTree = "<group>"; };
+		C6AA1A92175EC49600772EB3 /* Contact.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Contact.png; path = AKContacts/Images/Contact.png; sourceTree = "<group>"; };
+		C6AA1A93175EC49600772EB3 /* Contact@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Contact@2x.png"; path = "AKContacts/Images/Contact@2x.png"; sourceTree = "<group>"; };
+		C6AA1A96175ECF9800772EB3 /* Company.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Company.png; path = AKContacts/Images/Company.png; sourceTree = "<group>"; };
+		C6AA1A97175ECF9800772EB3 /* Company@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Company@2x.png"; path = "AKContacts/Images/Company@2x.png"; sourceTree = "<group>"; };
 		C6AD931A1751998E00474CCB /* AKContactPickerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactPickerViewController.h; sourceTree = "<group>"; };
 		C6AD931B1751998E00474CCB /* AKContactPickerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactPickerViewController.m; sourceTree = "<group>"; };
 		C6AD931D1751A28100474CCB /* AKBadge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKBadge.h; sourceTree = "<group>"; };
@@ -326,6 +334,10 @@
 				C66951D016B6FFE100D030A2 /* InfoPlist.strings */,
 				C66951C516B6FFA400D030A2 /* AKContacts-Info.plist */,
 				C66951C616B6FFA400D030A2 /* AKContacts-Prefix.pch */,
+				C6AA1A96175ECF9800772EB3 /* Company.png */,
+				C6AA1A97175ECF9800772EB3 /* Company@2x.png */,
+				C6AA1A92175EC49600772EB3 /* Contact.png */,
+				C6AA1A93175EC49600772EB3 /* Contact@2x.png */,
 				C66951C716B6FFA400D030A2 /* Default-568h@2x.png */,
 				C66951C816B6FFA400D030A2 /* Default.png */,
 				C66951C916B6FFA400D030A2 /* Default@2x.png */,
@@ -465,6 +477,10 @@
 				C66951D216B6FFE100D030A2 /* InfoPlist.strings in Resources */,
 				C682DF03171E28C100CC4A70 /* ButtonDelete.png in Resources */,
 				C682DF04171E28C100CC4A70 /* ButtonDelete@2x.png in Resources */,
+				C6AA1A94175EC49600772EB3 /* Contact.png in Resources */,
+				C6AA1A95175EC49600772EB3 /* Contact@2x.png in Resources */,
+				C6AA1A98175ECF9800772EB3 /* Company.png in Resources */,
+				C6AA1A99175ECF9800772EB3 /* Company@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
