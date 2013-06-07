@@ -37,31 +37,35 @@ static const int editModeItem = 8;
 
 @interface AKContactHeaderViewCell ()
 
+@property (nonatomic, unsafe_unretained) AKContactViewController *delegate;
 @property (assign, nonatomic) ABPropertyID abPropertyID;
 @property (strong, nonatomic) UITextField *textField;
+
+- (void)configureCellAtRow: (NSInteger)row;
 
 @end
 
 @implementation AKContactHeaderViewCell
 
-- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
++ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate atRow: (NSInteger)row
+{
+  static NSString *CellIdentifier = @"AKContactHeaderCellView";
   
-  self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-  if (self) {
-    // Initialization code
+  AKContactHeaderViewCell *cell = [delegate.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  if (cell == nil)
+  {
+    cell = [[AKContactHeaderViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
   }
-  return self;
-}
-
-- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
-
-  [super setSelected:selected animated:animated];
-
-  // Configure the view for the selected state
+  
+  [cell setDelegate: delegate];
+  
+  [cell configureCellAtRow: row];
+  
+  return (UITableViewCell *)cell;
 }
 
 - (void)setFrame:(CGRect)frame {
-  if ([self.parent isEditing]) {
+  if ([self.delegate isEditing]) {
     frame.origin.x += 80.f;
     frame.size.width -= 80.f;
   }
@@ -78,15 +82,15 @@ static const int editModeItem = 8;
     [subView removeFromSuperview];
   }
 
-  AKContact *contact = self.parent.contact;
+  AKContact *contact = self.delegate.contact;
 
   if (row == 0)
   {
-    CGFloat posX = (self.parent.editing == YES) ? -80.f : 0.f;
+    CGFloat posX = (self.delegate.editing == YES) ? -80.f : 0.f;
     UIButton *button = [[UIButton alloc] initWithFrame: CGRectMake(posX, 0.f, 64.f, 64.f)];
-    [button setUserInteractionEnabled: (self.parent.editing == YES)];
+    [button setUserInteractionEnabled: (self.delegate.editing == YES)];
     [self.contentView addSubview: button];
-    if (contact.pictureData == nil && self.parent.editing == YES)
+    if (contact.pictureData == nil && self.delegate.editing == YES)
     {
       [button.layer setMasksToBounds: YES];
       [button.layer setCornerRadius: 5.f];
@@ -112,7 +116,7 @@ static const int editModeItem = 8;
     }
   }
   
-  if ([self.parent isEditing])
+  if ([self.delegate isEditing])
   {
     UITextField *textField = [[UITextField alloc] initWithFrame: CGRectZero];
     [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
@@ -148,7 +152,7 @@ static const int editModeItem = 8;
   else
   {
     [self.backgroundView setHidden: YES]; // Hide background in default mode
-    [self.parent.tableView setSeparatorStyle: UITableViewCellSeparatorStyleNone];
+    [self.delegate.tableView setSeparatorStyle: UITableViewCellSeparatorStyleNone];
 
     UILabel *contactNameLabel = [[UILabel alloc] initWithFrame: CGRectMake(80.f, 0.f, 210.f, 23.f)];
     [self.contentView addSubview: contactNameLabel];
@@ -192,11 +196,11 @@ static const int editModeItem = 8;
   }
 }
 
--(void)layoutSubviews
+- (void)layoutSubviews
 {
   [super layoutSubviews];
 
-  if (self.parent.isEditing)
+  if (self.delegate.isEditing)
   {
     CGRect frame = CGRectMake(self.contentView.bounds.origin.x + 10.f,
                               self.contentView.bounds.origin.y,
@@ -205,24 +209,20 @@ static const int editModeItem = 8;
     [self.textField setFrame: frame];
 
     [self.backgroundView setHidden: NO]; // Show background in edit mode
-    [self.parent.tableView setSeparatorStyle: UITableViewCellSeparatorStyleSingleLine];
+    [self.delegate.tableView setSeparatorStyle: UITableViewCellSeparatorStyleSingleLine];
   }
   else
   {
     [self.backgroundView setHidden: YES]; // Hide background in default mode
-    [self.parent.tableView setSeparatorStyle: UITableViewCellSeparatorStyleNone];
+    [self.delegate.tableView setSeparatorStyle: UITableViewCellSeparatorStyleNone];
   }
-}
-
-- (void)dealloc
-{
 }
 
 #pragma masrk - UITextField delegate
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField
 {
-  [self.parent setFirstResponder: textField];
+  [self.delegate setFirstResponder: textField];
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField
@@ -230,9 +230,9 @@ static const int editModeItem = 8;
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
   
-  [self.parent setFirstResponder: nil];
+  [self.delegate setFirstResponder: nil];
   
-  AKContact *contact = self.parent.contact;
+  AKContact *contact = self.delegate.contact;
   if (self.abPropertyID == kABPersonLastNameProperty)
   {
     [contact setValue: textField.text forProperty: kABPersonLastNameProperty];
