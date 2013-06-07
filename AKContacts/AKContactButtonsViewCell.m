@@ -40,14 +40,34 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
 
 @interface AKContactButtonsViewCell ()
 
+@property (unsafe_unretained, nonatomic) AKContactViewController *delegate;
 @property (strong, nonatomic) UIButton *textButton;
 @property (strong, nonatomic) UIButton *groupButton;
+
+-(void)configureCellAtRow: (NSInteger)row;
 
 @end
 
 @implementation AKContactButtonsViewCell
 
--(id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
++ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate atRow: (NSInteger)row
+{
+  static NSString *CellIdentifier = @"AKContactButtonsViewCell";
+  
+  AKContactButtonsViewCell *cell = [delegate.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  if (cell == nil)
+  {
+    cell = [[AKContactButtonsViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier: CellIdentifier];
+  }
+
+  [cell setDelegate: delegate];
+
+  [cell configureCellAtRow: row];
+
+  return (UITableViewCell *)cell;
+}
+
+- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
   
   self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
   if (self) {
@@ -73,16 +93,6 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
     [self.contentView addSubview: self.groupButton];
   }
   return self;
-}
-
--(void)setSelected:(BOOL)selected animated:(BOOL)animated {
-
-  [super setSelected:selected animated:animated];
-
-  // Configure the view for the selected state
-}
-
-- (void)dealloc {
 }
 
 -(void)configureCellAtRow: (NSInteger)row
@@ -112,7 +122,7 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
   UIButton *button = (UIButton *)sender;
   if (button.tag == kButtonText)
   {
-      AKContact *contact = self.parent.contact;
+      AKContact *contact = self.delegate.contact;
       NSInteger phoneCount = [contact countForProperty: kABPersonPhoneProperty];
       NSInteger emailCount = [contact countForProperty: kABPersonEmailProperty];
 
@@ -132,18 +142,18 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
       }
       else
       {
-          [messanger showTextActionSheetWithContactID: self.parent.contact.recordID];
+          [messanger showTextActionSheetWithContactID: self.delegate.contact.recordID];
       }
   }
   else
   {
-    AKGroupPickerViewController *groupSelectView = [[AKGroupPickerViewController alloc] initWithContactID: self.parent.contact.recordID];
+    AKGroupPickerViewController *groupSelectView = [[AKGroupPickerViewController alloc] initWithContactID: self.delegate.contact.recordID];
     UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: groupSelectView];
 
-    if ([self.parent.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
-      [self.parent.navigationController presentViewController: navigationController animated: YES completion: nil];
+    if ([self.delegate.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
+      [self.delegate.navigationController presentViewController: navigationController animated: YES completion: nil];
     else
-      [self.parent.navigationController presentModalViewController: navigationController animated: YES];
+      [self.delegate.navigationController presentModalViewController: navigationController animated: YES];
   }
 }
 
