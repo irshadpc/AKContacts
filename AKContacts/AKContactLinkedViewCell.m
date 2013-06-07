@@ -32,22 +32,31 @@
 #import "AKContact.h"
 #import "AKSource.h"
 
+@interface AKContactLinkedViewCell ()
+
+@property (unsafe_unretained, nonatomic) AKContactViewController *delegate;
+
+-(void)configureCellAtRow:(NSInteger)row;
+
+@end
+
 @implementation AKContactLinkedViewCell
 
-- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
++ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate atRow: (NSInteger)row
 {
-    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-    if (self) {
-        // Initialization code
-    }
-    return self;
-}
+  static NSString *CellIdentifier = @"AKContactLinkedViewCell";
+  
+  AKContactLinkedViewCell *cell = [delegate.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  if (cell == nil)
+  {
+    cell = [[AKContactLinkedViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
+  }
 
-- (void)setSelected:(BOOL)selected animated:(BOOL)animated
-{
-    [super setSelected:selected animated:animated];
+  [cell setDelegate: delegate];
 
-    // Configure the view for the selected state
+  [cell configureCellAtRow: row];
+
+  return (UITableViewCell *)cell;
 }
 
 - (void)configureCellAtRow:(NSInteger)row
@@ -56,10 +65,10 @@
   [self.detailTextLabel setText: nil];
   [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
   [self setAccessoryType: UITableViewCellAccessoryNone];
+  
+  NSInteger recordID = [[[self.delegate.contact linkedContactIDs] objectAtIndex: row] integerValue];
 
-  NSInteger recordID = [[[self.parent.contact linkedContactIDs] objectAtIndex: row] integerValue];
-
-  if (recordID != self.parent.parentLinkedContactID)
+  if (recordID != self.delegate.parentLinkedContactID)
   {
     [self setAccessoryType: UITableViewCellAccessoryDisclosureIndicator];
   }
