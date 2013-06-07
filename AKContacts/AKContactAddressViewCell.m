@@ -49,28 +49,15 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
 @interface AKContactAddressViewCell ()
 
+@property (unsafe_unretained, nonatomic) AKContactViewController *delegate;
+
+- (void)configureCellAtRow: (NSInteger)row;
+
 @end
 
 @implementation AKContactAddressViewCell
 
--(id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
-{
-  self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-  if (self)
-  {
-
-  }
-  return self;
-}
-
--(void)setSelected:(BOOL)selected animated:(BOOL)animated
-{
-  [super setSelected:selected animated:animated];
-
-  // Configure the view for the selected state
-}
-
--(void)configureCellAtRow:(NSInteger)row
+- (void)configureCellAtRow:(NSInteger)row
 {
   [self setTag: NSNotFound];
   [self.textLabel setText: nil];
@@ -85,7 +72,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     }
   }
 
-  AKContact *contact = self.parent.contact;
+  AKContact *contact = self.delegate.contact;
   
   if (row < [contact countForProperty: kABPersonAddressProperty])
   {
@@ -105,12 +92,12 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   }
   else
   {
-    [self.textLabel setText: (self.parent.willAddAddress == YES) ?
+    [self.textLabel setText: (self.delegate.willAddAddress == YES) ?
      [[AKLabel defaultLocalizedLabelForABPropertyID: kABPersonAddressProperty] lowercaseString] : NSLocalizedString(@"add new address", @"")];
   }
 
-  if ((self.parent.editing == YES && self.tag != NSNotFound) ||
-      (self.parent.editing == YES && self.parent.willAddAddress == YES))
+  if ((self.delegate.editing == YES && self.tag != NSNotFound) ||
+      (self.delegate.editing == YES && self.delegate.willAddAddress == YES))
   {
     [self.contentView addSubview: [AKContactAddressViewCell separatorWithTag: kHorizontal1]];
     [self.contentView addSubview: [AKContactAddressViewCell separatorWithTag: kHorizontal2]];
@@ -127,7 +114,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   }
 }
 
--(void)layoutSubviews
+- (void)layoutSubviews
 {
   [super layoutSubviews];
 
@@ -135,7 +122,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
                                        self.textLabel.frame.size.width,
                                        self.textLabel.frame.size.height)];
   
-  if (self.parent.editing)
+  if (self.delegate.editing)
   {
     UIView *view = [self.contentView viewWithTag: kAddressStreet];
     [view setFrame: CGRectMake(81.f, 0.f, 187.f, 40.f)];
@@ -164,7 +151,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     view = [self.contentView viewWithTag: kHorizontal2];
     [view setFrame: CGRectMake(80.f, 40.f, self.contentView.bounds.size.width - 80.f, 1.f)];
     
-    if (self.parent.willAddAddress == NO && self.tag == NSNotFound)
+    if (self.delegate.willAddAddress == NO && self.tag == NSNotFound)
     { // Add new address frame
       CGFloat width = [self.textLabel.text sizeWithFont: self.textLabel.font].width;
       CGRect frame = self.textLabel.frame;
@@ -174,15 +161,11 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   }
 }
 
-- (void)dealloc
-{
-}
-
 #pragma mark - Custom methods
 
 - (UITextField *)getTextFieldWithTag: (NSInteger)tag
 {
-  AKContact *contact = self.parent.contact;
+  AKContact *contact = self.delegate.contact;
   NSDictionary *address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.tag];
 
   NSString *key = [AKContactAddressViewCell descriptionForAddressTag: tag];
@@ -209,6 +192,23 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
 #pragma mark - Class methods
 
++ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate atRow: (NSInteger)row
+{
+  static NSString *CellIdentifier = @"AKContactAddressViewCell";
+  
+  AKContactAddressViewCell *cell = [delegate.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  if (cell == nil)
+  {
+    cell = [[AKContactAddressViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
+  }
+  
+  [cell setDelegate: delegate];
+  
+  [cell configureCellAtRow: row];
+  
+  return (UITableViewCell *)cell;
+}
+
 + (UIView *)separatorWithTag: (SeparatorTag)tag
 {
   UIView *separator = [[UIView alloc] initWithFrame: CGRectZero];
@@ -233,21 +233,21 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
 #pragma mark - UITextField delegate
 
--(void)textFieldDidBeginEditing:(UITextField *)textField
+- (void)textFieldDidBeginEditing:(UITextField *)textField
 {
-  [self.parent setFirstResponder: textField];
+  [self.delegate setFirstResponder: textField];
 }
 
--(void)textFieldDidEndEditing:(UITextField *)textField
+- (void)textFieldDidEndEditing:(UITextField *)textField
 {
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
 
-  [self.parent setFirstResponder: nil];
+  [self.delegate setFirstResponder: nil];
   
   if ([textField.text length] == 0) return;
 
-  AKContact *contact = self.parent.contact;
+  AKContact *contact = self.delegate.contact;
 
   NSString *key = [AKContactAddressViewCell descriptionForAddressTag: textField.tag];
 
@@ -272,7 +272,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   }
 }
 
--(BOOL)textFieldShouldReturn:(UITextField *)textField
+- (BOOL)textFieldShouldReturn:(UITextField *)textField
 {
   if ([textField isFirstResponder])
     [textField resignFirstResponder];

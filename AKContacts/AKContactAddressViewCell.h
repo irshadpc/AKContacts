@@ -33,8 +33,6 @@
 
 @interface AKContactAddressViewCell : UITableViewCell <UITextFieldDelegate> 
 
-@property (unsafe_unretained, nonatomic) AKContactViewController *parent;
-
--(void)configureCellAtRow: (NSInteger)row;
++ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate atRow: (NSInteger)row;
 
 @end
