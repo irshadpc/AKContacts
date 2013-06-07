@@ -31,10 +31,8 @@
 
 @class AKContactViewController;
 
-@interface AKContactSwitchViewCell : UITableViewCell 
+@interface AKContactSwitchViewCell : UITableViewCell
 
-@property (unsafe_unretained, nonatomic) AKContactViewController *parent;
-
--(void)configureCellAtRow:(NSInteger)row;
++ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate atRow: (NSInteger)row;
 
 @end

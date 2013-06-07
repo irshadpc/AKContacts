@@ -32,32 +32,33 @@
 
 @interface AKContactSwitchViewCell ()
 
+@property (unsafe_unretained, nonatomic) AKContactViewController *delegate;
 @property (assign, nonatomic) NSInteger identifier;
+
+- (void)configureCellAtRow:(NSInteger)row;
 
 @end
 
 @implementation AKContactSwitchViewCell
 
--(id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
++ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate atRow: (NSInteger)row
+{
+  static NSString *CellIdentifier = @"AKContactSwitchViewCell";
   
-  self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-  if (self) {
-    // Initialization code
+  AKContactSwitchViewCell *cell = [delegate.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  if (cell == nil)
+  {
+    cell = [[AKContactSwitchViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
   }
-  return self;
+  
+  [cell setDelegate: delegate];
+  
+  [cell configureCellAtRow: row];
+  
+  return (UITableViewCell *)cell;
 }
 
--(void)setSelected:(BOOL)selected animated:(BOOL)animated {
-
-  [super setSelected:selected animated:animated];
-
-  // Configure the view for the selected state
-}
-
-- (void)dealloc {
-}
-
--(void)configureCellAtRow: (NSInteger)row {
+- (void)configureCellAtRow: (NSInteger)row {
   
   [self setIdentifier: NSNotFound];
   [self.textLabel setText: nil];
@@ -73,7 +74,7 @@
 
 #pragma mark - UISwitch
 
--(void)uiSwitchDidChangeValue: (id)sender {
+- (void)uiSwitchDidChangeValue: (id)sender {
   
 }
 
