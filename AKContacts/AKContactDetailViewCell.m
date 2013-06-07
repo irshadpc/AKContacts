@@ -33,11 +33,13 @@
 
 @interface AKContactDetailViewCell ()
 
+@property (unsafe_unretained, nonatomic) AKContactViewController *delegate;
 @property (assign, nonatomic) ABPropertyID abPropertyID;
 @property (strong, nonatomic) UITextField *textField;
 @property (strong, nonatomic) UITextView *textView;
 @property (strong, nonatomic) UIView *separator;
 
+- (void)configureCellForProperty: (ABPropertyID)property atRow: (NSInteger)row;
 - (UIView *)datePickerInputViewWithDate: (NSDate *)date;
 - (UIView *)datePickerInputAccessoryView;
 - (void)datePickerDidChangeValue: (id)sender;
@@ -46,6 +48,23 @@
 @end
 
 @implementation AKContactDetailViewCell
+
++ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate andProperty: (ABPropertyID)property atRow: (NSInteger)row
+{
+  static NSString *CellIdentifier = @"AKContactDetailViewCell";
+
+  AKContactDetailViewCell *cell = [delegate.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  if (cell == nil)
+  {
+    cell = [[AKContactDetailViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
+  }
+
+  [cell setDelegate: delegate];
+
+  [cell configureCellForProperty: property atRow: row];
+
+  return (UITableViewCell *)cell;
+}
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
@@ -71,14 +90,6 @@
   return self;
 }
 
-- (void)setSelected:(BOOL)selected animated:(BOOL)animated
-{
-
-  [super setSelected:selected animated:animated];
-
-  // Configure the view for the selected state
-}
-
 - (void)configureCellForProperty:(ABPropertyID)property atRow:(NSInteger)row
 {
   [self setAbPropertyID: property];
@@ -90,7 +101,7 @@
   [self.textField setInputView: nil];
   [self.textField setInputAccessoryView: nil];
   
-  AKContact *contact = self.parent.contact;
+  AKContact *contact = self.delegate.contact;
 
   NSString *text = nil;
   NSString *placeholder = nil;
@@ -190,16 +201,16 @@
                             self.contentView.bounds.size.width - 85.f,
                             self.contentView.bounds.size.height);
   [self.textField setFrame: frame];
-  [self.textField setUserInteractionEnabled: self.parent.editing];
+  [self.textField setUserInteractionEnabled: self.delegate.editing];
 
   frame.size.height -= 10.f;
   frame.origin.x -= 7.f;
   frame.size.width += 7.f;
   [self.textView setFrame: frame];
-  [self.textView setEditable: self.parent.editing];
+  [self.textView setEditable: self.delegate.editing];
 
   [self.separator setFrame: CGRectMake(80.f, 0.f, 1.f, self.contentView.bounds.size.height)];
-  [self.separator setHidden: !self.parent.editing];
+  [self.separator setHidden: !self.delegate.editing];
 
   if (self.abPropertyID == kABPersonNoteProperty)
   {
@@ -209,25 +220,21 @@
   }
 }
 
-- (void)dealloc
-{
-}
-
 #pragma mark - UITextField delegate
 
--(void)textFieldDidBeginEditing:(UITextField *)textField
+- (void)textFieldDidBeginEditing:(UITextField *)textField
 {
-  [self.parent setFirstResponder: textField];
+  [self.delegate setFirstResponder: textField];
 }
 
--(void)textFieldDidEndEditing:(UITextField *)textField
+- (void)textFieldDidEndEditing:(UITextField *)textField
 {
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
 
-  [self.parent setFirstResponder: nil];
+  [self.delegate setFirstResponder: nil];
 
-  AKContact *contact = self.parent.contact;
+  AKContact *contact = self.delegate.contact;
   
   NSString *oldValue = [contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.tag];
   if ([textField.text isEqualToString: oldValue] || [textField.text length] == 0)
@@ -258,7 +265,7 @@
 
 - (void)textViewDidBeginEditing:(UITextField *)textView
 {
-  [self.parent setFirstResponder: textView];
+  [self.delegate setFirstResponder: textView];
 }
 
 - (void)textViewDidEndEditing:(UITextField *)textView
@@ -266,11 +273,11 @@
   if ([textView isFirstResponder])
     [textView resignFirstResponder];
 
-  [self.parent setFirstResponder: nil];
+  [self.delegate setFirstResponder: nil];
 
   if (self.abPropertyID == kABPersonNoteProperty)
   {
-    AKContact *contact = self.parent.contact;
+    AKContact *contact = self.delegate.contact;
 
     NSString *oldValue = [contact valueForProperty: kABPersonNoteProperty];
     if ([textView.text isEqualToString: oldValue] || [textView.text length] == 0)
@@ -343,7 +350,7 @@
   if ([self.textField isFirstResponder])
     [self.textField resignFirstResponder];
   
-  AKContact *contact = self.parent.contact;
+  AKContact *contact = self.delegate.contact;
   
   UIBarButtonItem *button = (UIBarButtonItem *)sender;
   if (button.tag == UIBarButtonSystemItemDone)
