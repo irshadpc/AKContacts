@@ -33,32 +33,32 @@
 
 @interface AKContactDeleteButtonViewCell () <UIActionSheetDelegate>
 
+@property (unsafe_unretained, nonatomic) AKContactViewController *delegate;
+
+-(void)configureCell;
+
 @end
 
 @implementation AKContactDeleteButtonViewCell
 
--(id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
++ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate atRow: (NSInteger)row
 {
-  self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-  if (self)
+  static NSString *CellIdentifier = @"AKContactDeleteButtonViewCell";
+  
+  AKContactDeleteButtonViewCell *cell = [delegate.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  if (cell == nil)
   {
-    // Initialization code
+    cell = [[AKContactDeleteButtonViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier: CellIdentifier];
   }
-  return self;
+  
+  [cell setDelegate: delegate];
+  
+  [cell configureCell];
+  
+  return (UITableViewCell *)cell;
 }
 
--(void)setSelected:(BOOL)selected animated:(BOOL)animated
-{
-
-  [super setSelected:selected animated:animated];
-
-  // Configure the view for the selected state
-}
-
-- (void)dealloc {
-}
-
--(void)configureCell
+- (void)configureCell
 {
   [self setSelectionStyle: UITableViewCellSelectionStyleNone];
   [self setBackgroundColor: [UIColor clearColor]];
@@ -96,7 +96,7 @@
                                                   cancelButtonTitle: NSLocalizedString(@"Cancel", @"")
                                              destructiveButtonTitle: NSLocalizedString(@"Delete Contact", @"")
                                                   otherButtonTitles: nil];
-  [actionSheet showInView: self.parent.view];
+  [actionSheet showInView: self.delegate.view];
 }
 
 #pragma mark - UIActionSheet delegate
@@ -105,10 +105,10 @@
 {
   if (buttonIndex == actionSheet.destructiveButtonIndex)
   {
-    [[AKAddressBook sharedInstance] removeRecordID: self.parent.contact.recordID];
-    if ([self.parent.delegate respondsToSelector: @selector(recordDidRemoveWithContactID:)])
-      [self.parent.delegate recordDidRemoveWithContactID: self.parent.contact.recordID];
-    [self.parent.navigationController popViewControllerAnimated: YES];
+    [[AKAddressBook sharedInstance] removeRecordID: self.delegate.contact.recordID];
+    if ([self.delegate.delegate respondsToSelector: @selector(recordDidRemoveWithContactID:)])
+      [self.delegate.delegate recordDidRemoveWithContactID: self.delegate.contact.recordID];
+    [self.delegate.navigationController popViewControllerAnimated: YES];
   }
 }
 
