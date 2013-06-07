@@ -383,12 +383,10 @@ static const float defaultCellHeight = 44.f;
 {
   NSInteger section = [[self.sections objectAtIndex: indexPath.section] integerValue];
 
-  ABPropertyID property = [AKContactViewController abPropertyIDforSection: section];
-
   switch (section)
   {
     case kSectionHeader:
-      return [self headerCellViewAtRow: indexPath.row];
+      return [AKContactHeaderViewCell cellWithDelegate: self atRow: indexPath.row];
 
     case kSectionPhone:
     case kSectionEmail:
@@ -397,25 +395,27 @@ static const float defaultCellHeight = 44.f;
     case kSectionDate:
     case kSectionSocialProfile:
     case kSectionNote:
-      return [self detailCellViewForProperty: property atRow: indexPath.row];
+      return [AKContactDetailViewCell cellWithDelegate: self
+                                           andProperty: [AKContactViewController abPropertyIDforSection: section]
+                                                 atRow: indexPath.row];
 
     case kSectionAddress:
-      return [self addressCellViewAtRow: indexPath.row];
+      return [AKContactAddressViewCell cellWithDelegate: self atRow: indexPath.row];
 
     case kSectionInstantMessage:
-      return [self instantMessageCellViewAtRow: indexPath.row];
-      
+      return [AKContactInstantMessageViewCell cellWithDelegate: self atRow: indexPath.row];
+
     case kSectionSwitch:
-      return [self switchCellViewAtRow: indexPath.row];
+      return [AKContactSwitchViewCell cellWithDelegate: self atRow: indexPath.row];
 
     case kSectionButtons:
-      return [self buttonsCellViewAtRow: indexPath.row];
+      return [AKContactButtonsViewCell cellWithDelegate: self atRow: indexPath.row];
 
     case kSectionLinkedRecords:
-      return [self linkedCellViewAtRow: indexPath.row];
+      return [AKContactLinkedViewCell cellWithDelegate: self atRow: indexPath.row];
 
     case kSectionDeleteButton:
-      return [self deleteButtonCellViewAtRow: indexPath.row];
+      return [AKContactDeleteButtonViewCell cellWithDelegate: self atRow: indexPath.row];
 
     default:
       return nil;
@@ -774,144 +774,6 @@ static const float defaultCellHeight = 44.f;
 - (void)tableViewTouchUpInside: (id)sender
 {
   [self.firstResponder resignFirstResponder];
-}
-
-#pragma mark - Table View Cells
-
-- (UITableViewCell *)headerCellViewAtRow: (NSInteger)row
-{
-  static NSString *CellIdentifier = @"AKContactHeaderCellView";
-
-  AKContactHeaderViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil)
-  {
-    cell = [[AKContactHeaderViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
-  }
-
-  [cell setParent: self];
-  
-  [cell configureCellAtRow: row];
-
-  return (UITableViewCell *)cell;
-}
-
-- (UITableViewCell *)detailCellViewForProperty: (ABPropertyID)property atRow: (NSInteger)row
-{
-  static NSString *CellIdentifier = @"AKContactDetailViewCell";
-
-  AKContactDetailViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil)
-  {
-    cell = [[AKContactDetailViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
-  }
-
-  [cell setParent: self];
-
-  [cell configureCellForProperty: property atRow: row];
-
-  return (UITableViewCell *)cell;
-}
-
-- (UITableViewCell *)addressCellViewAtRow: (NSInteger)row
-{
-  static NSString *CellIdentifier = @"AKContactAddressViewCell";
-
-  AKContactAddressViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil)
-  {
-    cell = [[AKContactAddressViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
-  }
-
-  [cell setParent: self];
-
-  [cell configureCellAtRow: row];
-
-  return (UITableViewCell *)cell;
-}
-
-- (UITableViewCell *)instantMessageCellViewAtRow: (NSInteger)row
-{
-  static NSString *CellIdentifier = @"AKContactInstantMessageViewCell";
-  
-  AKContactInstantMessageViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil)
-  {
-    cell = [[AKContactInstantMessageViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
-  }
-
-  [cell setParent: self];
-
-  [cell configureCellAtRow: row];
-
-  return (UITableViewCell *)cell;
-}
-
-- (UITableViewCell *)switchCellViewAtRow: (NSInteger)row
-{
-  static NSString *CellIdentifier = @"AKContactSwitchViewCell";
-
-  AKContactSwitchViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil)
-  {
-    cell = [[AKContactSwitchViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
-  }
-  
-  [cell setParent: self];
-  
-  [cell configureCellAtRow: row];
-  
-  return (UITableViewCell *)cell;
-}
-
-- (UITableViewCell *)buttonsCellViewAtRow: (NSInteger)row
-{
-  static NSString *CellIdentifier = @"AKContactButtonsViewCell";
-  
-  AKContactButtonsViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil)
-  {
-    cell = [[AKContactButtonsViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier: CellIdentifier];
-  }
-  
-  [cell setParent: self];
-  
-  [cell configureCellAtRow: row];
-  
-  return (UITableViewCell *)cell;
-}
-
-- (UITableViewCell *)deleteButtonCellViewAtRow: (NSInteger)row
-{
-  static NSString *CellIdentifier = @"AKContactDeleteButtonViewCell";
-
-  AKContactDeleteButtonViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil)
-  {
-    cell = [[AKContactDeleteButtonViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier: CellIdentifier];
-  }
-
-  [cell setParent: self];
-
-  [cell configureCell];
-
-  return (UITableViewCell *)cell;
-}
-
-- (UITableViewCell *)linkedCellViewAtRow: (NSInteger)row
-{
-  static NSString *CellIdentifier = @"AKContactLinkedViewCell";
-
-  AKContactLinkedViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil)
-  {
-    cell = [[AKContactLinkedViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
-  }
-
-  [cell setParent: self];
-
-  [cell configureCellAtRow: row];
-
-  return (UITableViewCell *)cell;
 }
 
 @end
