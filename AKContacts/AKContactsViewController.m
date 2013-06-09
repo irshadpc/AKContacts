@@ -107,11 +107,6 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
   // self.navigationItem.rightBarButtonItem = self.editButtonItem;
 
-  UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd
-                                                                             target: self
-                                                                             action: @selector(addButtonTouchUpInside:)];
-  [self.navigationItem setRightBarButtonItem: addButton];
-  
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AKGroupPickerViewDidDismissNotification object: nil];
   
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AKContactPickerViewDidDismissNotification object: nil];
@@ -122,7 +117,15 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   [super viewWillAppear:animated];
 
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
-  
+
+  if ([akAddressBook sourceForSourceId: akAddressBook.sourceID].canCreateRecord == YES)
+  { // Display 'Add' button only if source supports create records
+    UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd
+                                                                               target: self
+                                                                               action: @selector(addButtonTouchUpInside:)];
+    [self.navigationItem setRightBarButtonItem: addButton];
+  }
+
   [akAddressBook addObserver: self forKeyPath: @"status" options: NSKeyValueObservingOptionNew context: nil];
   
   [[NSNotificationCenter defaultCenter] addObserver: self
