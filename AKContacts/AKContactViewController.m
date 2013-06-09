@@ -35,6 +35,7 @@
 #import "AKContactDeleteButtonViewCell.h"
 #import "AKContactLinkedViewCell.h"
 #import "AKContactInstantMessageViewCell.h"
+#import "AKContactImage.h"
 #import "AKContact.h"
 #import "AKLabel.h"
 #import "AKLabelViewController.h"
@@ -64,7 +65,14 @@ static const float defaultCellHeight = 44.f;
 
 @property (strong, nonatomic) NSMutableArray *sections;
 @property (strong, nonatomic) NSArray *sectionIdentifiers;
+/**
+ * When the keyboard is present, tap anywhere on the tableview dismisses the keyboard
+ */
 @property (strong, nonatomic) UITapGestureRecognizer *tapGestureRecognizer;
+/**
+ * Displays the contact's image
+ */
+@property (strong, nonatomic) AKContactImage *contactImage;
 
 /**
  * Return the ABPropertyID of a section
@@ -220,6 +228,9 @@ static const float defaultCellHeight = 44.f;
 
   [self setView: self.tableView];
 
+  [self setContactImage: [[AKContactImage alloc] initWithFrame: CGRectMake(10.f, 11.f, 64.f, 64.f) andDelegate: self]];
+  [self.view addSubview: self.contactImage];
+
   [self.navigationItem setRightBarButtonItem: self.editButtonItem];
   
   if (self.contact.recordID == tagNewContact)
@@ -236,6 +247,7 @@ static const float defaultCellHeight = 44.f;
         [sectionsToRemove addObject: section];
     }
     [self.sections removeObjectsInArray: sectionsToRemove];
+    [self setEditing: NO animated: NO]; // Set contact picture
   }
 }
 
@@ -253,7 +265,7 @@ static const float defaultCellHeight = 44.f;
 - (void)viewWillAppear: (BOOL)animated
 {
   [super viewWillAppear:animated];
-  
+
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillShow:)
                                                name: UIKeyboardWillShowNotification object:nil];
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillHide:)
@@ -649,6 +661,18 @@ static const float defaultCellHeight = 44.f;
   [super setEditing: editing animated: animate]; // Toggles Done button
   [self.tableView setEditing: editing animated: animate];
 
+  [self.contactImage setEditing: editing];
+  
+  if (self.contact.pictureData == nil && self.editing == YES)
+  {
+    NSString *imageName = ([self.contact recordType] == kABPersonType) ? @"Contact" : @"Company";
+    [self.contactImage setImage: [UIImage imageNamed: imageName] forState: UIControlStateNormal];
+  }
+  else
+  {
+    [self.contactImage setImage: [self.contact picture] forState: UIControlStateNormal];
+  }
+
   if (self.editing)
   {
     UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel target:self action:@selector(cancelButtonTouchUpInside:)];
@@ -774,6 +798,38 @@ static const float defaultCellHeight = 44.f;
 - (void)tableViewTouchUpInside: (id)sender
 {
   [self.firstResponder resignFirstResponder];
+}
+
+#pragma mark - UIImagePickerController delegate
+
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
+{
+  NSString *mediaType = [info objectForKey: UIImagePickerControllerMediaType];
+  UIImage *originalImage, *editedImage, *imageToSave;
+  
+  if (CFStringCompare((CFStringRef)mediaType, kUTTypeImage, 0) == kCFCompareEqualTo) {
+
+    editedImage = (UIImage *) [info objectForKey: UIImagePickerControllerEditedImage];
+    originalImage = (UIImage *) [info objectForKey: UIImagePickerControllerOriginalImage];
+
+    imageToSave = (editedImage) ? editedImage : originalImage;
+
+    [self.contact setPictureData: UIImagePNGRepresentation(imageToSave)];
+    [self.contactImage setImage: imageToSave forState: UIControlStateNormal];
+  }
+
+  if ([picker respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
+    [picker dismissViewControllerAnimated: YES completion: nil];
+  else
+    [picker dismissModalViewControllerAnimated: YES];
+}
+
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
+{
+  if ([picker respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
+    [picker dismissViewControllerAnimated: YES completion: nil];
+  else
+    [picker dismissModalViewControllerAnimated: YES];
 }
 
 @end
