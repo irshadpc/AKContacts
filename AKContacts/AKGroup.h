@@ -56,6 +56,12 @@ typedef NS_ENUM(NSInteger, GroupTypes)
  * before storing in AB database
  **/
 @property (copy, nonatomic) NSString *provisoryName;
+/**
+ * Set to YES for the main aggregator group
+ * the count value of which is not [memberIDs count]
+ * but rather the sum of members of all aggregator groups
+ */
+@property (assign, nonatomic) BOOL isMainAggregate;
 
 - (id)initWithABRecordID: (ABRecordID) recordID;
 /**
