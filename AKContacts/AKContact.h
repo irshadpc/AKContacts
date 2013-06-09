@@ -58,8 +58,9 @@ FOUNDATION_EXPORT const int tagNewContact;
 - (NSString *)dictionaryKey;
 - (NSString *)dictionaryKeyBySortOrdering: (ABPersonSortOrdering)ordering;
 
-- (NSData*)pictureData;
-- (UIImage *)picture;
+- (NSData *)imageData;
+- (void)setImageData: (NSData *)data;
+- (UIImage *)image;
 
 - (NSString *)addressForIdentifier: (NSInteger)identifier andNumRows: (NSInteger *)numRows;
 - (NSString *)instantMessageDescriptionForIdentifier: (NSInteger)identifier;

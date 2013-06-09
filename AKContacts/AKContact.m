@@ -261,7 +261,7 @@ const int tagNewContact = -368;
   return ret;
 }
 
-- (NSData*)pictureData
+- (NSData*)imageData
 {
   __block NSData *ret = nil;
   
@@ -277,18 +277,35 @@ const int tagNewContact = -368;
   return ret;
 }
 
-- (UIImage *)picture
+- (void)setImageData: (NSData *)pictureData
+{
+  dispatch_block_t block = ^{
+    CFErrorRef error = NULL; // Remove first to update full and thumbnail image
+    ABPersonRemoveImageData([self recordRef], &error);
+    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+    if (pictureData != nil)
+    {
+      ABPersonSetImageData([self recordRef], (__bridge CFDataRef)pictureData, &error);
+      if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+    }
+  };
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
+}
+
+- (UIImage *)image
 {
   UIImage *ret = nil;
-  NSData *data = [self pictureData];
-  if (data)
+  NSData *data = [self imageData];
+  if (data != nil)
   {
-    ret = [UIImage imageWithData: [self pictureData]];
+    ret = [UIImage imageWithData: data];
   }
   else
   {
     NSInteger kind = [(NSNumber *)[self valueForProperty: kABPersonKindProperty] integerValue];
-    ret = [UIImage imageNamed: (kind == [(NSNumber *)kABPersonKindOrganization integerValue]) ? @"Company.png" : @"Contact.png"];
+    NSString *imageName = (kind == [(NSNumber *)kABPersonKindOrganization integerValue]) ? @"Company.png" : @"Contact.png";
+    ret = [UIImage imageNamed: imageName];
   }
   return ret;
 }
