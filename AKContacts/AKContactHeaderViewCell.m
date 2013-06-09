@@ -31,8 +31,6 @@
 #import "AKContactViewController.h"
 #import "AKAddressBook.h"
 
-#import <QuartzCore/QuartzCore.h> // Image Layer
-
 static const int editModeItem = 8;
 
 @interface AKContactHeaderViewCell ()
@@ -64,8 +62,10 @@ static const int editModeItem = 8;
   return (UITableViewCell *)cell;
 }
 
-- (void)setFrame:(CGRect)frame {
-  if ([self.delegate isEditing]) {
+- (void)setFrame:(CGRect)frame
+{
+  if ([self.delegate isEditing])
+  {
     frame.origin.x += 80.f;
     frame.size.width -= 80.f;
   }
@@ -83,38 +83,6 @@ static const int editModeItem = 8;
   }
 
   AKContact *contact = self.delegate.contact;
-
-  if (row == 0)
-  {
-    CGFloat posX = (self.delegate.editing == YES) ? -80.f : 0.f;
-    UIButton *button = [[UIButton alloc] initWithFrame: CGRectMake(posX, 0.f, 64.f, 64.f)];
-    [button setUserInteractionEnabled: (self.delegate.editing == YES)];
-    [self.contentView addSubview: button];
-    if (contact.pictureData == nil && self.delegate.editing == YES)
-    {
-      [button.layer setMasksToBounds: YES];
-      [button.layer setCornerRadius: 5.f];
-      [button.layer setBorderColor: [UIColor colorWithRed: 130.f/255.f green: 138.f/255.f blue: 154.f/255.f alpha: 1.f].CGColor];
-      [button.layer setBorderWidth: 1.5f];
-      [button setTitle: NSLocalizedString(@"add\nphoto", @"") forState: UIControlStateNormal];
-      [button.titleLabel setLineBreakMode: NSLineBreakByWordWrapping];
-      [button.titleLabel setFont: [UIFont boldSystemFontOfSize: 12.f]];
-      [button.titleLabel setNumberOfLines: 2];
-      [button.titleLabel setTextAlignment: NSTextAlignmentCenter];
-      [button setTitleColor: [UIColor colorWithRed:81.f/255.f green:102.f/255.f blue:145.f/255.f alpha: 1.f] forState: UIControlStateNormal];
-    }
-    else
-    {
-      [button setImage: [contact picture] forState: UIControlStateNormal];
-      [button setContentMode: UIViewContentModeScaleAspectFit];
-      [button.layer setBorderColor: [[UIColor whiteColor] CGColor]];
-      [button.layer setBorderWidth: 4.f];
-      [button.layer setShadowColor: [UIColor grayColor].CGColor];
-      [button.layer setShadowOffset: CGSizeMake(0, 1)];
-      [button.layer setShadowOpacity: 1];
-      [button.layer setShadowRadius: 1.0];
-    }
-  }
   
   if ([self.delegate isEditing])
   {
@@ -218,7 +186,7 @@ static const int editModeItem = 8;
   }
 }
 
-#pragma masrk - UITextField delegate
+#pragma mark - UITextField delegate
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField
 {
