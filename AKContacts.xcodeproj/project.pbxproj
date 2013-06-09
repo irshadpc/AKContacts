@@ -44,6 +44,8 @@
 		C6AA1A95175EC49600772EB3 /* Contact@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C6AA1A93175EC49600772EB3 /* Contact@2x.png */; };
 		C6AA1A98175ECF9800772EB3 /* Company.png in Resources */ = {isa = PBXBuildFile; fileRef = C6AA1A96175ECF9800772EB3 /* Company.png */; };
 		C6AA1A99175ECF9800772EB3 /* Company@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C6AA1A97175ECF9800772EB3 /* Company@2x.png */; };
+		C6AA1A9B17638AF200772EB3 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C6AA1A9A17638AF100772EB3 /* MobileCoreServices.framework */; };
+		C6AA1A9E1763FA5700772EB3 /* AKContactImage.m in Sources */ = {isa = PBXBuildFile; fileRef = C6AA1A9D1763FA5600772EB3 /* AKContactImage.m */; };
 		C6AD931C1751998E00474CCB /* AKContactPickerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C6AD931B1751998E00474CCB /* AKContactPickerViewController.m */; };
 		C6AD931F1751A28200474CCB /* AKBadge.m in Sources */ = {isa = PBXBuildFile; fileRef = C6AD931E1751A28100474CCB /* AKBadge.m */; };
 		C6C2066016E1828F0033C58A /* AKGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2065F16E1828F0033C58A /* AKGroup.m */; };
@@ -127,6 +129,9 @@
 		C6AA1A93175EC49600772EB3 /* Contact@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Contact@2x.png"; path = "AKContacts/Images/Contact@2x.png"; sourceTree = "<group>"; };
 		C6AA1A96175ECF9800772EB3 /* Company.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Company.png; path = AKContacts/Images/Company.png; sourceTree = "<group>"; };
 		C6AA1A97175ECF9800772EB3 /* Company@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Company@2x.png"; path = "AKContacts/Images/Company@2x.png"; sourceTree = "<group>"; };
+		C6AA1A9A17638AF100772EB3 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
+		C6AA1A9C1763FA5400772EB3 /* AKContactImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactImage.h; sourceTree = "<group>"; };
+		C6AA1A9D1763FA5600772EB3 /* AKContactImage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactImage.m; sourceTree = "<group>"; };
 		C6AD931A1751998E00474CCB /* AKContactPickerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactPickerViewController.h; sourceTree = "<group>"; };
 		C6AD931B1751998E00474CCB /* AKContactPickerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactPickerViewController.m; sourceTree = "<group>"; };
 		C6AD931D1751A28100474CCB /* AKBadge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKBadge.h; sourceTree = "<group>"; };
@@ -156,6 +161,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C6AA1A9B17638AF200772EB3 /* MobileCoreServices.framework in Frameworks */,
 				F3F072131730575B0044084A /* QuartzCore.framework in Frameworks */,
 				F35CCE61172F13BF00466697 /* MessageUI.framework in Frameworks */,
 				C66951E416B705C400D030A2 /* AddressBook.framework in Frameworks */,
@@ -213,6 +219,8 @@
 			children = (
 				C6140A731749B27B00B338CB /* AKContactInstantMessageViewCell.h */,
 				C6140A741749B27B00B338CB /* AKContactInstantMessageViewCell.m */,
+				C6AA1A9C1763FA5400772EB3 /* AKContactImage.h */,
+				C6AA1A9D1763FA5600772EB3 /* AKContactImage.m */,
 				C620080816B997A900C16121 /* AKContactHeaderViewCell.h */,
 				C620080916B997A900C16121 /* AKContactHeaderViewCell.m */,
 				C620080616B997A900C16121 /* AKContactDetailViewCell.h */,
@@ -274,6 +282,7 @@
 		C669518A16B6FD7100D030A2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C6AA1A9A17638AF100772EB3 /* MobileCoreServices.framework */,
 				F3F072121730575B0044084A /* QuartzCore.framework */,
 				F35CCE60172F13BF00466697 /* MessageUI.framework */,
 				C66951E316B705C400D030A2 /* AddressBook.framework */,
@@ -543,6 +552,7 @@
 				C600EB18174C6199000DEB84 /* AKGroupPickerViewController.m in Sources */,
 				C6AD931C1751998E00474CCB /* AKContactPickerViewController.m in Sources */,
 				C6AD931F1751A28200474CCB /* AKBadge.m in Sources */,
+				C6AA1A9E1763FA5700772EB3 /* AKContactImage.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
