@@ -44,6 +44,10 @@ typedef NS_ENUM(NSInteger, SourceTypes)
  **/
 @property (strong, nonatomic) NSMutableArray *groups;
 @property (assign, nonatomic) BOOL isDefault;
+/**
+ *  Return YES if records can be added to the source
+ */
+@property (assign, nonatomic) BOOL canCreateRecord;
 
 - (id)initWithABRecordID: (ABRecordID) recordID;
 /**

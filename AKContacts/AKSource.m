@@ -149,7 +149,7 @@ NSString *const defaultsSourceKey = @"Source_%d";
     case kABSourceTypeExchange: return NO;
     case kABSourceTypeMobileMe: return NO;
     case kABSourceTypeLDAP: return NO;
-    case kABSourceTypeCardDAV: return YES;
+    case kABSourceTypeCardDAV: return self.canCreateRecord;
     default: return NO;
   }
 }
