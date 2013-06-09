@@ -35,6 +35,7 @@
 #import "AKAddressBook.h"
 #import "AKSource.h"
 #import "AKGroupPickerViewController.h"
+#import "AKGroupsViewController.h"
 #import "AKContactPickerViewController.h"
 
 #import <AddressBook/AddressBook.h>
@@ -187,7 +188,14 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 - (void)recordDidRemoveWithContactID: (NSInteger)contactID
 {
   [[AKAddressBook sharedInstance] resetSearch];
-  [self reloadTableViewData];  
+  [self reloadTableViewData];
+  
+  id rootViewController = [self.navigationController.viewControllers objectAtIndex: 0];
+  
+  if ([rootViewController isKindOfClass: [AKGroupsViewController class]])
+  {
+    [(AKGroupsViewController *)rootViewController reloadTableViewData];
+  }
 }
 
 #pragma mark - Custom methods
