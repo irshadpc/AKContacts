@@ -120,6 +120,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     _ab_timer_suspended = YES;
 
+    _needReload = YES;
+
     dispatch_source_set_event_handler(_ab_timer, ^{
       [self releaseUnusedContacts];
       [self suspend_ab_timer];
@@ -169,8 +171,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   if (SYSTEM_VERSION_LESS_THAN(@"6.0")) 
   {
     [self loadAddressBook];
-  } 
-  else 
+  }
+  else
   {
     ABAuthorizationStatus stat = ABAddressBookGetAuthorizationStatus();
 
@@ -188,7 +190,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
           NSLog(@"Access denied to addressBook");
         }
       });
-
     } 
     else if (stat == kABAuthorizationStatusDenied) 
     {
@@ -213,12 +214,18 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   {
     NSTimeInterval elapsed = fabs([self.dateAddressBookLoaded timeIntervalSinceNow]);
     NSLog(@"Elasped since last AB load: %f", elapsed);
-    if (elapsed < 5.0) return;
+    if (elapsed < 5.0)
+    {
+      return;
+    }
+    else
+    {
+      [self setNeedReload: YES];
+    }
   }
 
-  if (self.status != kAddressBookLoading)
+  if (self.status != kAddressBookLoading && self.needReload == YES)
   {
-    [self setDateAddressBookLoaded: [NSDate date]];
     [self loadAddressBook];
   }
 }
@@ -263,8 +270,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     CFRelease(addressBook);
     
-    NSDate *finish = [NSDate date];
-    NSLog(@"Address book loaded in %f", [finish timeIntervalSinceDate: start]);
+    [self setDateAddressBookLoaded: [NSDate date]];
+    NSLog(@"Address book loaded in %.2f", fabs([self.dateAddressBookLoaded timeIntervalSinceDate: start]));
 
     [self resetSearch];
 
@@ -575,6 +582,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   {
     [array removeObject: [NSNumber numberWithInteger: recordID]];
   }
+
+  [self setNeedReload: NO];
 
   CFErrorRef error = NULL;
   ABAddressBookRemoveRecord(self.addressBookRef, contact.recordRef, &error);
