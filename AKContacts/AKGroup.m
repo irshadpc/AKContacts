@@ -158,6 +158,8 @@ NSString *const DefaultsKeyGroups = @"Groups";
 
   if (ABAddressBookHasUnsavedChanges(addressBookRef))
   {
+    [[AKAddressBook sharedInstance] setNeedReload: NO];
+
     CFErrorRef error = NULL;
     ABAddressBookSave(addressBookRef, &error);
     if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }

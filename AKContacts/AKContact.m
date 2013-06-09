@@ -65,6 +65,8 @@ const int tagNewContact = -368;
       {
         AKSource *source = [addressBook sourceForSourceId: addressBook.sourceID];
 
+        [[AKAddressBook sharedInstance] setNeedReload: NO];
+
         ABRecordRef recordRef = ABPersonCreateInSource((source.recordID >= 0) ? source.recordRef : NULL);
 
         CFErrorRef error = NULL;
@@ -359,6 +361,8 @@ const int tagNewContact = -368;
 
   if (ABAddressBookHasUnsavedChanges(addressBookRef))
   {
+    [[AKAddressBook sharedInstance] setNeedReload: NO];
+
     CFErrorRef error = NULL;
     ABAddressBookSave(addressBookRef, &error);
     if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
@@ -390,6 +394,9 @@ const int tagNewContact = -368;
 
   if (self.recordID == tagNewContact)
   { // Reference super.recordRef not self.recordRef here
+
+    [[AKAddressBook sharedInstance] setNeedReload: NO];
+
     CFErrorRef error = NULL;
     ABAddressBookRemoveRecord(addressBookRef, super.recordRef, &error);
     if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }

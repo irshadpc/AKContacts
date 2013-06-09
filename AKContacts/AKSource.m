@@ -163,6 +163,8 @@ NSString *const defaultsSourceKey = @"Source_%d";
   {
     if (group.recordID == kGroupWillCreate)
     {
+      [[AKAddressBook sharedInstance] setNeedReload: NO];
+
       CFErrorRef error = NULL;
       ABRecordRef record = ABGroupCreateInSource(self.recordRef);
       ABRecordSetValue(record, kABGroupNameProperty, (__bridge CFTypeRef)(group.provisoryName), &error);
@@ -182,6 +184,8 @@ NSString *const defaultsSourceKey = @"Source_%d";
     }
     else if (group.provisoryName != nil)
     {
+      [[AKAddressBook sharedInstance] setNeedReload: NO];
+
       CFErrorRef error = NULL;
       ABRecordSetValue(group.recordRef, kABGroupNameProperty, (__bridge CFTypeRef)(group.provisoryName), &error);
       if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
@@ -191,6 +195,8 @@ NSString *const defaultsSourceKey = @"Source_%d";
     }
     else if (group.recordID == kGroupWillDelete)
     {
+      [[AKAddressBook sharedInstance] setNeedReload: NO];
+
       [groupsToRemove addObject: group];
       CFErrorRef error = NULL;
       ABAddressBookRemoveRecord(addressBook.addressBookRef, group.recordRef, &error);
