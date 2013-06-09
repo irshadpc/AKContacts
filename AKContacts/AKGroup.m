@@ -29,6 +29,7 @@
 
 #import "AKGroup.h"
 #import "AKContact.h"
+#import "AKSource.h"
 #import "AKAddressBook.h"
 
 NSString *const DefaultsKeyGroups = @"Groups";
@@ -67,7 +68,27 @@ NSString *const DefaultsKeyGroups = @"Groups";
 
 - (NSInteger)count
 {
-  return [self.memberIDs count];
+  if (self.isMainAggregate == NO)
+  {
+    return [self.memberIDs count];
+  }
+  else
+  {
+    NSInteger ret = 0;
+    AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+    for (AKSource *source in addressBook.sources)
+    {
+      for (AKGroup *group in source.groups)
+      {
+        if (group.isMainAggregate == YES) continue;
+        if (group.recordID == kGroupAggregate)
+        {
+          ret += [group count];
+        }
+      }
+    }
+    return ret;
+  }
 }
 
 - (void)addMemberWithID: (ABRecordID)recordID
