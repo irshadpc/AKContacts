@@ -85,6 +85,8 @@ typedef NS_ENUM(NSInteger, AddressBookStatus)
 @property (assign, nonatomic) NSInteger sourceID;
 @property (assign, nonatomic) NSInteger groupID;
 
+@property (assign, nonatomic) BOOL needReload;
+
 + (AKAddressBook *)sharedInstance;
 - (void)requestAddressBookAccess;
 - (void)insertRecordID: (ABRecordID)recordID inDictionary: (NSMutableDictionary *)dictionary withAddressBookRef: (ABAddressBookRef)addressBook;
