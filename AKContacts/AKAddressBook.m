@@ -317,6 +317,12 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     AKSource *source = [[AKSource alloc] initWithABRecordID: recordID];
     [source setIsDefault: (defaultSourceID == recordID) ? YES : NO];
 
+    recordRef = ABPersonCreateInSource(source.recordRef);
+    if (recordRef != nil)
+    { // Check if source supports create records
+      [source setCanCreateRecord: YES];
+    }
+
     [self.sources addObject: source];
   }
   [self setSourceID: (sources.count > 1) ? kSourceAggregate : defaultSourceID];
