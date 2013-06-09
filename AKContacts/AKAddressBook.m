@@ -299,6 +299,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   if ([sources count] > 1)
   {
     AKSource *aggregatorSource = [[AKSource alloc] initWithABRecordID: kSourceAggregate];
+    [aggregatorSource setCanCreateRecord: YES];
     [self.sources addObject: aggregatorSource];
   }
 
@@ -313,14 +314,15 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     ABSourceType type =  [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABSourceTypeProperty)) integerValue];
     if (type == kABSourceTypeExchangeGAL) continue; // No support for Exchange Global Address List, yet
-    
+
     AKSource *source = [[AKSource alloc] initWithABRecordID: recordID];
     [source setIsDefault: (defaultSourceID == recordID) ? YES : NO];
 
-    recordRef = ABPersonCreateInSource(source.recordRef);
-    if (recordRef != nil)
+    ABRecordRef tryRecordRef = ABPersonCreateInSource(source.recordRef);
+    if (tryRecordRef != nil)
     { // Check if source supports create records
       [source setCanCreateRecord: YES];
+      CFRelease(tryRecordRef);
     }
 
     [self.sources addObject: source];
