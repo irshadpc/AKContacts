@@ -42,7 +42,7 @@
 - (void)recordDidRemoveWithContactID: (NSInteger)contactID;
 @end
 
-@interface AKContactViewController : UIViewController <UITableViewDataSource, UITableViewDelegate> 
+@interface AKContactViewController : UIViewController <UITableViewDataSource, UITableViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate>
 
 @property (strong, nonatomic) UITableView *tableView;
 @property (strong, nonatomic) AKContact *contact;
