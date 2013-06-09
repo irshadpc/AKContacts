@@ -38,4 +38,9 @@
  */
 @property (strong, nonatomic) UITextField *firstResponder;
 
+/**
+ * Reload contents of tableView
+ */
+- (void)reloadTableViewData;
+
 @end

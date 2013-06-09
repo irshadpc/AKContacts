@@ -55,10 +55,6 @@ static const float defaultCellHeight = 44.f;
  */
 - (void)tableViewTouchUpInside: (id)sender;
 /**
- * Reload contents of tableView
- */
-- (void)reloadTableViewData;
-/**
  * Keyboard notification handlers
  */
 - (void)keyboardWillShow: (NSNotification *)notification;
