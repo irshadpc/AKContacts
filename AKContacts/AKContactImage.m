@@ -78,7 +78,7 @@
   }
   label = NSLocalizedString(@"Choose Photo", @"");
   [actionSheet addButtonWithTitle: label];
-  if ([self.delegate.contact pictureData] != nil)
+  if ([self.delegate.contact imageData] != nil)
   {
     label = NSLocalizedString(@"Delete Photo", @"");
     [actionSheet addButtonWithTitle: label];
@@ -114,7 +114,7 @@
       }
       else if (buttonIndex == 2)
       { // Delete
-        [self.delegate.contact setPictureData: nil];
+        [self.delegate.contact setImageData: nil];
         NSString *imageName = ([self.delegate.contact recordType] == kABPersonType) ? @"Contact" : @"Company";
         [self setImage: [UIImage imageNamed: imageName] forState: UIControlStateNormal];
       }
@@ -128,7 +128,7 @@
       }
       else if (buttonIndex == 1)
       { // Delete
-        [self.delegate.contact setPictureData: nil];
+        [self.delegate.contact setImageData: nil];
         NSString *imageName = ([self.delegate.contact recordType] == kABPersonType) ? @"Contact" : @"Company";
         [self setImage: [UIImage imageNamed: imageName] forState: UIControlStateNormal];        
       }

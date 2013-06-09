@@ -663,14 +663,14 @@ static const float defaultCellHeight = 44.f;
 
   [self.contactImage setEditing: editing];
   
-  if (self.contact.pictureData == nil && self.editing == YES)
+  if (self.contact.imageData == nil && self.editing == YES)
   {
     NSString *imageName = ([self.contact recordType] == kABPersonType) ? @"Contact" : @"Company";
     [self.contactImage setImage: [UIImage imageNamed: imageName] forState: UIControlStateNormal];
   }
   else
   {
-    [self.contactImage setImage: [self.contact picture] forState: UIControlStateNormal];
+    [self.contactImage setImage: [self.contact image] forState: UIControlStateNormal];
   }
 
   if (self.editing)
@@ -814,7 +814,7 @@ static const float defaultCellHeight = 44.f;
 
     imageToSave = (editedImage) ? editedImage : originalImage;
 
-    [self.contact setPictureData: UIImagePNGRepresentation(imageToSave)];
+    [self.contact setImageData: UIImagePNGRepresentation(imageToSave)];
     [self.contactImage setImage: imageToSave forState: UIControlStateNormal];
   }
 
