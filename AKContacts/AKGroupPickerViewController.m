@@ -74,12 +74,11 @@ NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDid
 {
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
 
-  for (AKSource *source in akAddressBook.sources)
+  AKSource *source = [akAddressBook sourceForContactId: self.contactID];
+
+  for (AKGroup *group in source.groups)
   {
-    for (AKGroup *group in source.groups)
-    {
-      [group revert];
-    }
+    [group revert];
   }
 
   if ([self.navigationController respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
@@ -92,12 +91,11 @@ NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDid
 {
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
 
-  for (AKSource *source in akAddressBook.sources)
+  AKSource *source = [akAddressBook sourceForContactId: self.contactID];
+  
+  for (AKGroup *group in source.groups)
   {
-    for (AKGroup *group in source.groups)
-    {
-      [group commit];
-    }
+    [group commit];
   }
 
   [akAddressBook resetSearch];
@@ -115,14 +113,14 @@ NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDid
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-  return [[AKAddressBook sharedInstance].sources count];
+  return 1;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-  AKSource *source = [[AKAddressBook sharedInstance].sources objectAtIndex: section];
+  AKSource *source = [[AKAddressBook sharedInstance] sourceForContactId: self.contactID];
 
-  return [source.groups count] - 1;
+  return [source.groups count] - 1; // Do not include aggregate group
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -134,7 +132,7 @@ NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDid
     cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
   }
 
-  AKSource *source = [[AKAddressBook sharedInstance].sources objectAtIndex: indexPath.section];
+  AKSource *source = [[AKAddressBook sharedInstance] sourceForContactId: self.contactID];
 
   AKGroup *group = [[source groups] objectAtIndex: indexPath.row + 1];
 
@@ -147,7 +145,14 @@ NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDid
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection: (NSInteger)section
 {
-  return nil;
+  AKSource *source = [[AKAddressBook sharedInstance] sourceForContactId: self.contactID];
+
+  return [source typeName];
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section
+{
+  return NSLocalizedString(@"Only those groups are shown here that are in the source the contact belongs to", @"");
 }
 
 #pragma mark - Table view delegate
@@ -156,7 +161,7 @@ NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDid
 {
   UITableViewCell *cell = [tableView cellForRowAtIndexPath: indexPath];
 
-  AKSource *source = [[AKAddressBook sharedInstance].sources objectAtIndex: indexPath.section];
+  AKSource *source = [[AKAddressBook sharedInstance] sourceForContactId: self.contactID];
   
   AKGroup *group = [[source groups] objectAtIndex: indexPath.row + 1];
   
