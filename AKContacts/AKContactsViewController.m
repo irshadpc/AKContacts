@@ -514,7 +514,6 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
     CGRect frame = CGRectMake(0.f, 0.f, 20.f, 20.f);
     AKContactsProgressIndicatorView *activity = [[AKContactsProgressIndicatorView alloc] initWithFrame: frame];
     [cell setAccessoryView: activity];
-    [[AKAddressBook sharedInstance] setDelegate: activity];
   }
   return cell;
 }
