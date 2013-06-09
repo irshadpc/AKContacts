@@ -57,6 +57,7 @@ static const CGFloat kRadius = 11.f;
         [s setFillColor: [UIColor clearColor].CGColor];
         [[self layer] addSublayer: s];
         [self setSpinLayer:s];
+        [[AKAddressBook sharedInstance] setDelegate: self];
 
         [self setProgress: 0.f];
     }
@@ -65,7 +66,7 @@ static const CGFloat kRadius = 11.f;
 
 - (void)dealloc
 {
-
+  [[AKAddressBook sharedInstance] setDelegate: nil];
 }
 
 - (void)setProgress: (CGFloat)progress
