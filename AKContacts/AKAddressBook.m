@@ -209,14 +209,14 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 {
   NSLog(@"AKAddressBook reloadAddressBook");
 
-  if (_dateAddressBookLoaded) 
+  if (self.dateAddressBookLoaded)
   {
     NSTimeInterval elapsed = fabs([self.dateAddressBookLoaded timeIntervalSinceNow]);
     NSLog(@"Elasped since last AB load: %f", elapsed);
     if (elapsed < 5.0) return;
   }
 
-  if (_status != kAddressBookLoading) 
+  if (self.status != kAddressBookLoading)
   {
     [self setDateAddressBookLoaded: [NSDate date]];
     [self loadAddressBook];
@@ -233,8 +233,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       [self setStatus: kAddressBookInitializing];
       break;
     case kAddressBookOnline:
-      // _addressBookRef needs a revert to recognize external changes
-      ABAddressBookRevert(_addressBookRef);
+      // self.addressBookRef needs a revert to recognize external changes
+      ABAddressBookRevert(self.addressBookRef);
       [self setStatus: kAddressBookLoading];
       break;
   }
@@ -292,7 +292,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 {
   NSAssert(dispatch_get_specific(IsOnMainQueueKey) == NULL, @"Must not be dispatched on main queue");
 
-  _sources = [[NSMutableArray alloc] init];
+  [self setSources: [[NSMutableArray alloc] init]];
 
   NSArray *sources = (NSArray *)CFBridgingRelease(ABAddressBookCopyArrayOfAllSources(addressBook));
 
@@ -332,14 +332,18 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
   AKGroup *mainAggregateGroup = nil;
   
-  for (AKSource *source in _sources) 
+  for (AKSource *source in self.sources)
   {
     AKGroup *aggregateGroup = [[AKGroup alloc] initWithABRecordID: kGroupAggregate];
     [source.groups addObject: aggregateGroup];
 
     if (source.recordID < 0) 
     {
-      mainAggregateGroup = aggregateGroup;
+      if (source.recordID == kSourceAggregate)
+      {
+        mainAggregateGroup = aggregateGroup;
+        [mainAggregateGroup setIsMainAggregate: YES];
+      }
       continue; // Skip custom sources
     }
 
@@ -396,7 +400,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   NSLog(@"Number of contacts: %d", self.contactsCount);
   NSInteger i = 0;
   // Get array of records in Address Book
-  for (AKSource *source in _sources) 
+  for (AKSource *source in self.sources)
   {
     if (source.recordID < 0)
       continue; // Skip custom sources
@@ -480,7 +484,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 {
   AKSource *ret = nil;
 
-  for (AKSource *source in _sources) 
+  for (AKSource *source in self.sources)
   {
     if ([source isDefault] == YES) 
     {
@@ -508,7 +512,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 {  
   AKSource *ret = nil;
   
-  for (AKSource *source in _sources) 
+  for (AKSource *source in self.sources)
   {
     if (source.recordID == recordId) 
     {
@@ -620,8 +624,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 {
   [self setKeys: [[NSMutableArray alloc] initWithObjects: UITableViewIndexSearch, nil]];
 
-  AKSource *source = [self sourceForSourceId: _sourceID];
-  AKGroup *group = [source groupForGroupId: _groupID];
+  AKSource *source = [self sourceForSourceId: self.sourceID];
+  AKGroup *group = [source groupForGroupId: self.groupID];
   NSMutableSet *groupMembers = [group memberIDs];
 
   NSArray *keyArray = [[self.allContactIdentifiers allKeys] sortedArrayUsingSelector: @selector(compare:)];
