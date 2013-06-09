@@ -656,7 +656,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       NSMutableArray *recordsToRemove = [[NSMutableArray alloc] init];
       for (NSNumber *contactID in sectionArray)
       {
-        if ([groupMembers member: contactID] == nil)
+        if (groupMembers != nil && [groupMembers member: contactID] == nil)
           [recordsToRemove addObject: contactID];
       }
       [sectionArray removeObjectsInArray: recordsToRemove];
