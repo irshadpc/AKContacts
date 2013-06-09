@@ -38,6 +38,7 @@
 #import "AKContactImage.h"
 #import "AKContact.h"
 #import "AKLabel.h"
+#import "AKSource.h"
 #import "AKLabelViewController.h"
 #import "AKAddressBook.h"
 #import "AKMessenger.h"
@@ -231,8 +232,6 @@ static const float defaultCellHeight = 44.f;
   [self setContactImage: [[AKContactImage alloc] initWithFrame: CGRectMake(10.f, 11.f, 64.f, 64.f) andDelegate: self]];
   [self.view addSubview: self.contactImage];
 
-  [self.navigationItem setRightBarButtonItem: self.editButtonItem];
-  
   if (self.contact.recordID == tagNewContact)
   {
     [self.sections removeObject: [NSNumber numberWithInteger: kSectionDeleteButton]];
@@ -265,6 +264,12 @@ static const float defaultCellHeight = 44.f;
 - (void)viewWillAppear: (BOOL)animated
 {
   [super viewWillAppear:animated];
+
+  AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+  if ([akAddressBook sourceForSourceId: akAddressBook.sourceID].canCreateRecord == YES)
+  {
+    [self.navigationItem setRightBarButtonItem: self.editButtonItem];
+  }
 
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillShow:)
                                                name: UIKeyboardWillShowNotification object:nil];
