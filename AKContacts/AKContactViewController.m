@@ -440,7 +440,7 @@ static const float defaultCellHeight = 44.f;
 
   switch (section) {
     case kSectionLinkedRecords:
-      return (self.editing) ? nil : NSLocalizedString(@"Linked Contacts", @"");
+      return (self.editing || [self.contact linkedContactIDs].count == 0) ? nil : NSLocalizedString(@"Linked Contacts", @"");
     default: return nil;
   }
 }
