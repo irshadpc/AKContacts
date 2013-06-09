@@ -64,7 +64,8 @@ const int tagNewContact = -368;
       else
       {
         AKSource *source = [addressBook sourceForSourceId: addressBook.sourceID];
-        ABRecordRef recordRef = ABPersonCreateInSource(source.recordRef);
+
+        ABRecordRef recordRef = ABPersonCreateInSource((source.recordID >= 0) ? source.recordRef : NULL);
 
         CFErrorRef error = NULL;
         ABAddressBookAddRecord(addressBook.addressBookRef, recordRef, &error);
