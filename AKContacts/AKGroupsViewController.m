@@ -70,7 +70,7 @@ static const float defaultCellHeight = 44.f;
 - (void)loadView
 {
   CGFloat height = ([UIScreen mainScreen].bounds.size.height == 568.f) ? 568.f : 480.f;
-  if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0"))
+  if (SYSTEM_VERSION_LESS_THAN(@"7.0"))
   {
     height -= (self.navigationController.navigationBar.frame.size.height + [UIApplication sharedApplication].statusBarFrame.size.height);
   }
