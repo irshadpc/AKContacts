@@ -51,11 +51,11 @@
 - (void)configureCellAtIndexPath:(NSIndexPath *)indexPath
 {
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
-    
+
   NSString *key = nil;
   if ([akAddressBook.keys count] > indexPath.section)
     key = [akAddressBook.keys objectAtIndex: indexPath.section];
-    
+
   NSArray *identifiersArray = [akAddressBook.contactIdentifiers objectForKey: key];
   if ([identifiersArray count] == 0) return;
   NSNumber *recordId = [identifiersArray objectAtIndex: indexPath.row];
@@ -63,17 +63,20 @@
   if (!contact) return;
   [self setTag: [contact recordID]];
   [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
-    
+
   [self setAccessoryView: nil];
   if (![contact name])
   {
-    self.textLabel.font = [UIFont italicSystemFontOfSize: 20.f];
-    self.textLabel.text = NSLocalizedString(@"No Name", @"");
+    [self.textLabel setFont: [UIFont italicSystemFontOfSize: 20.f] ];
+    [self.textLabel setText: NSLocalizedString(@"No Name", @"")];
   }
   else
   {
-    self.textLabel.font = [UIFont boldSystemFontOfSize: 20.f];
-    self.textLabel.text = [contact name];
+    NSString *lastName = [contact valueForProperty: kABPersonLastNameProperty];
+    NSRange range = [contact.name rangeOfString: lastName];
+    NSMutableAttributedString *text = [[NSMutableAttributedString alloc] initWithString: contact.name];
+    [text addAttribute: NSFontAttributeName value: [UIFont boldSystemFontOfSize: 20.f] range: range];
+    [self.textLabel setAttributedText: text];
   }
 }
 
