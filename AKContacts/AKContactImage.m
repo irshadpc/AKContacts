@@ -9,6 +9,7 @@
 #import "AKContactImage.h"
 #import "AKContact.h"
 #import "AKContactViewController.h"
+#import "AppDelegate.h" // SYSTEM_VERSION
 
 #import <QuartzCore/QuartzCore.h> // Image Layer
 
@@ -32,15 +33,28 @@
       [self setUserInteractionEnabled: NO];
       [self addTarget: self action: @selector(contactImageTouchUpInside:) forControlEvents: UIControlEventTouchUpInside];
       [self.layer setBorderColor: [[UIColor whiteColor] CGColor]];
-      [self.layer setBorderWidth: 4.f];
-      [self.layer setShadowColor: [UIColor grayColor].CGColor];
-      [self.layer setShadowOffset: CGSizeMake(0, 1)];
-      [self.layer setShadowOpacity: 1];
-      [self.layer setShadowRadius: 1.0];
+      [self.layer setMasksToBounds:YES];
+      if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0"))
+      {
+        CAShapeLayer *circle = [CAShapeLayer layer];
+        CGRect rect = CGRectMake(5.f, 5.f, self.frame.size.width*.84, self.frame.size.height*.84);
+        circle.path = [UIBezierPath bezierPathWithOvalInRect: rect].CGPath;
+        circle.fillColor = [UIColor blackColor].CGColor;
+        [self.layer setMask: circle];
+      }
+      else
+      {
+        [self.layer setBorderWidth: 4.f];
+        [self.layer setShadowColor: [UIColor grayColor].CGColor];
+        [self.layer setShadowOffset: CGSizeMake(0, 1)];
+        [self.layer setShadowOpacity: 1];
+        [self.layer setShadowRadius: 1.0];
+      }
       [self setContentMode: UIViewContentModeScaleAspectFit];
  
       [self setEditBackground: [[UIView alloc] initWithFrame: CGRectMake(4.f, 45.f, 56.f, 15.f)]];
       [self.editBackground setBackgroundColor: [UIColor colorWithWhite: 0.f alpha: .2f]];
+      [self.editBackground setUserInteractionEnabled: NO];
       [self addSubview: self.editBackground];
       [self setEditLabel: [[UILabel alloc] initWithFrame: CGRectMake(4.f, 45.f, 56.f, 15.f)]];
       [self.editLabel setText: NSLocalizedString(@"edit", @"")];
@@ -50,6 +64,7 @@
       [self.editLabel setBackgroundColor: [UIColor clearColor]];
       [self.editLabel setTextAlignment: NSTextAlignmentCenter];
       [self.editLabel setFont: [UIFont boldSystemFontOfSize: 12.f]];
+      [self.editLabel setUserInteractionEnabled: NO];
       [self addSubview: self.editLabel];
       
     }
