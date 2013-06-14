@@ -136,7 +136,7 @@
 {
   [super layoutSubviews];
 
-  CGRect frame = CGRectMake(self.contentView.bounds.origin.x + 10.f,
+  CGRect frame = CGRectMake(self.contentView.bounds.origin.x + 15.f,
                             self.contentView.bounds.origin.y,
                             self.contentView.bounds.size.width - 20.f,
                             self.contentView.bounds.size.height);
