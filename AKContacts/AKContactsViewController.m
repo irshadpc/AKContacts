@@ -37,6 +37,7 @@
 #import "AKGroupPickerViewController.h"
 #import "AKGroupsViewController.h"
 #import "AKContactPickerViewController.h"
+#import "AppDelegate.h" // SYSTEM_VERSION
 
 #import <AddressBook/AddressBook.h>
 #import <AddressBookUI/AddressBookUI.h>
@@ -83,12 +84,15 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 - (void)loadView
 {
   CGFloat height = ([UIScreen mainScreen].bounds.size.height == 568.f) ? 568.f : 480.f;
-  height -= (self.navigationController.navigationBar.frame.size.height + [UIApplication sharedApplication].statusBarFrame.size.height);
+  if (SYSTEM_VERSION_LESS_THAN(@"7.0"))
+  {
+    height -= (self.navigationController.navigationBar.frame.size.height + [UIApplication sharedApplication].statusBarFrame.size.height);
+  }
   [self setTableView: [[UITableView alloc] initWithFrame: CGRectMake(0.f, 0.f, 320.f, height)
                                                    style: UITableViewStylePlain]];
   [self.tableView setDataSource: self];
   [self.tableView setDelegate: self];
-
+  
   [self setSearchBar: [[UISearchBar alloc] initWithFrame: CGRectMake(0.f, 0.f, 320.f, defaultCellHeight)]];
   [self.tableView setTableHeaderView: self.searchBar];
   [self.searchBar setDelegate: self];
