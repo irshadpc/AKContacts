@@ -148,7 +148,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     NSAssert(dispatch_get_specific(IsOnMainQueueKey), @"Must be dispatched on main queue");
 
     CFErrorRef error = NULL;
-    _addressBookRef = SYSTEM_VERSION_LESS_THAN(@"6.0") ? ABAddressBookCreate() : ABAddressBookCreateWithOptions(NULL, &error);
+    _addressBookRef = (&ABAddressBookCreateWithOptions) ? ABAddressBookCreateWithOptions(NULL, &error) : ABAddressBookCreate();
     if (error) NSLog(@"%ld", CFErrorGetCode(error));
 
     ABAddressBookRegisterExternalChangeCallback(_addressBookRef, addressBookChanged, (__bridge void*) self);
@@ -168,28 +168,24 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 {
   NSAssert(dispatch_get_specific(IsOnMainQueueKey), @"Must be dispatched on main queue");
 
-  if (SYSTEM_VERSION_LESS_THAN(@"6.0")) 
-  {
-    [self loadAddressBook];
-  }
-  else
+  if (&ABAddressBookGetAuthorizationStatus)
   {
     ABAuthorizationStatus stat = ABAddressBookGetAuthorizationStatus();
 
-    if (stat == kABAuthorizationStatusNotDetermined) 
+    if (stat == kABAuthorizationStatusNotDetermined)
     {
-      ABAddressBookRequestAccessWithCompletion(_addressBookRef, ^(bool granted, CFErrorRef error) 
-      {
-        if (granted) 
-        {
-          NSLog(@"Access granted to addressBook");
-          [self loadAddressBook];
-        }
-        else 
-        {
-          NSLog(@"Access denied to addressBook");
-        }
-      });
+      ABAddressBookRequestAccessWithCompletion(_addressBookRef, ^(bool granted, CFErrorRef error)
+                                               {
+                                                 if (granted)
+                                                 {
+                                                   NSLog(@"Access granted to addressBook");
+                                                   [self loadAddressBook];
+                                                 }
+                                                 else
+                                                 {
+                                                   NSLog(@"Access denied to addressBook");
+                                                 }
+                                               });
     } 
     else if (stat == kABAuthorizationStatusDenied) 
     {
@@ -203,6 +199,10 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     {
       [self loadAddressBook];
     }
+  }
+  else
+  {
+      [self loadAddressBook];
   }
 }
 
@@ -254,9 +254,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     [self suspend_ab_timer];
     
     CFErrorRef error = NULL;
-    ABAddressBookRef addressBook = SYSTEM_VERSION_LESS_THAN(@"6.0") ?
-                                    ABAddressBookCreate() :
-                                    ABAddressBookCreateWithOptions(NULL, &error);
+    ABAddressBookRef addressBook = (&ABAddressBookCreateWithOptions) ? ABAddressBookCreateWithOptions(NULL, &error) : ABAddressBookCreate();
     if (error) NSLog(@"%ld", CFErrorGetCode(error));
 
     NSDate *start = [NSDate date];
@@ -265,7 +263,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     [self loadSourcesWithABAddressBookRef: addressBook];
 
     [self loadGroupsWithABAddressBookRef: addressBook];
-    
+
     [self loadContactsWithABAddressBookRef: addressBook];
 
     CFRelease(addressBook);
