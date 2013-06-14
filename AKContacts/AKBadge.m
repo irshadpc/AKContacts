@@ -27,6 +27,7 @@
 //
 
 #import "AKBadge.h"
+#import "AppDelegate.h" // SYSTEM_VERSION
 
 @interface AKBadge ()
 
@@ -101,7 +102,10 @@
 	CGContextAddArc(context, maxX-radius, maxY-radius, radius, 0, M_PI/2, 0);
 	CGContextAddArc(context, minX+radius, maxY-radius, radius, M_PI/2, M_PI, 0);
 	CGContextAddArc(context, minX+radius, minY+radius, radius, M_PI, M_PI+M_PI/2, 0);
-	CGContextSetShadowWithColor(context, CGSizeMake(1.f, 1.f), 3, [[UIColor blackColor] CGColor]);
+  if (SYSTEM_VERSION_LESS_THAN(@"7.0"))
+  {
+    CGContextSetShadowWithColor(context, CGSizeMake(1.f, 1.f), 3, [[UIColor blackColor] CGColor]);
+  }
   CGContextFillPath(context);
   
 	CGContextRestoreGState(context);
@@ -124,12 +128,11 @@
 	CGContextAddArc(context, minX+radius, maxY-radius, radius, M_PI/2, M_PI, 0);
 	CGContextAddArc(context, minX+radius, minY+radius, radius, M_PI, M_PI+M_PI/2, 0);
 	CGContextClip(context);
-	
-	
+
 	size_t num_locations = 2;
 	CGFloat locations[2] = { .0f, .4f };
 	CGFloat components[8] = { .92f, .92f, .92f, 1.f, .82f, .82f, .82f, .4f };
-  
+
 	CGColorSpaceRef cspace;
 	CGGradientRef gradient;
 	cspace = CGColorSpaceCreateDeviceRGB();
@@ -154,8 +157,7 @@
 	CGFloat maxY = CGRectGetMaxY(rect) - puffer;
 	CGFloat minX = CGRectGetMinX(rect) + puffer;
 	CGFloat minY = CGRectGetMinY(rect) + puffer;
-	
-	
+
   CGContextBeginPath(context);
 	CGFloat lineSize = 2.f;
 	CGContextSetLineWidth(context, lineSize);
@@ -175,9 +177,12 @@
 
 	[self drawRoundedRectWithContext:context withRect:rect];
 
-  [self drawShineWithContext:context withRect:rect];
+  if (SYSTEM_VERSION_LESS_THAN(@"7.0"))
+  {
+    [self drawShineWithContext:context withRect:rect];
 
-  [self drawFrameWithContext:context withRect:rect];
+    [self drawFrameWithContext:context withRect:rect];
+  }
 
 	if ([self.text length] > 0)
   {
@@ -188,6 +193,10 @@
 			sizeOfFont += sizeOfFont * .2f;
 		}
 		UIFont *textFont = [UIFont boldSystemFontOfSize: sizeOfFont];
+    if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0"))
+    {
+      textFont = [UIFont systemFontOfSize: sizeOfFont];
+    }
 		CGSize textSize = [self.text sizeWithFont: textFont];
 		[self.text drawAtPoint: CGPointMake((rect.size.width/2-textSize.width/2), (rect.size.height/2-textSize.height/2))
                   withFont: textFont];
