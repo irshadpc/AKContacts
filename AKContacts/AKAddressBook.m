@@ -145,7 +145,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
      */
     dispatch_queue_set_specific(dispatch_get_main_queue(), IsOnMainQueueKey, (__bridge void *)self, NULL);
 
-    NSAssert(dispatch_get_specific(IsOnMainQueueKey), @"Must be dispatched on main queue");
+    NSAssert(is_main_queue(), @"Must be dispatched on main queue");
 
     CFErrorRef error = NULL;
     _addressBookRef = (&ABAddressBookCreateWithOptions) ? ABAddressBookCreateWithOptions(NULL, &error) : ABAddressBookCreate();
@@ -166,7 +166,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (void)requestAddressBookAccess 
 {
-  NSAssert(dispatch_get_specific(IsOnMainQueueKey), @"Must be dispatched on main queue");
+  NSAssert(is_main_queue(), @"Must be dispatched on main queue");
 
   if (&ABAddressBookGetAuthorizationStatus)
   {
@@ -174,24 +174,24 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     if (stat == kABAuthorizationStatusNotDetermined)
     {
-      ABAddressBookRequestAccessWithCompletion(_addressBookRef, ^(bool granted, CFErrorRef error)
-                                               {
-                                                 if (granted)
-                                                 {
-                                                   NSLog(@"Access granted to addressBook");
-                                                   [self loadAddressBook];
-                                                 }
-                                                 else
-                                                 {
-                                                   NSLog(@"Access denied to addressBook");
-                                                 }
-                                               });
-    } 
-    else if (stat == kABAuthorizationStatusDenied) 
+      void (^block)(bool granted, CFErrorRef error) = ^(bool granted, CFErrorRef error){
+        if (granted)
+        {
+          NSLog(@"Access granted to addressBook");
+          [self loadAddressBook];
+        }
+        else
+        {
+          NSLog(@"Access denied to addressBook");
+        }
+      };
+      ABAddressBookRequestAccessWithCompletion(_addressBookRef, block);
+    }
+    else if (stat == kABAuthorizationStatusDenied)
     {
       NSLog(@"kABAuthorizationStatusDenied");
-    } 
-    else if (stat == kABAuthorizationStatusRestricted) 
+    }
+    else if (stat == kABAuthorizationStatusRestricted)
     {
       NSLog(@"kABAuthorizationStatusRestricted");
     }
@@ -232,7 +232,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (void)loadAddressBook 
 {
-  NSAssert(dispatch_get_specific(IsOnMainQueueKey), @"Must be dispatched on main queue");
+  NSAssert(is_main_queue(), @"Must be dispatched on main queue");
 
   switch (self.status) 
   {
@@ -295,7 +295,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (void)loadSourcesWithABAddressBookRef: (ABAddressBookRef)addressBook 
 {
-  NSAssert(dispatch_get_specific(IsOnMainQueueKey) == NULL, @"Must not be dispatched on main queue");
+  NSAssert((is_main_queue() == NO), @"Must not be dispatched on main queue");
 
   [self setSources: [[NSMutableArray alloc] init]];
 
@@ -337,7 +337,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (void)loadGroupsWithABAddressBookRef: (ABAddressBookRef)addressBook 
 {  
-  NSAssert(dispatch_get_specific(IsOnMainQueueKey) == NULL, @"Must not be dispatched on main queue");
+  NSAssert((is_main_queue() == NO), @"Must not be dispatched on main queue");
 
   if (ShowGroups == NO) return;
 
@@ -391,7 +391,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (void)loadContactsWithABAddressBookRef: (ABAddressBookRef)addressBook 
 {
-  NSAssert(dispatch_get_specific(IsOnMainQueueKey) == NULL, @"Must not be dispatched on main queue");
+  NSAssert((is_main_queue() == NO), @"Must not be dispatched on main queue");
 
   NSMutableDictionary *tempContactIdentifiers = [[NSMutableDictionary alloc] init];
 
@@ -549,7 +549,10 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   if (ret == nil)
   {
     ret = [[AKContact alloc] initWithABRecordID: recordId];
-    [self.contacts setObject: ret forKey: contactID];
+    if (recordId != tagNewContact)
+    {
+      [self.contacts setObject: ret forKey: contactID];
+    }
   }
   return ret;
 }
