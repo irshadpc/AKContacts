@@ -144,7 +144,7 @@ static const float defaultCellHeight = 44.f;
   self = [self init];
   if (self)
   {
-    _contact = (contactID != tagNewContact) ? [[AKAddressBook sharedInstance] contactForContactId: contactID] : [[AKContact alloc] initWithABRecordID: tagNewContact];
+    _contact = [[AKAddressBook sharedInstance] contactForContactId: contactID];
     _parentLinkedContactID = NSNotFound;
   }
   return self;
