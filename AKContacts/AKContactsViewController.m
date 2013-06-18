@@ -64,6 +64,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 - (void)addButtonTouchUpInside: (id)sender;
 - (void)reloadTableViewData;
 - (void)toggleBackButton;
+- (void)setRightBarButtonItem;
 /**
  * AKContactViewControllerDelegate
  */
@@ -122,14 +123,6 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   [super viewWillAppear:animated];
 
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
-
-  if ([akAddressBook sourceForSourceId: akAddressBook.sourceID].canCreateRecord == YES)
-  { // Display 'Add' button only if source supports create records
-    UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd
-                                                                               target: self
-                                                                               action: @selector(addButtonTouchUpInside:)];
-    [self.navigationItem setRightBarButtonItem: addButton];
-  }
 
   [akAddressBook addObserver: self forKeyPath: @"status" options: NSKeyValueObservingOptionNew context: nil];
   
@@ -290,6 +283,19 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   else dispatch_async(dispatch_get_main_queue(), block);
 }
 
+- (void)setRightBarButtonItem
+{
+  AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+  
+  if ([akAddressBook sourceForSourceId: akAddressBook.sourceID].canCreateRecord == YES)
+  { // Display 'Add' button only if source supports create records
+    UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd
+                                                                               target: self
+                                                                               action: @selector(addButtonTouchUpInside:)];
+    [self.navigationItem setRightBarButtonItem: addButton];
+  }
+}
+
 - (void)reloadTableViewData
 {
   dispatch_block_t block = ^{
@@ -300,6 +306,9 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
       if (self.tableView.tableHeaderView && self.tableView.contentOffset.y <= self.searchBar.frame.size.height)
         self.tableView.contentOffset = CGPointMake(0.f, self.searchBar.frame.size.height);
     }
+
+    [self setRightBarButtonItem];
+
     [self.tableView reloadData];
   };
 
