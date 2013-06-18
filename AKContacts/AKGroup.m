@@ -36,12 +36,11 @@ NSString *const DefaultsKeyGroups = @"Groups";
 
 @implementation AKGroup
 
-- (id)initWithABRecordID: (ABRecordID) recordID
+- (instancetype)initWithABRecordID: (ABRecordID) recordID
 {
-  self = [super init];
+  self = [super initWithABRecordID: recordID];
   if (self)
   {
-    super.recordID = recordID;
     _memberIDs = [[NSMutableSet alloc] init];
   }
   return  self;
@@ -60,7 +59,7 @@ NSString *const DefaultsKeyGroups = @"Groups";
     ret = super.recordRef;
   };
 
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  if (is_main_queue()) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
   return ret;
@@ -112,7 +111,7 @@ NSString *const DefaultsKeyGroups = @"Groups";
     }
   };
   
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  if (is_main_queue()) block();
   else dispatch_async(dispatch_get_main_queue(), block);
 }
 
@@ -143,7 +142,7 @@ NSString *const DefaultsKeyGroups = @"Groups";
     }
   };
   
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  if (is_main_queue()) block();
   else dispatch_async(dispatch_get_main_queue(), block);
 }
 
