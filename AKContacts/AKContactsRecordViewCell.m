@@ -63,20 +63,32 @@
   if (!contact) return;
   [self setTag: [contact recordID]];
   [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
+  [self.textLabel setFont: [UIFont systemFontOfSize: 20.f]];
 
   [self setAccessoryView: nil];
   if (![contact name])
   {
-    [self.textLabel setFont: [UIFont italicSystemFontOfSize: 20.f] ];
+    [self.textLabel setFont: [UIFont italicSystemFontOfSize: 20.f]];
     [self.textLabel setText: NSLocalizedString(@"No Name", @"")];
   }
   else
   {
-    NSString *lastName = [contact valueForProperty: kABPersonLastNameProperty];
-    NSRange range = [contact.name rangeOfString: lastName];
-    NSMutableAttributedString *text = [[NSMutableAttributedString alloc] initWithString: contact.name];
-    [text addAttribute: NSFontAttributeName value: [UIFont boldSystemFontOfSize: 20.f] range: range];
-    [self.textLabel setAttributedText: text];
+    if ([self.textLabel respondsToSelector:@selector(setAttributedText:)])
+    {
+      NSMutableAttributedString *text = [[NSMutableAttributedString alloc] initWithString: contact.name];
+      [text addAttribute: NSFontAttributeName value: [UIFont systemFontOfSize: 20.f] range: NSMakeRange(0, text.length - 1)];
+      NSString *lastName = [contact valueForProperty: kABPersonLastNameProperty];
+      if (lastName != nil)
+      {
+        NSRange range = [contact.name rangeOfString: lastName];
+        [text addAttribute: NSFontAttributeName value: [UIFont boldSystemFontOfSize: 20.f] range: range];
+      }
+      [self.textLabel setAttributedText: text];
+    }
+    else
+    {
+      [self.textLabel setText: contact.name];
+    }
   }
 }
 
