@@ -286,7 +286,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
       [self.navigationItem setHidesBackButton: YES];
   };
 
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  if (is_main_queue()) block();
   else dispatch_async(dispatch_get_main_queue(), block);
 }
 
@@ -303,7 +303,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
     [self.tableView reloadData];
   };
 
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  if (is_main_queue()) block();
   else dispatch_async(dispatch_get_main_queue(), block);
 }
 
