@@ -35,7 +35,6 @@ FOUNDATION_EXPORT const int tagNewContact;
 
 @interface AKContact : AKRecord
 
-- (id)initWithABRecordID: (ABRecordID) recordID;
 - (ABRecordRef)recordRef;
 /**
  * Return full name using system default naming convention

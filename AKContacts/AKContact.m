@@ -39,16 +39,6 @@ const int tagNewContact = -368;
 
 @implementation AKContact
 
-- (id)initWithABRecordID: (ABRecordID) recordID
-{
-  self = [super init];
-  if (self)
-  {
-    super.recordID = recordID;
-  }
-  return  self;
-}
-
 - (ABRecordRef)recordRef
 {
   __block ABRecordRef ret;
@@ -87,7 +77,7 @@ const int tagNewContact = -368;
     super.age = [NSDate date];
   };
 
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  if (is_main_queue()) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
   return ret;
@@ -101,7 +91,7 @@ const int tagNewContact = -368;
 		ret = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName([self recordRef])); // kABStringPropertyType
 	};
 
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  if (is_main_queue()) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
   return ret;
@@ -240,7 +230,7 @@ const int tagNewContact = -368;
     }
 	};
 
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  if (is_main_queue()) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
   return [ret copy];
@@ -274,7 +264,7 @@ const int tagNewContact = -368;
       ret = (NSData *)CFBridgingRelease(ABPersonCopyImageDataWithFormat([self recordRef], kABPersonImageFormatThumbnail));
     }
   };
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  if (is_main_queue()) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
   return ret;
@@ -292,7 +282,7 @@ const int tagNewContact = -368;
       if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
     }
   };
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  if (is_main_queue()) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 }
 
