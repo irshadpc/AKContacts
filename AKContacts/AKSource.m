@@ -45,12 +45,11 @@ NSString *const defaultsSourceKey = @"Source_%d";
 
 @implementation AKSource
 
-- (id)initWithABRecordID: (ABRecordID) recordID
+- (instancetype)initWithABRecordID: (ABRecordID) recordID
 {
-  self = [super init];
+  self = [super initWithABRecordID: recordID];
   if (self)
   {
-    super.recordID = recordID;
     _isDefault = NO;
     _groups = [[NSMutableArray alloc] init];
   }
@@ -70,7 +69,7 @@ NSString *const defaultsSourceKey = @"Source_%d";
     ret = super.recordRef;
 	};
 
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  if (is_main_queue()) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
   return ret;
