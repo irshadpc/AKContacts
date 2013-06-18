@@ -35,7 +35,7 @@
 @property (assign, nonatomic) ABRecordID recordID;
 @property (strong, nonatomic) NSDate *age;
 
-- (id)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef;
+- (instancetype)initWithABRecordID: (ABRecordID) recordID;
 - (NSString *)description;
 /**
  * Return kABPersonType, kABGroupType or kABSourceType
