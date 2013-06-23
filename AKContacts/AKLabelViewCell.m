@@ -70,7 +70,7 @@
   [self.textLabel setTextAlignment: NSTextAlignmentLeft];
   [self setSelectionStyle: UITableViewCellSelectionStyleNone];
 
-  NSMutableArray *labels = [self.parent.labels objectAtIndex: indexPath.section];
+  NSMutableArray *labels = [self.controller.labels objectAtIndex: indexPath.section];
 
   if (indexPath.row == [labels count])
   {
@@ -108,19 +108,19 @@
                             self.contentView.bounds.size.width - 20.f,
                             self.contentView.bounds.size.height);
   [self.textField setFrame: frame];
-  [self.textField setEnabled: (self.parent.editing && self.indexPath.section == kCustomSection)];
+  [self.textField setEnabled: (self.controller.editing && self.indexPath.section == kCustomSection)];
 }
 
 #pragma mark - UITextField delegate
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField
 {
-  [self.parent setFirstResponder: textField];
+  [self.controller setFirstResponder: textField];
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField
 {
-  [self.parent setFirstResponder: nil];
+  [self.controller setFirstResponder: nil];
 
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
@@ -131,7 +131,7 @@
   }
   else if (textField.text.length > 0)
   {
-    NSMutableArray *labels = [self.parent.labels objectAtIndex: kCustomSection];
+    NSMutableArray *labels = [self.controller.labels objectAtIndex: kCustomSection];
 
     AKLabel *label = [[AKLabel alloc] initWithLabel: textField.text andIsStandard: NO];
     

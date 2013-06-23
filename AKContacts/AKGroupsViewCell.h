@@ -32,7 +32,7 @@
 
 @interface AKGroupsViewCell : UITableViewCell <UITextFieldDelegate>
 
-@property (strong, nonatomic) AKGroupsViewController *parent;
+@property (strong, nonatomic) AKGroupsViewController *controller;
 
 - (void)configureCellAtIndexPath: (NSIndexPath *)indexPath;
 

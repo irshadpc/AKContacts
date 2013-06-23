@@ -141,19 +141,19 @@
                             self.contentView.bounds.size.width - 20.f,
                             self.contentView.bounds.size.height);
   [self.textField setFrame: frame];
-  [self.textField setEnabled: (self.parent.editing && self.tag != kGroupAggregate)];  
+  [self.textField setEnabled: (self.controller.editing && self.tag != kGroupAggregate)];
 }
 
 #pragma mark - UITextField delegate
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField
 {
-  [self.parent setFirstResponder: textField];
+  [self.controller setFirstResponder: textField];
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField
 {
-  [self.parent setFirstResponder: nil];
+  [self.controller setFirstResponder: nil];
 
   if ([textField isFirstResponder])
     [textField resignFirstResponder];

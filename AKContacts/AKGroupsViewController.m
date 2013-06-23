@@ -310,7 +310,7 @@ static const float defaultCellHeight = 44.f;
     cell = [[AKGroupsViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
   }
 
-  [cell setParent: self];
+  [cell setController: self];
 
   [cell configureCellAtIndexPath: indexPath];
 

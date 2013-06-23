@@ -513,7 +513,7 @@
     cell = [[AKLabelViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
   }
 
-  [cell setParent: self];
+  [cell setController: self];
 
   [cell configureCellAtIndexPath: indexPath];
 

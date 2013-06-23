@@ -32,7 +32,7 @@
 
 @interface AKContactsRecordViewCell : UITableViewCell
 
-@property (unsafe_unretained, nonatomic) AKContactsViewController *parent;
+@property (unsafe_unretained, nonatomic) AKContactsViewController *controller;
 
 - (void)configureCellAtIndexPath: (NSIndexPath *)indexPath;
 
