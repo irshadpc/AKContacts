@@ -31,7 +31,7 @@
 
 #import "AKRecord.h"
 
-FOUNDATION_EXPORT const int tagNewContact;
+FOUNDATION_EXPORT const int newContactID;
 
 @interface AKContact : AKRecord
 

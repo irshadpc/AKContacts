@@ -199,7 +199,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
 - (void)presentNewContactViewController
 {
-  AKContactViewController *contactView = [[AKContactViewController alloc] initWithContactID: tagNewContact];
+  AKContactViewController *contactView = [[AKContactViewController alloc] initWithContactID: newContactID];
   [contactView setDelegate: self];
   UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: contactView];
   

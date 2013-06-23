@@ -36,9 +36,9 @@ FOUNDATION_EXPORT NSString *const DefaultsKeyGroups;
  **/
 typedef NS_ENUM(NSInteger, GroupTypes)
 {
-  kGroupAggregate = -1,
-  kGroupWillCreate = -128,
-  kGroupWillDelete = -256,
+  kGroupAggregate = -1<<0,
+  kGroupWillCreate = -1<<7,
+  kGroupWillDelete = -1<<8,
 };
 
 @interface AKGroup : AKRecord

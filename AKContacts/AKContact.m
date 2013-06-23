@@ -31,7 +31,7 @@
 #import "AKGroup.h"
 #import "AKSource.h"
 
-const int tagNewContact = -368;
+const int newContactID = -1<<9;
 
 @interface AKContact ()
 
@@ -47,7 +47,7 @@ const int tagNewContact = -368;
     if (super.recordRef == nil)
     {
       AKAddressBook *addressBook = [AKAddressBook sharedInstance];
-      if (self.recordID != tagNewContact)
+      if (self.recordID != newContactID)
       {
         super.recordRef = ABAddressBookGetPersonWithRecordID(addressBook.addressBookRef, super.recordID);
       }
@@ -358,14 +358,14 @@ const int tagNewContact = -368;
     if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
   }
 
-  if (self.recordID == tagNewContact)
+  if (self.recordID == newContactID)
   {
     super.recordID = ABRecordGetRecordID(self.recordRef);
     
     AKAddressBook *addressBook = [AKAddressBook sharedInstance];
     
     [addressBook.contacts setObject: self forKey: [NSNumber numberWithInteger: self.recordID]];
-    [addressBook.contacts removeObjectForKey: [NSNumber numberWithInteger: tagNewContact]];
+    [addressBook.contacts removeObjectForKey: [NSNumber numberWithInteger: newContactID]];
     
     [addressBook insertRecordID: self.recordID inDictionary: [addressBook allContactIdentifiers] withAddressBookRef: addressBookRef];
     
@@ -382,7 +382,7 @@ const int tagNewContact = -368;
 {
   ABAddressBookRef addressBookRef = [AKAddressBook sharedInstance].addressBookRef;
 
-  if (self.recordID == tagNewContact)
+  if (self.recordID == newContactID)
   { // Reference super.recordRef not self.recordRef here
 
     [[AKAddressBook sharedInstance] setNeedReload: NO];

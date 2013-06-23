@@ -28,7 +28,7 @@
 
 #import "AKLabel.h"
 
-const int createLabelTag = -128;
+const int createLabelTag = -1<<7;
 
 NSString *const defaultsLabelKey = @"Label_%d";
 

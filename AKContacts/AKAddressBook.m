@@ -549,7 +549,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   if (ret == nil)
   {
     ret = [[AKContact alloc] initWithABRecordID: recordId];
-    if (recordId != tagNewContact)
+    if (recordId != newContactID)
     {
       [self.contacts setObject: ret forKey: contactID];
     }
