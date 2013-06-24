@@ -1,5 +1,5 @@
 //
-//  AddressBookManager.m
+//  AKAddressBook.m
 //
 //  Copyright (c) 2013 Adam Kornafeld All rights reserved.
 //
