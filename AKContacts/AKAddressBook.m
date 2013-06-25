@@ -36,7 +36,6 @@ NSString *const AKAddressBookQueueName = @"AKAddressBookQueue";
 
 NSString *const AddressBookDidInitializeNotification = @"AddressBookDidInitializeNotification";
 NSString *const AddressBookDidLoadNotification = @"AddressBookDidLoadNotification";
-NSString *const AddressBookSearchDidFinishNotification = @"AddressBookSearchDidFinishNotification";
 
 const BOOL ShowGroups = YES;
 
@@ -53,14 +52,8 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 
 @interface AKAddressBook ()
 
-@property (assign, nonatomic, readonly) dispatch_queue_t ab_queue;
-
-@property (assign, nonatomic, readonly) dispatch_semaphore_t ab_semaphore;
-
 @property (assign, nonatomic) dispatch_source_t ab_timer;
 @property (assign, nonatomic) BOOL ab_timer_suspended;
-
-@property (assign, nonatomic) NSInteger contactsCount;
 
 /**
  * ABAddressBookRegisterExternalChangeCallback tends to fire multiple times
@@ -110,8 +103,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   self = [super init];
   if (self) 
   {
-    _contactIdentifiers = nil;
-
     _ab_queue = dispatch_queue_create([AKAddressBookQueueName UTF8String], NULL);
 
     _ab_semaphore = dispatch_semaphore_create(1);
@@ -270,8 +261,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     
     [self setDateAddressBookLoaded: [NSDate date]];
     NSLog(@"Address book loaded in %.2f", fabs([self.dateAddressBookLoaded timeIntervalSinceDate: start]));
-
-    [self resetSearch];
 
     if (self.status == kAddressBookInitializing) 
     {
@@ -511,16 +500,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   return ret;
 }
 
-- (NSInteger)displayedContactsCount 
-{
-  NSInteger ret = 0;
-  for (NSMutableArray *section in [self.contactIdentifiers allValues])
-  {
-    ret += [section count];
-  }
-  return ret;
-}
-
 - (AKSource *)sourceForSourceId: (ABRecordID)recordId
 {  
   AKSource *ret = nil;
@@ -634,105 +613,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     dispatch_suspend(self.ab_timer);
     self.ab_timer_suspended = YES;
   }
-}
-
-#pragma mark - Address Book Search
-
-- (void)resetSearch 
-{
-  [self setKeys: [[NSMutableArray alloc] initWithObjects: UITableViewIndexSearch, nil]];
-
-  AKSource *source = [self sourceForSourceId: self.sourceID];
-  AKGroup *group = [source groupForGroupId: self.groupID];
-  NSMutableSet *groupMembers = [group memberIDs];
-
-  NSArray *keyArray = [[self.allContactIdentifiers allKeys] sortedArrayUsingSelector: @selector(compare:)];
-  
-  if ([groupMembers count] == self.contactsCount)
-  { // Shortcut for aggregate group if there's only a single source
-    NSMutableDictionary *contactIdentifiers = [NSKeyedUnarchiver unarchiveObjectWithData: [NSKeyedArchiver archivedDataWithRootObject: self.allContactIdentifiers]]; // Mutable deep copy
-    [self setContactIdentifiers: contactIdentifiers];
-    [self.keys addObjectsFromArray: keyArray];
-  }
-  else
-  {
-    [self setContactIdentifiers: [[NSMutableDictionary alloc] initWithCapacity: [self.allContactIdentifiers count]]];
-
-    for (NSString *key in keyArray)
-    {
-      NSArray *arrayForKey = [self.allContactIdentifiers objectForKey: key];
-      NSMutableArray *sectionArray = [NSKeyedUnarchiver unarchiveObjectWithData: [NSKeyedArchiver archivedDataWithRootObject: arrayForKey]]; // Mutable deep copy
-
-      NSMutableArray *recordsToRemove = [[NSMutableArray alloc] init];
-      for (NSNumber *contactID in sectionArray)
-      {
-        if (groupMembers != nil && [groupMembers member: contactID] == nil)
-          [recordsToRemove addObject: contactID];
-      }
-      [sectionArray removeObjectsInArray: recordsToRemove];
-      if ([sectionArray count] > 0)
-      {
-        [self.contactIdentifiers setObject: sectionArray forKey: key];
-        [self.keys addObject: key];
-      }
-    }
-  }
-
-  if ([self.keys count] > 1 && [[self.keys objectAtIndex: 1] isEqualToString: @"#"])
-  { // Little hack to move # to the end of the list
-    [self.keys addObject: [self.keys objectAtIndex: 1]];
-    [self.keys removeObjectAtIndex: 1];
-  }
-}
-
-- (void)handleSearchForTerm: (NSString *)searchTerm 
-{
-  static NSInteger previousTermLength = 1;
-  
-  dispatch_block_t block = ^{
-
-    dispatch_semaphore_wait(self.ab_semaphore, DISPATCH_TIME_FOREVER);
-
-    NSMutableArray *sectionsToRemove = [[NSMutableArray alloc ]init];
-
-    if (previousTermLength >= [searchTerm length])
-    {
-      [self resetSearch];
-    }
-    previousTermLength = [searchTerm length];
-
-    for (NSString *key in self.keys)
-    {
-      if ([key isEqualToString: UITableViewIndexSearch])
-        continue;
-
-      NSMutableArray *array = [self.contactIdentifiers valueForKey: key];
-      NSMutableArray *toRemove = [[NSMutableArray alloc] init];
-      for (NSNumber *identifier in array) 
-      {
-        AKContact *contact = [self contactForContactId: [identifier integerValue]];
-        NSString *firstName = [contact valueForProperty: kABPersonFirstNameProperty];
-        NSString *lastName = [contact valueForProperty: kABPersonLastNameProperty];
-
-        BOOL firstNameMatches = (firstName && [firstName rangeOfString: searchTerm options: NSCaseInsensitiveSearch|NSDiacriticInsensitiveSearch|NSAnchoredSearch].location != NSNotFound);
-        BOOL lastNameMatches = (lastName && [lastName rangeOfString: searchTerm options: NSCaseInsensitiveSearch|NSDiacriticInsensitiveSearch|NSAnchoredSearch].location != NSNotFound);
-
-        if (firstNameMatches == NO && lastNameMatches == NO)
-          [toRemove addObject: identifier];
-      }
-
-      if ([array count] == [toRemove count])
-        [sectionsToRemove addObject: key];
-      [array removeObjectsInArray: toRemove];
-    }
-    [self.keys removeObjectsInArray: sectionsToRemove];
-
-    dispatch_semaphore_signal(self.ab_semaphore);
-
-    [[NSNotificationCenter defaultCenter] postNotificationName: AddressBookSearchDidFinishNotification object: nil];
-  };
-
-  dispatch_async(self.ab_queue, block);
 }
 
 @end

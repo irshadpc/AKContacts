@@ -32,7 +32,6 @@
 
 FOUNDATION_EXPORT NSString *const AddressBookDidInitializeNotification;
 FOUNDATION_EXPORT NSString *const AddressBookDidLoadNotification;
-FOUNDATION_EXPORT NSString *const AddressBookSearchDidFinishNotification;
 FOUNDATION_EXPORT const void *const IsOnMainQueueKey;
 FOUNDATION_EXPORT const BOOL ShowGroups;
 
@@ -60,6 +59,10 @@ typedef NS_ENUM(NSInteger, AddressBookStatus)
 
 @property (assign, nonatomic) ABAddressBookRef addressBookRef;
 
+@property (assign, nonatomic, readonly) dispatch_queue_t ab_queue;
+
+@property (assign, nonatomic, readonly) dispatch_semaphore_t ab_semaphore;
+
 @property (assign, nonatomic) NSInteger status;
 /**
  * AKContact objects with their recordIDs as keys
@@ -70,17 +73,9 @@ typedef NS_ENUM(NSInteger, AddressBookStatus)
  **/
 @property (strong, nonatomic) NSMutableArray *sources;
 /**
- * Dictionary keys of displayed contacts
- **/
-@property (strong, nonatomic) NSMutableArray *keys;
-/**
  * Arrays of AKContact objects with their alphabetic lookup letters as keys
  **/
 @property (strong, nonatomic) NSMutableDictionary *allContactIdentifiers;
-/**
- * Subset of allContactIdentifiers that are displayed
- **/
-@property (strong, nonatomic) NSMutableDictionary *contactIdentifiers;
 /**
  * ID of displayed source and group
  **/
@@ -89,17 +84,15 @@ typedef NS_ENUM(NSInteger, AddressBookStatus)
 
 @property (assign, nonatomic) BOOL needReload;
 
+@property (assign, nonatomic) NSInteger contactsCount;
+
 + (AKAddressBook *)sharedInstance;
 - (void)requestAddressBookAccess;
 - (void)insertRecordID: (ABRecordID)recordID inDictionary: (NSMutableDictionary *)dictionary withAddressBookRef: (ABAddressBookRef)addressBook;
 - (AKSource *)defaultSource;
-- (NSInteger)displayedContactsCount;
 - (AKSource *)sourceForSourceId: (ABRecordID)recordId;
 - (AKContact *)contactForContactId: (ABRecordID)recordId;
 - (AKSource *)sourceForContactId: (ABRecordID)recordId;
 - (void)removeRecordID: (ABRecordID)recordID;
-- (void)resetSearch;
-
-- (void)handleSearchForTerm:(NSString *)searchTerm;
 
 @end
