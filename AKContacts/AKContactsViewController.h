@@ -30,4 +30,13 @@
 
 @interface AKContactsViewController : UIViewController
 
+/**
+ * Dictionary keys of displayed contacts
+ **/
+@property (strong, nonatomic) NSMutableArray *keys;
+/**
+ * Subset of allContactIdentifiers that are displayed
+ **/
+@property (strong, nonatomic) NSMutableDictionary *contactIdentifiers;
+
 @end
