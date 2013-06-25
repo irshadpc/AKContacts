@@ -141,8 +141,6 @@ NSString *const AKContactPickerViewDidDismissNotification = @"AKContactPickerVie
 
   [group commit];
 
-  [akAddressBook resetSearch];
-
   [[NSNotificationCenter defaultCenter] postNotificationName: AKContactPickerViewDidDismissNotification object: nil];
 
   if ([self.navigationController respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
