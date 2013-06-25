@@ -29,6 +29,7 @@
 #import "AKContactsRecordViewCell.h"
 #import "AKAddressBook.h"
 #import "AKContact.h"
+#import "AKContactsViewController.h"
 
 @implementation AKContactsRecordViewCell
 
@@ -53,10 +54,10 @@
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
 
   NSString *key = nil;
-  if ([akAddressBook.keys count] > indexPath.section)
-    key = [akAddressBook.keys objectAtIndex: indexPath.section];
+  if ([self.controller.keys count] > indexPath.section)
+    key = [self.controller.keys objectAtIndex: indexPath.section];
 
-  NSArray *identifiersArray = [akAddressBook.contactIdentifiers objectForKey: key];
+  NSArray *identifiersArray = [self.controller.contactIdentifiers objectForKey: key];
   if ([identifiersArray count] == 0) return;
   NSNumber *recordId = [identifiersArray objectAtIndex: indexPath.row];
   AKContact *contact = [akAddressBook contactForContactId: [recordId integerValue]];
