@@ -435,7 +435,6 @@ static const float defaultCellHeight = 44.f;
 
   [akAddressBook setSourceID: [source recordID]];
   [akAddressBook setGroupID: [group recordID]];
-  [akAddressBook resetSearch];
 
   AKContactsViewController *contactsView = [[AKContactsViewController alloc] init];
   [self.navigationController pushViewController: contactsView animated: YES];
