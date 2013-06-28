@@ -35,7 +35,7 @@ static const int editModeItem = 8;
 
 @interface AKContactHeaderViewCell ()
 
-@property (nonatomic, unsafe_unretained) AKContactViewController *delegate;
+@property (nonatomic, unsafe_unretained) AKContactViewController *controller;
 @property (assign, nonatomic) ABPropertyID abPropertyID;
 @property (strong, nonatomic) UITextField *textField;
 
@@ -45,17 +45,17 @@ static const int editModeItem = 8;
 
 @implementation AKContactHeaderViewCell
 
-+ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate atRow: (NSInteger)row
++ (UITableViewCell *)cellWithController:(AKContactViewController *)controller atRow:(NSInteger)row
 {
   static NSString *CellIdentifier = @"AKContactHeaderCellView";
   
-  AKContactHeaderViewCell *cell = [delegate.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  AKContactHeaderViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
   if (cell == nil)
   {
     cell = [[AKContactHeaderViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
   }
   
-  [cell setDelegate: delegate];
+  [cell setController: controller];
   
   [cell configureCellAtRow: row];
   
@@ -64,7 +64,7 @@ static const int editModeItem = 8;
 
 - (void)setFrame:(CGRect)frame
 {
-  if ([self.delegate isEditing])
+  if ([self.controller isEditing])
   {
     frame.origin.x += 80.f;
     frame.size.width -= 80.f;
@@ -82,9 +82,9 @@ static const int editModeItem = 8;
     [subView removeFromSuperview];
   }
 
-  AKContact *contact = self.delegate.contact;
+  AKContact *contact = self.controller.contact;
   
-  if ([self.delegate isEditing])
+  if ([self.controller isEditing])
   {
     UITextField *textField = [[UITextField alloc] initWithFrame: CGRectZero];
     [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
@@ -120,7 +120,7 @@ static const int editModeItem = 8;
   else
   {
     [self.backgroundView setHidden: YES]; // Hide background in default mode
-    [self.delegate.tableView setSeparatorStyle: UITableViewCellSeparatorStyleNone];
+    [self.controller.tableView setSeparatorStyle: UITableViewCellSeparatorStyleNone];
 
     UILabel *contactNameLabel = [[UILabel alloc] initWithFrame: CGRectMake(80.f, 0.f, 210.f, 23.f)];
     [self.contentView addSubview: contactNameLabel];
@@ -168,7 +168,7 @@ static const int editModeItem = 8;
 {
   [super layoutSubviews];
 
-  if (self.delegate.isEditing)
+  if (self.controller.isEditing)
   {
     CGRect frame = CGRectMake(self.contentView.bounds.origin.x + 10.f,
                               self.contentView.bounds.origin.y,
@@ -177,12 +177,12 @@ static const int editModeItem = 8;
     [self.textField setFrame: frame];
 
     [self.backgroundView setHidden: NO]; // Show background in edit mode
-    [self.delegate.tableView setSeparatorStyle: UITableViewCellSeparatorStyleSingleLine];
+    [self.controller.tableView setSeparatorStyle: UITableViewCellSeparatorStyleSingleLine];
   }
   else
   {
     [self.backgroundView setHidden: YES]; // Hide background in default mode
-    [self.delegate.tableView setSeparatorStyle: UITableViewCellSeparatorStyleNone];
+    [self.controller.tableView setSeparatorStyle: UITableViewCellSeparatorStyleNone];
   }
 }
 
@@ -190,7 +190,7 @@ static const int editModeItem = 8;
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField
 {
-  [self.delegate setFirstResponder: textField];
+  [self.controller setFirstResponder: textField];
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField
@@ -198,9 +198,9 @@ static const int editModeItem = 8;
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
   
-  [self.delegate setFirstResponder: nil];
+  [self.controller setFirstResponder: nil];
   
-  AKContact *contact = self.delegate.contact;
+  AKContact *contact = self.controller.contact;
   if (self.abPropertyID == kABPersonLastNameProperty)
   {
     [contact setValue: textField.text forProperty: kABPersonLastNameProperty];

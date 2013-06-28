@@ -32,6 +32,6 @@
 
 @interface AKContactLinkedViewCell : UITableViewCell
 
-+ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate atRow: (NSInteger)row;
++ (UITableViewCell *)cellWithController: (AKContactViewController *)controller atRow: (NSInteger)row;
 
 @end

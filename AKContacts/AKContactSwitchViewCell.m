@@ -32,7 +32,7 @@
 
 @interface AKContactSwitchViewCell ()
 
-@property (unsafe_unretained, nonatomic) AKContactViewController *delegate;
+@property (unsafe_unretained, nonatomic) AKContactViewController *controller;
 @property (assign, nonatomic) NSInteger identifier;
 
 - (void)configureCellAtRow:(NSInteger)row;
@@ -41,17 +41,17 @@
 
 @implementation AKContactSwitchViewCell
 
-+ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate atRow: (NSInteger)row
++ (UITableViewCell *)cellWithController: (AKContactViewController *)controller atRow: (NSInteger)row
 {
   static NSString *CellIdentifier = @"AKContactSwitchViewCell";
   
-  AKContactSwitchViewCell *cell = [delegate.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  AKContactSwitchViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
   if (cell == nil)
   {
     cell = [[AKContactSwitchViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
   }
   
-  [cell setDelegate: delegate];
+  [cell setController: controller];
   
   [cell configureCellAtRow: row];
   
@@ -59,7 +59,7 @@
 }
 
 - (void)configureCellAtRow: (NSInteger)row {
-  
+
   [self setIdentifier: NSNotFound];
   [self.textLabel setText: nil];
   [self.detailTextLabel setText: nil];

@@ -40,7 +40,7 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
 
 @interface AKContactButtonsViewCell ()
 
-@property (unsafe_unretained, nonatomic) AKContactViewController *delegate;
+@property (unsafe_unretained, nonatomic) AKContactViewController *controller;
 @property (strong, nonatomic) UIButton *textButton;
 @property (strong, nonatomic) UIButton *groupButton;
 
@@ -50,17 +50,17 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
 
 @implementation AKContactButtonsViewCell
 
-+ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate atRow: (NSInteger)row
++ (UITableViewCell *)cellWithController:(AKContactViewController *)controller atRow:(NSInteger)row
 {
   static NSString *CellIdentifier = @"AKContactButtonsViewCell";
   
-  AKContactButtonsViewCell *cell = [delegate.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  AKContactButtonsViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
   if (cell == nil)
   {
     cell = [[AKContactButtonsViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier: CellIdentifier];
   }
 
-  [cell setDelegate: delegate];
+  [cell setController: controller];
 
   [cell configureCellAtRow: row];
 
@@ -122,7 +122,7 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
   UIButton *button = (UIButton *)sender;
   if (button.tag == kButtonText)
   {
-      AKContact *contact = self.delegate.contact;
+      AKContact *contact = self.controller.contact;
       NSInteger phoneCount = [contact countForProperty: kABPersonPhoneProperty];
       NSInteger emailCount = [contact countForProperty: kABPersonEmailProperty];
 
@@ -142,18 +142,18 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
       }
       else
       {
-          [messanger showTextActionSheetWithContactID: self.delegate.contact.recordID];
+          [messanger showTextActionSheetWithContactID: self.controller.contact.recordID];
       }
   }
   else
   {
-    AKGroupPickerViewController *groupSelectView = [[AKGroupPickerViewController alloc] initWithContactID: self.delegate.contact.recordID];
+    AKGroupPickerViewController *groupSelectView = [[AKGroupPickerViewController alloc] initWithContactID: self.controller.contact.recordID];
     UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: groupSelectView];
 
-    if ([self.delegate.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
-      [self.delegate.navigationController presentViewController: navigationController animated: YES completion: nil];
+    if ([self.controller.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
+      [self.controller.navigationController presentViewController: navigationController animated: YES completion: nil];
     else
-      [self.delegate.navigationController presentModalViewController: navigationController animated: YES];
+      [self.controller.navigationController presentModalViewController: navigationController animated: YES];
   }
 }
 

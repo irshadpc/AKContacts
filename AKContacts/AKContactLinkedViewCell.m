@@ -34,7 +34,7 @@
 
 @interface AKContactLinkedViewCell ()
 
-@property (unsafe_unretained, nonatomic) AKContactViewController *delegate;
+@property (unsafe_unretained, nonatomic) AKContactViewController *controller;
 
 -(void)configureCellAtRow:(NSInteger)row;
 
@@ -42,17 +42,17 @@
 
 @implementation AKContactLinkedViewCell
 
-+ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate atRow: (NSInteger)row
++ (UITableViewCell *)cellWithController: (AKContactViewController *)controller atRow: (NSInteger)row
 {
   static NSString *CellIdentifier = @"AKContactLinkedViewCell";
   
-  AKContactLinkedViewCell *cell = [delegate.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  AKContactLinkedViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
   if (cell == nil)
   {
     cell = [[AKContactLinkedViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
   }
 
-  [cell setDelegate: delegate];
+  [cell setController: controller];
 
   [cell configureCellAtRow: row];
 
@@ -66,9 +66,9 @@
   [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
   [self setAccessoryType: UITableViewCellAccessoryNone];
   
-  NSInteger recordID = [[[self.delegate.contact linkedContactIDs] objectAtIndex: row] integerValue];
+  NSInteger recordID = [[[self.controller.contact linkedContactIDs] objectAtIndex: row] integerValue];
 
-  if (recordID != self.delegate.parentLinkedContactID)
+  if (recordID != self.controller.parentLinkedContactID)
   {
     [self setAccessoryType: UITableViewCellAccessoryDisclosureIndicator];
   }

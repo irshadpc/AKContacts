@@ -15,7 +15,7 @@
 
 @interface AKContactImage () <UIActionSheetDelegate>
 
-@property (strong, nonatomic) AKContactViewController *delegate;
+@property (strong, nonatomic) AKContactViewController *controller;
 @property (strong, nonatomic) UIView *editBackground;
 @property (strong, nonatomic) UILabel *editLabel;
 
@@ -23,11 +23,11 @@
 
 @implementation AKContactImage
 
-- (id)initWithFrame:(CGRect)frame andDelegate: (AKContactViewController *)delegate
+- (id)initWithFrame:(CGRect)frame andController:(AKContactViewController *)controller
 {
     self = [super initWithFrame:frame];
     if (self) {
-      _delegate = delegate;
+      _controller = controller;
       
       [self setBackgroundColor: [UIColor clearColor]];
       [self setUserInteractionEnabled: NO];
@@ -93,7 +93,7 @@
   }
   label = NSLocalizedString(@"Choose Photo", @"");
   [actionSheet addButtonWithTitle: label];
-  if ([self.delegate.contact imageData] != nil)
+  if ([self.controller.contact imageData] != nil)
   {
     label = NSLocalizedString(@"Delete Photo", @"");
     [actionSheet addButtonWithTitle: label];
@@ -101,7 +101,7 @@
   label = NSLocalizedString(@"Cancel", @"");
   [actionSheet addButtonWithTitle: label];
   [actionSheet setCancelButtonIndex: (actionSheet.numberOfButtons - 1)];
-  [actionSheet showInView: self.delegate.view];
+  [actionSheet showInView: self.controller.view];
 }
 
 #pragma mark - UIActionsheet Delegate
@@ -113,24 +113,24 @@
     UIImagePickerController *cameraUI = [[UIImagePickerController alloc] init];
     [cameraUI setMediaTypes: [[NSArray alloc] initWithObjects: (NSString *)kUTTypeImage, nil]];
     [cameraUI setAllowsEditing: YES];
-    [cameraUI setDelegate: self.delegate];
+    [cameraUI setDelegate: self.controller];
     
     if ([UIImagePickerController isSourceTypeAvailable: UIImagePickerControllerSourceTypeCamera] == YES)
     {
       if (buttonIndex == 0)
       { // Take
         [cameraUI setSourceType: UIImagePickerControllerSourceTypeCamera];
-        [self.delegate presentModalViewController: cameraUI animated: YES];
+        [self.controller presentModalViewController: cameraUI animated: YES];
       }
       else if (buttonIndex == 1)
       { // Choose
         [cameraUI setSourceType: UIImagePickerControllerSourceTypePhotoLibrary];
-        [self.delegate presentModalViewController: cameraUI animated: YES];
+        [self.controller presentModalViewController: cameraUI animated: YES];
       }
       else if (buttonIndex == 2)
       { // Delete
-        [self.delegate.contact setImageData: nil];
-        NSString *imageName = ([self.delegate.contact recordType] == kABPersonType) ? @"Contact" : @"Company";
+        [self.controller.contact setImageData: nil];
+        NSString *imageName = ([self.controller.contact recordType] == kABPersonType) ? @"Contact" : @"Company";
         [self setImage: [UIImage imageNamed: imageName] forState: UIControlStateNormal];
       }
     }
@@ -139,12 +139,12 @@
       if (buttonIndex == 0)
       { // Choose
         [cameraUI setSourceType: UIImagePickerControllerSourceTypePhotoLibrary];
-        [self.delegate presentModalViewController: cameraUI animated: YES];
+        [self.controller presentModalViewController: cameraUI animated: YES];
       }
       else if (buttonIndex == 1)
       { // Delete
-        [self.delegate.contact setImageData: nil];
-        NSString *imageName = ([self.delegate.contact recordType] == kABPersonType) ? @"Contact" : @"Company";
+        [self.controller.contact setImageData: nil];
+        NSString *imageName = ([self.controller.contact recordType] == kABPersonType) ? @"Contact" : @"Company";
         [self setImage: [UIImage imageNamed: imageName] forState: UIControlStateNormal];        
       }
     }

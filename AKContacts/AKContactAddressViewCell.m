@@ -49,7 +49,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
 @interface AKContactAddressViewCell ()
 
-@property (unsafe_unretained, nonatomic) AKContactViewController *delegate;
+@property (unsafe_unretained, nonatomic) AKContactViewController *controller;
 
 - (void)configureCellAtRow: (NSInteger)row;
 
@@ -72,7 +72,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     }
   }
 
-  AKContact *contact = self.delegate.contact;
+  AKContact *contact = self.controller.contact;
   
   if (row < [contact countForProperty: kABPersonAddressProperty])
   {
@@ -92,12 +92,12 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   }
   else
   {
-    [self.textLabel setText: (self.delegate.willAddAddress == YES) ?
+    [self.textLabel setText: (self.controller.willAddAddress == YES) ?
      [[AKLabel defaultLocalizedLabelForABPropertyID: kABPersonAddressProperty] lowercaseString] : NSLocalizedString(@"add new address", @"")];
   }
 
-  if ((self.delegate.editing == YES && self.tag != NSNotFound) ||
-      (self.delegate.editing == YES && self.delegate.willAddAddress == YES))
+  if ((self.controller.editing == YES && self.tag != NSNotFound) ||
+      (self.controller.editing == YES && self.controller.willAddAddress == YES))
   {
     [self.contentView addSubview: [AKContactAddressViewCell separatorWithTag: kHorizontal1]];
     [self.contentView addSubview: [AKContactAddressViewCell separatorWithTag: kHorizontal2]];
@@ -122,7 +122,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
                                        self.textLabel.frame.size.width,
                                        self.textLabel.frame.size.height)];
   
-  if (self.delegate.editing)
+  if (self.controller.editing)
   {
     UIView *view = [self.contentView viewWithTag: kAddressStreet];
     [view setFrame: CGRectMake(81.f, 0.f, 187.f, 40.f)];
@@ -151,7 +151,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     view = [self.contentView viewWithTag: kHorizontal2];
     [view setFrame: CGRectMake(80.f, 40.f, self.contentView.bounds.size.width - 80.f, 1.f)];
     
-    if (self.delegate.willAddAddress == NO && self.tag == NSNotFound)
+    if (self.controller.willAddAddress == NO && self.tag == NSNotFound)
     { // Add new address frame
       CGFloat width = [self.textLabel.text sizeWithFont: self.textLabel.font].width;
       CGRect frame = self.textLabel.frame;
@@ -165,7 +165,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
 - (UITextField *)getTextFieldWithTag: (NSInteger)tag
 {
-  AKContact *contact = self.delegate.contact;
+  AKContact *contact = self.controller.contact;
   NSDictionary *address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.tag];
 
   NSString *key = [AKContactAddressViewCell descriptionForAddressTag: tag];
@@ -192,17 +192,17 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
 #pragma mark - Class methods
 
-+ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate atRow: (NSInteger)row
++ (UITableViewCell *)cellWithController:(AKContactViewController *)controller atRow:(NSInteger)row
 {
   static NSString *CellIdentifier = @"AKContactAddressViewCell";
   
-  AKContactAddressViewCell *cell = [delegate.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  AKContactAddressViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
   if (cell == nil)
   {
     cell = [[AKContactAddressViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
   }
   
-  [cell setDelegate: delegate];
+  [cell setController: controller];
   
   [cell configureCellAtRow: row];
   
@@ -235,7 +235,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField
 {
-  [self.delegate setFirstResponder: textField];
+  [self.controller setFirstResponder: textField];
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField
@@ -243,11 +243,11 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
 
-  [self.delegate setFirstResponder: nil];
+  [self.controller setFirstResponder: nil];
   
   if ([textField.text length] == 0) return;
 
-  AKContact *contact = self.delegate.contact;
+  AKContact *contact = self.controller.contact;
 
   NSString *key = [AKContactAddressViewCell descriptionForAddressTag: textField.tag];
 

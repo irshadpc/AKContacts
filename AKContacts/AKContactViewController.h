@@ -46,7 +46,7 @@
 
 @property (strong, nonatomic) UITableView *tableView;
 @property (strong, nonatomic) AKContact *contact;
-@property (unsafe_unretained, nonatomic) id <AKContactViewControllerDelegate> delegate;
+@property (unsafe_unretained, nonatomic) id<AKContactViewControllerDelegate> delegate;
 /**
  * Set to YES when add new address row is
  * selected in the contact edit view

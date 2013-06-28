@@ -14,7 +14,7 @@
 
 @interface AKContactImage : UIButton
 
-- (id)initWithFrame:(CGRect)frame andDelegate: (AKContactViewController *)delegate;
+- (id)initWithFrame:(CGRect)frame andController: (AKContactViewController *)controller;
 - (void)setEditing: (BOOL)editing;
 
 @end

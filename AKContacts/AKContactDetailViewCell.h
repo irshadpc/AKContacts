@@ -33,6 +33,6 @@
 
 @interface AKContactDetailViewCell : UITableViewCell <UITextFieldDelegate, UITextViewDelegate> 
 
-+ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate andProperty: (ABPropertyID)property atRow: (NSInteger)row;
++ (UITableViewCell *)cellWithController: (AKContactViewController *)controller andProperty: (ABPropertyID)property atRow: (NSInteger)row;
 
 @end

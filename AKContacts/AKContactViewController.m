@@ -230,7 +230,7 @@ static const float defaultCellHeight = 44.f;
 
   [self setView: self.tableView];
 
-  [self setContactImage: [[AKContactImage alloc] initWithFrame: CGRectMake(10.f, 11.f, 64.f, 64.f) andDelegate: self]];
+  [self setContactImage: [[AKContactImage alloc] initWithFrame: CGRectMake(10.f, 11.f, 64.f, 64.f) andController: self]];
   [self.view addSubview: self.contactImage];
 
   if (self.contact.recordID == newContactID)
@@ -404,7 +404,7 @@ static const float defaultCellHeight = 44.f;
   switch (section)
   {
     case kSectionHeader:
-      return [AKContactHeaderViewCell cellWithDelegate: self atRow: indexPath.row];
+      return [AKContactHeaderViewCell cellWithController: self atRow: indexPath.row];
 
     case kSectionPhone:
     case kSectionEmail:
@@ -413,27 +413,27 @@ static const float defaultCellHeight = 44.f;
     case kSectionDate:
     case kSectionSocialProfile:
     case kSectionNote:
-      return [AKContactDetailViewCell cellWithDelegate: self
+      return [AKContactDetailViewCell cellWithController: self
                                            andProperty: [AKContactViewController abPropertyIDforSection: section]
                                                  atRow: indexPath.row];
 
     case kSectionAddress:
-      return [AKContactAddressViewCell cellWithDelegate: self atRow: indexPath.row];
+      return [AKContactAddressViewCell cellWithController: self atRow: indexPath.row];
 
     case kSectionInstantMessage:
-      return [AKContactInstantMessageViewCell cellWithDelegate: self atRow: indexPath.row];
+      return [AKContactInstantMessageViewCell cellWithController: self atRow: indexPath.row];
 
     case kSectionSwitch:
-      return [AKContactSwitchViewCell cellWithDelegate: self atRow: indexPath.row];
+      return [AKContactSwitchViewCell cellWithController: self atRow: indexPath.row];
 
     case kSectionButtons:
-      return [AKContactButtonsViewCell cellWithDelegate: self atRow: indexPath.row];
+      return [AKContactButtonsViewCell cellWithController: self atRow: indexPath.row];
 
     case kSectionLinkedRecords:
-      return [AKContactLinkedViewCell cellWithDelegate: self atRow: indexPath.row];
+      return [AKContactLinkedViewCell cellWithController: self atRow: indexPath.row];
 
     case kSectionDeleteButton:
-      return [AKContactDeleteButtonViewCell cellWithDelegate: self atRow: indexPath.row];
+      return [AKContactDeleteButtonViewCell cellWithController: self atRow: indexPath.row];
 
     default:
       return nil;

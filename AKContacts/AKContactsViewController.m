@@ -104,9 +104,8 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   [self.tableView setTableHeaderView: self.searchBar];
   [self.searchBar setDelegate: self];
   [self.searchBar setBarStyle: UIBarStyleDefault];
-  
-  [self setView: [[UIView alloc] init]];
-  [self.view addSubview: self.tableView];
+
+  [self setView: self.tableView];
 }
 
 -(void)viewDidLoad

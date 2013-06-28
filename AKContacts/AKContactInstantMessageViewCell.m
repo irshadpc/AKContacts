@@ -45,7 +45,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
 @interface AKContactInstantMessageViewCell () <UITextFieldDelegate>
 
-@property (unsafe_unretained, nonatomic) AKContactViewController *delegate;
+@property (unsafe_unretained, nonatomic) AKContactViewController *controller;
 
 - (void)configureCellAtRow: (NSInteger)row;
 
@@ -68,7 +68,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     }
   }
 
-  AKContact *contact = self.delegate.contact;
+  AKContact *contact = self.controller.contact;
 
   if (row < [contact countForProperty: kABPersonInstantMessageProperty])
   {
@@ -88,7 +88,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     [self.textLabel setText: [[AKLabel defaultLocalizedLabelForABPropertyID: kABPersonInstantMessageProperty] lowercaseString]];
   }
 
-  if (self.delegate.editing == YES)
+  if (self.controller.editing == YES)
   {
     [self.contentView addSubview: [AKContactInstantMessageViewCell separatorWithTag: kHorizontal1]];
     [self.contentView addSubview: [AKContactInstantMessageViewCell separatorWithTag: kVertical1]];
@@ -108,7 +108,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
                                        self.textLabel.frame.size.width,
                                        self.textLabel.frame.size.height)];
   
-  if (self.delegate.editing)
+  if (self.controller.editing)
   {
     UIView *view = [self.contentView viewWithTag: kIMUsername];
     [view setFrame: CGRectMake(81.f, 0.f, 187.f, 40.f)];
@@ -128,7 +128,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
 - (UITextField *)getTextFieldWithTag: (NSInteger)tag
 {
-  AKContact *contact = self.delegate.contact;
+  AKContact *contact = self.controller.contact;
   NSDictionary *service = [contact valueForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: self.tag];
 
   NSString *key = [AKContactInstantMessageViewCell descriptionForInstantMessageTag: tag];
@@ -161,7 +161,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 {
   AKLabelViewCompletionHandler handler = ^(ABPropertyID property, NSInteger identifier, NSString *service){
     
-    NSDictionary *serviceDict = [self.delegate.contact valueForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: identifier];
+    NSDictionary *serviceDict = [self.controller.contact valueForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: identifier];
     if (serviceDict == nil)
     {
       serviceDict = [[NSDictionary alloc] init];
@@ -169,39 +169,39 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     NSMutableDictionary *mutableServiceDict = [serviceDict mutableCopy];
     [mutableServiceDict setObject: service forKey: (NSString *)kABPersonInstantMessageServiceKey];
     serviceDict = [mutableServiceDict copy];
-    NSString *label = [self.delegate.contact labelForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: identifier];
-    [self.delegate.contact setValue: serviceDict andLabel: label forMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: &identifier];
+    NSString *label = [self.controller.contact labelForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: identifier];
+    [self.controller.contact setValue: serviceDict andLabel: label forMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: &identifier];
 
     [textField setText: service];
   };
   
-  NSDictionary *serviceDict = [self.delegate.contact valueForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: self.tag];
+  NSDictionary *serviceDict = [self.controller.contact valueForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: self.tag];
 
   NSString *service = (self.tag != NSNotFound) ? [serviceDict objectForKey: (NSString *)kABPersonInstantMessageServiceKey] : (NSString *)kABPersonInstantMessageServiceSkype;
 
   AKLabelViewController *labelView = [[AKLabelViewController alloc] initForInstantMessageServiceWithSelectedService: service andCompletionHandler: handler];
   UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: labelView];
   
-  if ([self.delegate.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
-    [self.delegate.navigationController presentViewController: navigationController animated: YES completion: nil];
+  if ([self.controller.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
+    [self.controller.navigationController presentViewController: navigationController animated: YES completion: nil];
   else
-    [self.delegate.navigationController presentModalViewController: navigationController animated: YES];
+    [self.controller.navigationController presentModalViewController: navigationController animated: YES];
 
 }
 
 #pragma mark - Class methods
 
-+ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate atRow: (NSInteger)row
++ (UITableViewCell *)cellWithController: (AKContactViewController *)controller atRow: (NSInteger)row
 {
   static NSString *CellIdentifier = @"AKContactInstantMessageViewCell";
   
-  AKContactInstantMessageViewCell *cell = [delegate.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  AKContactInstantMessageViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
   if (cell == nil)
   {
     cell = [[AKContactInstantMessageViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
   }
   
-  [cell setDelegate: delegate];
+  [cell setController: controller];
   
   [cell configureCellAtRow: row];
   
@@ -241,7 +241,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField
 {
-  [self.delegate setFirstResponder: textField];
+  [self.controller setFirstResponder: textField];
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField
@@ -249,11 +249,11 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
 
-  [self.delegate setFirstResponder: nil];
+  [self.controller setFirstResponder: nil];
   
   if ([textField.text length] == 0) return;
 
-  AKContact *contact = self.delegate.contact;
+  AKContact *contact = self.controller.contact;
 
   NSString *key = [AKContactInstantMessageViewCell descriptionForInstantMessageTag: textField.tag];
 

@@ -33,7 +33,7 @@
 
 @interface AKContactDeleteButtonViewCell () <UIActionSheetDelegate>
 
-@property (unsafe_unretained, nonatomic) AKContactViewController *delegate;
+@property (unsafe_unretained, nonatomic) AKContactViewController *controller;
 
 -(void)configureCell;
 
@@ -41,17 +41,17 @@
 
 @implementation AKContactDeleteButtonViewCell
 
-+ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate atRow: (NSInteger)row
++ (UITableViewCell *)cellWithController:(AKContactViewController *)controller atRow:(NSInteger)row
 {
   static NSString *CellIdentifier = @"AKContactDeleteButtonViewCell";
   
-  AKContactDeleteButtonViewCell *cell = [delegate.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  AKContactDeleteButtonViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
   if (cell == nil)
   {
     cell = [[AKContactDeleteButtonViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier: CellIdentifier];
   }
   
-  [cell setDelegate: delegate];
+  [cell setController: controller];
   
   [cell configureCell];
   
@@ -96,7 +96,7 @@
                                                   cancelButtonTitle: NSLocalizedString(@"Cancel", @"")
                                              destructiveButtonTitle: NSLocalizedString(@"Delete Contact", @"")
                                                   otherButtonTitles: nil];
-  [actionSheet showInView: self.delegate.view];
+  [actionSheet showInView: self.controller.view];
 }
 
 #pragma mark - UIActionSheet delegate
@@ -105,10 +105,10 @@
 {
   if (buttonIndex == actionSheet.destructiveButtonIndex)
   {
-    [[AKAddressBook sharedInstance] removeRecordID: self.delegate.contact.recordID];
-    if ([self.delegate.delegate respondsToSelector: @selector(recordDidRemoveWithContactID:)])
-      [self.delegate.delegate recordDidRemoveWithContactID: self.delegate.contact.recordID];
-    [self.delegate.navigationController popViewControllerAnimated: YES];
+    [[AKAddressBook sharedInstance] removeRecordID: self.controller.contact.recordID];
+    if ([self.controller.delegate respondsToSelector: @selector(recordDidRemoveWithContactID:)])
+      [self.controller.delegate recordDidRemoveWithContactID: self.controller.contact.recordID];
+    [self.controller.navigationController popViewControllerAnimated: YES];
   }
 }
 

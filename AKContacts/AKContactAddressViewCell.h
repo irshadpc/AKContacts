@@ -31,8 +31,8 @@
 
 @class AKContactViewController;
 
-@interface AKContactAddressViewCell : UITableViewCell <UITextFieldDelegate> 
+@interface AKContactAddressViewCell : UITableViewCell <UITextFieldDelegate>
 
-+ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate atRow: (NSInteger)row;
++ (UITableViewCell *)cellWithController: (AKContactViewController *)controller atRow: (NSInteger)row;
 
 @end

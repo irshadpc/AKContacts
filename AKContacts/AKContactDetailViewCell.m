@@ -33,7 +33,7 @@
 
 @interface AKContactDetailViewCell ()
 
-@property (unsafe_unretained, nonatomic) AKContactViewController *delegate;
+@property (unsafe_unretained, nonatomic) AKContactViewController *controller;
 @property (assign, nonatomic) ABPropertyID abPropertyID;
 @property (strong, nonatomic) UITextField *textField;
 @property (strong, nonatomic) UITextView *textView;
@@ -49,17 +49,17 @@
 
 @implementation AKContactDetailViewCell
 
-+ (UITableViewCell *)cellWithDelegate: (AKContactViewController *)delegate andProperty: (ABPropertyID)property atRow: (NSInteger)row
++ (UITableViewCell *)cellWithController:(AKContactViewController *)controller andProperty:(ABPropertyID)property atRow:(NSInteger)row
 {
   static NSString *CellIdentifier = @"AKContactDetailViewCell";
 
-  AKContactDetailViewCell *cell = [delegate.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+  AKContactDetailViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
   if (cell == nil)
   {
     cell = [[AKContactDetailViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
   }
 
-  [cell setDelegate: delegate];
+  [cell setController: controller];
 
   [cell configureCellForProperty: property atRow: row];
 
@@ -101,7 +101,7 @@
   [self.textField setInputView: nil];
   [self.textField setInputAccessoryView: nil];
   
-  AKContact *contact = self.delegate.contact;
+  AKContact *contact = self.controller.contact;
 
   NSString *text = nil;
   NSString *placeholder = nil;
@@ -201,16 +201,16 @@
                             self.contentView.bounds.size.width - 85.f,
                             self.contentView.bounds.size.height);
   [self.textField setFrame: frame];
-  [self.textField setUserInteractionEnabled: self.delegate.editing];
+  [self.textField setUserInteractionEnabled: self.controller.editing];
 
   frame.size.height -= 10.f;
   frame.origin.x -= 7.f;
   frame.size.width += 7.f;
   [self.textView setFrame: frame];
-  [self.textView setEditable: self.delegate.editing];
+  [self.textView setEditable: self.controller.editing];
 
   [self.separator setFrame: CGRectMake(80.f, 0.f, 1.f, self.contentView.bounds.size.height)];
-  [self.separator setHidden: !self.delegate.editing];
+  [self.separator setHidden: !self.controller.editing];
 
   if (self.abPropertyID == kABPersonNoteProperty)
   {
@@ -224,7 +224,7 @@
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField
 {
-  [self.delegate setFirstResponder: textField];
+  [self.controller setFirstResponder: textField];
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField
@@ -232,9 +232,9 @@
   if ([textField isFirstResponder])
     [textField resignFirstResponder];
 
-  [self.delegate setFirstResponder: nil];
+  [self.controller setFirstResponder: nil];
 
-  AKContact *contact = self.delegate.contact;
+  AKContact *contact = self.controller.contact;
   
   NSString *oldValue = [contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.tag];
   if ([textField.text isEqualToString: oldValue] || [textField.text length] == 0)
@@ -265,7 +265,7 @@
 
 - (void)textViewDidBeginEditing:(UITextField *)textView
 {
-  [self.delegate setFirstResponder: textView];
+  [self.controller setFirstResponder: textView];
 }
 
 - (void)textViewDidEndEditing:(UITextField *)textView
@@ -273,11 +273,11 @@
   if ([textView isFirstResponder])
     [textView resignFirstResponder];
 
-  [self.delegate setFirstResponder: nil];
+  [self.controller setFirstResponder: nil];
 
   if (self.abPropertyID == kABPersonNoteProperty)
   {
-    AKContact *contact = self.delegate.contact;
+    AKContact *contact = self.controller.contact;
 
     NSString *oldValue = [contact valueForProperty: kABPersonNoteProperty];
     if ([textView.text isEqualToString: oldValue] || [textView.text length] == 0)
@@ -350,7 +350,7 @@
   if ([self.textField isFirstResponder])
     [self.textField resignFirstResponder];
   
-  AKContact *contact = self.delegate.contact;
+  AKContact *contact = self.controller.contact;
   
   UIBarButtonItem *button = (UIBarButtonItem *)sender;
   if (button.tag == UIBarButtonSystemItemDone)
