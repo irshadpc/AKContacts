@@ -37,9 +37,10 @@ NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDid
 
 - (void)loadView
 {
-  CGFloat height = ([UIScreen mainScreen].bounds.size.height == 568.f) ? 568.f : 480.f;
+  CGFloat width = [UIScreen mainScreen].bounds.size.width;
+  CGFloat height = [UIScreen mainScreen].bounds.size.height;
   height -= (self.navigationController.navigationBar.frame.size.height + [UIApplication sharedApplication].statusBarFrame.size.height);
-  [self setTableView: [[UITableView alloc] initWithFrame: CGRectMake(0.f, 0.f, 320.f, height)
+  [self setTableView: [[UITableView alloc] initWithFrame: CGRectMake(0.f, 0.f, width, height)
                                                    style: UITableViewStyleGrouped]];
   [self.tableView setDataSource: self];
   [self.tableView setDelegate: self];
