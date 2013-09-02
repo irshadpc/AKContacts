@@ -296,10 +296,12 @@ static const float defaultCellHeight = 44.f;
   [self.tableView addGestureRecognizer: recognizer];
   [self setTapGestureRecognizer: recognizer];
   
-  NSDictionary* info = [notification userInfo];
+  NSDictionary *info = [notification userInfo];
   CGSize kbSize = [[info objectForKey: UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
-  
-  UIEdgeInsets contentInsets = UIEdgeInsetsMake(0.f, 0.f, kbSize.height, 0.f);
+
+  UIEdgeInsets contentInsets = UIEdgeInsetsMake(self.tableView.contentInset.top,
+                                                self.tableView.contentInset.left,
+                                                kbSize.height, self.tableView.contentInset.right);
   [self.tableView setContentInset: contentInsets];
   [self.tableView setScrollIndicatorInsets: contentInsets];
   
@@ -326,6 +328,14 @@ static const float defaultCellHeight = 44.f;
   [self.tableView removeGestureRecognizer: self.tapGestureRecognizer];
 
   UIEdgeInsets contentInsets = UIEdgeInsetsZero;
+  BOOL iOS7 = SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0");
+  if (iOS7)
+  {
+    contentInsets = UIEdgeInsetsMake(self.tableView.contentInset.top,
+                                     self.tableView.contentInset.left, 0.f,
+                                     self.tableView.contentInset.right);
+  }
+  
   [self.tableView setContentInset: contentInsets];
   [self.tableView setScrollIndicatorInsets: contentInsets];
 }
