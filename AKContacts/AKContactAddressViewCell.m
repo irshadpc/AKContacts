@@ -158,11 +158,19 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     view = [self.contentView viewWithTag: kHorizontal2];
     [view setFrame: CGRectMake(80.f, 40.f, self.contentView.bounds.size.width - 80.f, 1.f)];
     
+    BOOL iOS7 = SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0");
     if (self.controller.willAddAddress == NO && self.tag == NSNotFound)
     { // Add new address frame
       CGFloat width = [self.textLabel.text sizeWithFont: self.textLabel.font].width;
       CGRect frame = self.textLabel.frame;
       frame.size.width = width;
+      [self.textLabel setFrame: frame];
+    }
+    else if (iOS7 == YES && self.controller.editing == YES)
+    {
+      CGRect frame = CGRectMake(-20.f, self.textLabel.frame.origin.y,
+                         self.textLabel.frame.size.width,
+                         self.textLabel.frame.size.height);
       [self.textLabel setFrame: frame];
     }
   }
