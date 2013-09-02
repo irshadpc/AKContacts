@@ -73,20 +73,30 @@
   frame.origin.x = 10.f;
   frame.size.width = frame.size.width - 20.f;
 
-  UIButton *button = [UIButton buttonWithType: UIButtonTypeCustom];
+  UIButton *button = nil;
+  if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0"))
+  {
+    button = [UIButton buttonWithType: UIButtonTypeSystem];
+    [button setTintColor: [UIColor redColor]];
+  }
+  else
+  {
+    button = [UIButton buttonWithType: UIButtonTypeCustom];
+    [button setBackgroundColor: [UIColor clearColor]];
+    [button setAutoresizingMask: UIViewAutoresizingFlexibleWidth];
+    UIImage *image = [[UIImage imageNamed: @"ButtonDelete.png"] stretchableImageWithLeftCapWidth: 4 topCapHeight: 0];
+    [button setBackgroundImage: image forState: UIControlStateNormal];
+    [button addTarget: self action: @selector(deleteButtonTouchUpInside:) forControlEvents: UIControlEventTouchUpInside];
+
+    [button.titleLabel setFont: [UIFont boldSystemFontOfSize: 22.f]];
+    [button.titleLabel setShadowOffset: CGSizeMake(0.f, -1.f)];
+    [button.titleLabel setShadowColor: [UIColor grayColor]];
+  }
   [button setFrame: frame];
-  [button setBackgroundColor: [UIColor clearColor]];
-  [button setAutoresizingMask: UIViewAutoresizingFlexibleWidth];
-	UIImage *image = [[UIImage imageNamed: @"ButtonDelete.png"] stretchableImageWithLeftCapWidth: 4 topCapHeight: 0];
-	[button setBackgroundImage: image forState: UIControlStateNormal];
   [button addTarget: self action: @selector(deleteButtonTouchUpInside:) forControlEvents: UIControlEventTouchUpInside];
+  [button setTitle: NSLocalizedString(@"Delete Contact", @"") forState: UIControlStateNormal];
 
   [self addSubview: button];
-
-  [button setTitle: NSLocalizedString(@"Delete Contact", @"") forState: UIControlStateNormal];
-  [button.titleLabel setFont: [UIFont boldSystemFontOfSize: 22.f]];
-  [button.titleLabel setShadowOffset: CGSizeMake(0.f, -1.f)];
-  [button.titleLabel setShadowColor: [UIColor grayColor]];
 }
 
 - (void)deleteButtonTouchUpInside: (id)sender
