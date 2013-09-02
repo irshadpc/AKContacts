@@ -34,7 +34,6 @@
 #import "AKGroup.h"
 #import "AKSource.h"
 #import "AKAddressBook.h"
-#import "AppDelegate.h" // SYSTEM_VERSION
 
 static const float defaultCellHeight = 44.f;
 

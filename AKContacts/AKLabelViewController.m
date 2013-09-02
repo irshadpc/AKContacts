@@ -29,7 +29,6 @@
 #import "AKLabelViewController.h"
 #import "AKLabelViewCell.h"
 #import "AKLabel.h"
-#import "AppDelegate.h"
 
 @interface AKLabelViewController () <UITableViewDataSource, UITableViewDelegate>
 

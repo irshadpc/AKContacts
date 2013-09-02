@@ -9,7 +9,6 @@
 #import "AKContactImage.h"
 #import "AKContact.h"
 #import "AKContactViewController.h"
-#import "AppDelegate.h" // SYSTEM_VERSION
 
 #import <QuartzCore/QuartzCore.h> // Image Layer
 

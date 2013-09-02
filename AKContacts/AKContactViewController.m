@@ -42,7 +42,6 @@
 #import "AKLabelViewController.h"
 #import "AKAddressBook.h"
 #import "AKMessenger.h"
-#import "AppDelegate.h" // SYSTEM_VERSION
 
 typedef NS_ENUM(NSInteger, SectionID) {
   kSectionHeader = 0,

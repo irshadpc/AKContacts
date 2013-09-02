@@ -11,7 +11,6 @@
 #import "AKContact.h"
 #import "AKGroup.h"
 #import "AKSource.h"
-#import "AppDelegate.h" // SYSTEM_VERSION
 
 NSString *const AKContactPickerViewDidDismissNotification = @"AKContactPickerViewDidDismissNotification";
 

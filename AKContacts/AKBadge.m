@@ -27,7 +27,6 @@
 //
 
 #import "AKBadge.h"
-#import "AppDelegate.h" // SYSTEM_VERSION
 
 @interface AKBadge ()
 

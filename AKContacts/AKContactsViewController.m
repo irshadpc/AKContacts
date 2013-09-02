@@ -38,7 +38,6 @@
 #import "AKGroupPickerViewController.h"
 #import "AKGroupsViewController.h"
 #import "AKContactPickerViewController.h"
-#import "AppDelegate.h" // SYSTEM_VERSION
 
 #import <AddressBook/AddressBook.h>
 #import <AddressBookUI/AddressBookUI.h>
@@ -142,6 +141,8 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
                                       context: nil];
 
   [self toggleBackButton];
+  
+  [self setRightBarButtonItem];
 
   if ([self.searchBar.text length] > 0)
   {

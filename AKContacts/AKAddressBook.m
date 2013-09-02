@@ -30,7 +30,6 @@
 #import "AKContact.h"
 #import "AKGroup.h"
 #import "AKSource.h"
-#import "AppDelegate.h"
 
 NSString *const AKAddressBookQueueName = @"AKAddressBookQueue";
 
@@ -135,8 +134,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
      * determine if the current queue is the main one
      */
     dispatch_queue_set_specific(dispatch_get_main_queue(), IsOnMainQueueKey, (__bridge void *)self, NULL);
-
-    NSAssert(is_main_queue(), @"Must be dispatched on main queue");
 
     CFErrorRef error = NULL;
     _addressBookRef = (&ABAddressBookCreateWithOptions) ? ABAddressBookCreateWithOptions(NULL, &error) : ABAddressBookCreate();
