@@ -86,7 +86,14 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     [self.detailTextLabel setLineBreakMode: NSLineBreakByWordWrapping];
     [self.detailTextLabel setNumberOfLines: numRows];
 
-    [self.detailTextLabel setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
+    if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0"))
+    {
+      [self.detailTextLabel setFont: [UIFont systemFontOfSize: [UIFont systemFontSize]]];
+    }
+    else
+    {
+      [self.detailTextLabel setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
+    }
 
     [self.textLabel setText: [contact localizedLabelForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.tag]];
   }
