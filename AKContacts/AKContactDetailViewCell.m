@@ -205,7 +205,7 @@
 
   BOOL iOS7 = SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0");
 
-  CGFloat offset = (iOS7) ? 115.f : 85.f;
+  CGFloat offset = (iOS7 && self.controller.editing == NO) ? 115.f : 85.f;
   
   CGRect frame = CGRectMake(self.contentView.bounds.origin.x + offset,
                             self.contentView.bounds.origin.y,
@@ -213,6 +213,14 @@
                             self.contentView.bounds.size.height);
   [self.textField setFrame: frame];
   [self.textField setUserInteractionEnabled: self.controller.editing];
+
+  if (iOS7 == YES && self.controller.editing == YES)
+  {
+    frame = CGRectMake(-20.f, self.textLabel.frame.origin.y,
+                       self.textLabel.frame.size.width,
+                       self.textLabel.frame.size.height);
+    [self.textLabel setFrame: frame];
+  }
 
   offset = (iOS7) ? -50.f : 7.f;
   
