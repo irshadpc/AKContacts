@@ -75,7 +75,14 @@
     [_textField setContentVerticalAlignment: UIControlContentVerticalAlignmentCenter];
     [_textField setClearButtonMode: UITextFieldViewModeWhileEditing];
     [_textField setDelegate: self];
-    [_textField setFont: [UIFont boldSystemFontOfSize: 15.f]];
+    if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0"))
+    {
+      [_textField setFont: [UIFont systemFontOfSize: [UIFont systemFontSize]]];
+    }
+    else
+    {
+      [_textField setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
+    }
 
     _textView = [[UITextView alloc] initWithFrame: CGRectZero];
     [_textView setDelegate: self];
@@ -196,16 +203,22 @@
 {
   [super layoutSubviews];
 
-  CGRect frame = CGRectMake(self.contentView.bounds.origin.x + 85.f,
+  BOOL iOS7 = SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0");
+
+  CGFloat offset = (iOS7) ? 115.f : 85.f;
+  
+  CGRect frame = CGRectMake(self.contentView.bounds.origin.x + offset,
                             self.contentView.bounds.origin.y,
-                            self.contentView.bounds.size.width - 85.f,
+                            self.contentView.bounds.size.width - offset,
                             self.contentView.bounds.size.height);
   [self.textField setFrame: frame];
   [self.textField setUserInteractionEnabled: self.controller.editing];
 
+  offset = (iOS7) ? -50.f : 7.f;
+  
   frame.size.height -= 10.f;
-  frame.origin.x -= 7.f;
-  frame.size.width += 7.f;
+  frame.origin.x -= offset;
+  frame.size.width += offset;
   [self.textView setFrame: frame];
   [self.textView setEditable: self.controller.editing];
 
