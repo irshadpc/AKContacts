@@ -64,6 +64,13 @@ static const int editModeItem = 8;
 
 - (void)setFrame:(CGRect)frame
 {
+  BOOL iOS7 = SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0");
+  if (iOS7)
+  {
+    frame.origin.y += 10.f;
+    frame.size.height -= 10.f;
+  }
+  
   if ([self.controller isEditing])
   {
     frame.origin.x += 80.f;
