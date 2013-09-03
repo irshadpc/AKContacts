@@ -151,7 +151,7 @@ NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDid
 
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section
 {
-  return NSLocalizedString(@"Only those groups are shown here that are in the source the contact belongs to", @"");
+  return NSLocalizedString(@"Only those groups are shown here that are in the same source the contact belongs to", @"");
 }
 
 #pragma mark - Table view delegate
