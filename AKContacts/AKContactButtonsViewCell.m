@@ -73,7 +73,12 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
   if (self) {
 
     UIColor *blue = [UIColor colorWithRed: .196f green: .3098f blue: .52f alpha: 1.f];
-    
+    BOOL iOS7 = SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0");
+    if (iOS7)
+    {
+      blue = [UIColor colorWithRed: 0.f green: 0.478431 blue: 1.f alpha: 1.f];
+    }
+
     UIButton *button = [UIButton buttonWithType: UIButtonTypeRoundedRect];
     [button setTag: kButtonText];
     [button setTitleColor: blue forState: UIControlStateNormal];
