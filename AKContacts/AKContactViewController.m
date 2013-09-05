@@ -222,8 +222,9 @@ static const float defaultCellHeight = 44.f;
   CGFloat width = [UIScreen mainScreen].bounds.size.width;
   CGFloat height = [UIScreen mainScreen].bounds.size.height;
   height -= (self.navigationController.navigationBar.frame.size.height + [UIApplication sharedApplication].statusBarFrame.size.height);
+  BOOL iOS7 = SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0");
   [self setTableView: [[UITableView alloc] initWithFrame: CGRectMake(0.f, 0.f, width, height)
-                                                   style: SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0") ? UITableViewStylePlain :  UITableViewStyleGrouped]];
+                                                   style: (iOS7) ? UITableViewStylePlain : UITableViewStyleGrouped]];
   [self.tableView setDataSource: self];
   [self.tableView setDelegate: self];
   [self.tableView setAllowsSelectionDuringEditing: YES];
@@ -304,17 +305,25 @@ static const float defaultCellHeight = 44.f;
                                                 kbSize.height, self.tableView.contentInset.right);
   [self.tableView setContentInset: contentInsets];
   [self.tableView setScrollIndicatorInsets: contentInsets];
+
+  id cell = self.firstResponder.superview;
+  while ([cell isKindOfClass: [UITableViewCell class]] == NO)
+  {
+    cell = [cell superview];
+  }
   
   CGFloat offset = self.tableView.contentOffset.y;
+  CGRect cellFrame = [(UITableViewCell *)cell frame];
+  CGFloat textFieldOrigin = cellFrame.origin.y - offset;
+  CGFloat cellBottom = textFieldOrigin + cellFrame.size.height;
   CGRect textFieldFrame = self.firstResponder.frame;
-  CGFloat textFieldOrigin = self.firstResponder.superview.superview.frame.origin.y - offset;
-  CGFloat cellBottom = textFieldOrigin + self.firstResponder.superview.superview.frame.size.height;
+
   CGRect visibleFrame = self.view.frame;
   visibleFrame.size.height -= kbSize.height;
 
   CGFloat keyboardTop = visibleFrame.size.height;
   CGPoint point = CGPointMake(textFieldFrame.origin.x, cellBottom);
-  
+
   if (CGRectContainsPoint(visibleFrame, point) == NO)
   {
     CGFloat posY = fabs(cellBottom - keyboardTop) + 10.f + offset;
@@ -667,7 +676,6 @@ static const float defaultCellHeight = 44.f;
     [self.navigationController presentViewController: navigationController animated: YES completion: nil];
   else
     [self.navigationController presentModalViewController: navigationController animated: YES];
-
 }
 
 #pragma mark - Button Delegate Methods
@@ -776,7 +784,7 @@ static const float defaultCellHeight = 44.f;
    * deletion method calls. This is unlike inserting or removing an item in a mutable array, where the 
    * operation can affect the array index used for the successive insertion or removal operation.
    */
-  
+
   for (NSNumber *section in insertSections)
   {
     NSInteger index = [self insertIndexForSection: [section integerValue]];
