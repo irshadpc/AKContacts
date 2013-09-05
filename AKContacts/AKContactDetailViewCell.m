@@ -75,19 +75,14 @@
     [_textField setContentVerticalAlignment: UIControlContentVerticalAlignmentCenter];
     [_textField setClearButtonMode: UITextFieldViewModeWhileEditing];
     [_textField setDelegate: self];
-    if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0"))
-    {
-      [_textField setFont: [UIFont systemFontOfSize: [UIFont systemFontSize]]];
-    }
-    else
-    {
-      [_textField setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
-    }
+
+    BOOL iOS7 = SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0");
+    [_textField setFont: (iOS7) ? [UIFont systemFontOfSize: [UIFont systemFontSize]] : [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
 
     _textView = [[UITextView alloc] initWithFrame: CGRectZero];
     [_textView setDelegate: self];
     [_textView setBackgroundColor: [UIColor clearColor]];
-    [_textView setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
+    [_textView setFont: (iOS7) ? [UIFont systemFontOfSize: [UIFont systemFontSize]] : [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
 
     _separator = [[UIView alloc] initWithFrame: CGRectZero];
     [_separator setBackgroundColor: [UIColor lightGrayColor]];
@@ -107,7 +102,7 @@
   [self.textField setKeyboardType: UIKeyboardTypeDefault];
   [self.textField setInputView: nil];
   [self.textField setInputAccessoryView: nil];
-  
+
   AKContact *contact = self.controller.contact;
 
   NSString *text = nil;
@@ -124,7 +119,7 @@
   {
     NSArray *identifiers = [contact identifiersForProperty: self.abPropertyID];
     [self setTag: (row < [contact countForProperty: self.abPropertyID]) ? [[identifiers objectAtIndex: row] integerValue] : NSNotFound];
-      
+
     text = [contact valueForMultiValueProperty: self.abPropertyID andIdentifier: self.tag];
     label = [contact localizedLabelForMultiValueProperty: self.abPropertyID andIdentifier: self.tag];
 
@@ -222,20 +217,19 @@
     [self.textLabel setFrame: frame];
   }
 
-  offset = (iOS7) ? -50.f : 7.f;
+  offset = 7.f;
   
   frame.size.height -= 10.f;
   frame.origin.x -= offset;
   frame.size.width += offset;
   [self.textView setFrame: frame];
-  [self.textView setEditable: self.controller.editing];
-
+  
   [self.separator setFrame: CGRectMake(80.f, 0.f, 1.f, self.contentView.bounds.size.height)];
   [self.separator setHidden: !self.controller.editing];
 
   if (self.abPropertyID == kABPersonNoteProperty)
   {
-    [self.textLabel setFrame: CGRectMake(self.textLabel.frame.origin.x, 13.f,
+    [self.textLabel setFrame: CGRectMake(self.textLabel.frame.origin.x, (iOS7) ? 8.f : 13.f,
                                          self.textLabel.frame.size.width,
                                          self.textLabel.frame.size.height)];
   }
@@ -243,9 +237,10 @@
 
 #pragma mark - UITextField delegate
 
-- (void)textFieldDidBeginEditing:(UITextField *)textField
+- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField
 {
   [self.controller setFirstResponder: textField];
+  return YES;
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField
@@ -284,9 +279,10 @@
 
 #pragma mark - UITextView delegate
 
-- (void)textViewDidBeginEditing:(UITextField *)textView
-{
+- (BOOL)textViewShouldBeginEditing:(UITextView *)textView
+{ // On iOS 7 -textViewDidBeginEditing: called after -keyboardWillShow:
   [self.controller setFirstResponder: textView];
+  return YES;
 }
 
 - (void)textViewDidEndEditing:(UITextField *)textView
