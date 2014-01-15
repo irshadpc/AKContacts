@@ -69,7 +69,7 @@ NSString *const defaultsSourceKey = @"Source_%d";
     ret = super.recordRef;
 	};
 
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
   return ret;
