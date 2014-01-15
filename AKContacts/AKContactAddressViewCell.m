@@ -161,7 +161,8 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     BOOL iOS7 = SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0");
     if (self.controller.willAddAddress == NO && self.tag == NSNotFound)
     { // Add new address frame
-      CGFloat width = [self.textLabel.text sizeWithFont: self.textLabel.font].width;
+      NSDictionary *attr = @{NSFontAttributeName: self.textLabel.font};
+      CGFloat width = [self.textLabel.text sizeWithAttributes: attr].width;
       CGRect frame = self.textLabel.frame;
       frame.size.width = width;
       [self.textLabel setFrame: frame];
@@ -267,14 +268,14 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   NSString *key = [AKContactAddressViewCell descriptionForAddressTag: textField.tag];
 
   NSDictionary *address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.tag];
-  if (address == nil)
+  if (!address)
   {
     NSDictionary *newAddress = [[NSDictionary alloc] initWithObjectsAndKeys: textField.text, key, nil];
     NSInteger identifier = self.tag;
     NSString *label = [AKLabel defaultLabelForABPropertyID: kABPersonAddressProperty];
     [contact setValue: newAddress andLabel: label forMultiValueProperty: kABPersonAddressProperty andIdentifier: &identifier];
     [self setTag: identifier];
-    address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.tag];
+    // address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.tag];
   }
   else
   {
