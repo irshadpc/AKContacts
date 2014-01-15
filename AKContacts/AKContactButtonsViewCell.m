@@ -155,10 +155,11 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
     AKGroupPickerViewController *groupSelectView = [[AKGroupPickerViewController alloc] initWithContactID: self.controller.contact.recordID];
     UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: groupSelectView];
 
-    if ([self.controller.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
-      [self.controller.navigationController presentViewController: navigationController animated: YES completion: nil];
-    else
-      [self.controller.navigationController presentModalViewController: navigationController animated: YES];
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+    [self.controller.navigationController presentViewController: navigationController animated: YES completion: nil];
+#else
+    [self.controller.navigationController presentModalViewController: navigationController animated: YES];
+#endif
   }
 }
 
