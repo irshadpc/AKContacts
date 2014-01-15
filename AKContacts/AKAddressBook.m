@@ -179,7 +179,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
           NSLog(@"Access denied to addressBook");
         }
       };
-      ABAddressBookRequestAccessWithCompletion(_addressBookRef, block);
+      ABAddressBookRequestAccessWithCompletion(self.addressBookRef, block);
     }
     else if (stat == kABAuthorizationStatusDenied)
     {
@@ -598,7 +598,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
   dispatch_async(dispatch_get_main_queue(), ^{
     [self.contacts removeObjectsForKeys: staleIDs];
-    ABAddressBookRevert(_addressBookRef);
+    ABAddressBookRevert(self.addressBookRef);
   });
 }
 
