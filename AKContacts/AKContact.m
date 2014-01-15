@@ -217,7 +217,7 @@ const int newContactID = -1<<9;
 
   dispatch_block_t block = ^{
 
-		NSArray *array = (NSArray *)CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople([self recordRef]));
+    NSArray *array = (NSArray *)CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople([self recordRef]));
 
     for (id obj in array)
     {
@@ -228,7 +228,7 @@ const int newContactID = -1<<9;
         [ret addObject: [NSNumber numberWithInteger: recordID]];
       }
     }
-	};
+  };
 
   if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
@@ -367,7 +367,14 @@ const int newContactID = -1<<9;
     [addressBook.contacts setObject: self forKey: [NSNumber numberWithInteger: self.recordID]];
     [addressBook.contacts removeObjectForKey: [NSNumber numberWithInteger: newContactID]];
     
-    [addressBook insertRecordID: self.recordID inDictionary: [addressBook allContactIdentifiers] withAddressBookRef: addressBookRef];
+    NSString *dictionaryKey = @"#";
+    if ([self.name length] > 0)
+    {
+      NSString *key = [[[[self.name substringToIndex: 1] decomposedStringWithCanonicalMapping] substringToIndex: 1] uppercaseString];
+      if (isalpha([key characterAtIndex: 0])) dictionaryKey = key;
+    }
+
+    [addressBook insertRecordID: self.recordID inDictionary: [addressBook allContactIdentifiers] forKey: dictionaryKey withAddressBookRef: addressBookRef];
     
     if (addressBook.groupID >= 0)
     { // Add to group
