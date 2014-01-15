@@ -59,7 +59,7 @@ NSString *const DefaultsKeyGroups = @"Groups";
     ret = super.recordRef;
   };
 
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
   return ret;
@@ -111,7 +111,7 @@ NSString *const DefaultsKeyGroups = @"Groups";
     }
   };
   
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_async(dispatch_get_main_queue(), block);
 }
 
@@ -142,7 +142,7 @@ NSString *const DefaultsKeyGroups = @"Groups";
     }
   };
   
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_async(dispatch_get_main_queue(), block);
 }
 
