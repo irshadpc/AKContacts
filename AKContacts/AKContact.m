@@ -77,7 +77,7 @@ const int newContactID = -1<<9;
     super.age = [NSDate date];
   };
 
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
   return ret;
@@ -91,7 +91,7 @@ const int newContactID = -1<<9;
 		ret = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName([self recordRef])); // kABStringPropertyType
 	};
 
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
   return ret;
@@ -230,7 +230,7 @@ const int newContactID = -1<<9;
     }
 	};
 
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
   return [ret copy];
@@ -264,7 +264,7 @@ const int newContactID = -1<<9;
       ret = (NSData *)CFBridgingRelease(ABPersonCopyImageDataWithFormat([self recordRef], kABPersonImageFormatThumbnail));
     }
   };
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
   return ret;
@@ -282,7 +282,7 @@ const int newContactID = -1<<9;
       if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
     }
   };
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 }
 
