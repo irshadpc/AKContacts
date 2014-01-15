@@ -447,10 +447,11 @@
 {
   if (self.editing == NO)
   {
-    if ([self.navigationController respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
-      [self.navigationController dismissViewControllerAnimated: YES completion: nil];
-    else
-      [self.navigationController dismissModalViewControllerAnimated: YES];
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+    [self.navigationController dismissViewControllerAnimated: YES completion: nil];
+#else
+    [self.navigationController dismissModalViewControllerAnimated: YES];
+#endif
   }
   else
   {
