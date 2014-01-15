@@ -213,10 +213,12 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   [contactView setDelegate: self];
   UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: contactView];
   
-  if ([self.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
+  if ([self.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)]) {
     [self.navigationController presentViewController: navigationController animated: YES completion: nil];
-  else
-    [self.navigationController presentModalViewController: navigationController animated: YES];
+  }
+  else {
+    [self.navigationController presentViewController: navigationController animated: YES completion: nil];
+  }
 }
 
 - (void)presentContactPickerViewController
@@ -224,10 +226,11 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   AKContactPickerViewController *contactView = [[AKContactPickerViewController alloc] init];
   UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: contactView];
 
-  if ([self.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
-    [self.navigationController presentViewController: navigationController animated: YES completion: nil];
-  else
-    [self.navigationController presentModalViewController: navigationController animated: YES];
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+  [self.navigationController presentViewController: navigationController animated: YES completion: nil];
+#else
+  [self.navigationController presentModalViewController: navigationController animated: YES];
+#endif
 }
 
 - (void)presentAddToGroupActionSheet
@@ -289,7 +292,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
       [self.navigationItem setHidesBackButton: YES];
   };
 
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_async(dispatch_get_main_queue(), block);
 }
 
@@ -324,7 +327,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
     [self.tableView reloadData];
   };
 
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_async(dispatch_get_main_queue(), block);
 }
 
