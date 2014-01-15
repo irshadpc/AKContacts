@@ -213,12 +213,11 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   [contactView setDelegate: self];
   UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: contactView];
   
-  if ([self.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)]) {
-    [self.navigationController presentViewController: navigationController animated: YES completion: nil];
-  }
-  else {
-    [self.navigationController presentViewController: navigationController animated: YES completion: nil];
-  }
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+  [self.navigationController presentViewController: navigationController animated: YES completion: nil];
+#else
+  [self.navigationController presentModalViewController: navigationController animated: YES];
+#endif
 }
 
 - (void)presentContactPickerViewController
