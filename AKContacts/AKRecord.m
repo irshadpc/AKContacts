@@ -77,7 +77,7 @@
 		  ret = ABRecordGetRecordType(_recordRef);
 	};
 
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
   return ret;
@@ -93,7 +93,7 @@
     ret = (id)CFBridgingRelease(ABRecordCopyValue(_recordRef, property));
 	};
 
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
   return ret;
@@ -116,7 +116,7 @@
     if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
 	};
 
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 }
 
@@ -134,7 +134,7 @@
     }
   };
 
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
   return ret;
@@ -160,7 +160,7 @@
     }
   };
   
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
   return ret;
@@ -185,7 +185,7 @@
     }
   };
 
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 
   return ret;
@@ -215,7 +215,7 @@
     }
   };
   
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
   
   return ret;
@@ -282,7 +282,7 @@
     }
   };
 
-  if (is_main_queue()) block();
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);
 }
 
