@@ -130,10 +130,11 @@ NSString *const AKContactPickerViewDidDismissNotification = @"AKContactPickerVie
 
   [group revert];
 
-  if ([self.navigationController respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
-    [self.navigationController dismissViewControllerAnimated: YES completion: nil];
-  else
-    [self.navigationController dismissModalViewControllerAnimated: YES];
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+  [self.navigationController dismissViewControllerAnimated: YES completion: nil];
+#else
+  [self.navigationController dismissModalViewControllerAnimated: YES];
+#endif
 }
 
 - (void)doneButtonTouchUpInside: (id)sender
@@ -147,10 +148,11 @@ NSString *const AKContactPickerViewDidDismissNotification = @"AKContactPickerVie
 
   [[NSNotificationCenter defaultCenter] postNotificationName: AKContactPickerViewDidDismissNotification object: nil];
 
-  if ([self.navigationController respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
-    [self.navigationController dismissViewControllerAnimated: YES completion: nil];
-  else
-    [self.navigationController dismissModalViewControllerAnimated: YES];
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+  [self.navigationController dismissViewControllerAnimated: YES completion: nil];
+#else
+  [self.navigationController dismissModalViewControllerAnimated: YES];
+#endif
 }
 
 #pragma mark - Table view data source
