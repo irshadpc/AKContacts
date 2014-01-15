@@ -72,12 +72,20 @@
 
 - (void)presentModalComposeEmailViewController: (UIViewController *)viewController
 {
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+  [self.navigationController presentViewController: viewController animated: YES completion: nil];
+#else
   [self.navigationController presentModalViewController: viewController animated: YES];
+#endif
 }
 
 - (void)presentModalComposeMessageViewController: (UIViewController *)viewController
 {
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+  [self.navigationController presentViewController: viewController animated: YES completion: nil];
+#else
   [self.navigationController presentModalViewController: viewController animated: YES];
+#endif
 }
 
 - (void)presentActionSheet: (UIActionSheet *)actionSheet
@@ -87,10 +95,11 @@
 
 - (void)dismissModalViewController
 {
-  if ([self.navigationController respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
-    [self.navigationController dismissViewControllerAnimated: YES completion: nil];
-  else
-    [self.navigationController dismissModalViewControllerAnimated: YES];
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+  [self.navigationController dismissViewControllerAnimated: YES completion: nil];
+#else
+  [self.navigationController dismissModalViewControllerAnimated: YES];
+#endif
 }
 
 @end
