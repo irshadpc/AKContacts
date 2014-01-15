@@ -119,12 +119,20 @@
       if (buttonIndex == 0)
       { // Take
         [cameraUI setSourceType: UIImagePickerControllerSourceTypeCamera];
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+        [self.controller presentViewController: cameraUI animated: YES completion: nil];
+#else
         [self.controller presentModalViewController: cameraUI animated: YES];
+#endif
       }
       else if (buttonIndex == 1)
       { // Choose
         [cameraUI setSourceType: UIImagePickerControllerSourceTypePhotoLibrary];
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+        [self.controller presentViewController: cameraUI animated: YES completion: nil];
+#else
         [self.controller presentModalViewController: cameraUI animated: YES];
+#endif
       }
       else if (buttonIndex == 2)
       { // Delete
@@ -138,7 +146,11 @@
       if (buttonIndex == 0)
       { // Choose
         [cameraUI setSourceType: UIImagePickerControllerSourceTypePhotoLibrary];
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+        [self.controller presentViewController: cameraUI animated: YES completion: nil];
+#else
         [self.controller presentModalViewController: cameraUI animated: YES];
+#endif
       }
       else if (buttonIndex == 1)
       { // Delete
