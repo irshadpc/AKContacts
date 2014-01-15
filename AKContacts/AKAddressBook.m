@@ -51,7 +51,7 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 
 @interface AKAddressBook ()
 
-@property (assign, nonatomic) dispatch_source_t ab_timer;
+@property (strong, nonatomic) dispatch_source_t ab_timer;
 @property (assign, nonatomic) BOOL ab_timer_suspended;
 
 /**
@@ -135,9 +135,13 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
      */
     dispatch_queue_set_specific(dispatch_get_main_queue(), IsOnMainQueueKey, (__bridge void *)self, NULL);
 
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
     CFErrorRef error = NULL;
-    _addressBookRef = (&ABAddressBookCreateWithOptions) ? ABAddressBookCreateWithOptions(NULL, &error) : ABAddressBookCreate();
+    _addressBookRef = ABAddressBookCreateWithOptions(NULL, &error);
     if (error) NSLog(@"%ld", CFErrorGetCode(error));
+#else
+    _addressBookRef = ABAddressBookCreate();
+#endif
 
     ABAddressBookRegisterExternalChangeCallback(_addressBookRef, addressBookChanged, (__bridge void*) self);
   }
@@ -154,7 +158,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (void)requestAddressBookAccess 
 {
-  NSAssert(is_main_queue(), @"Must be dispatched on main queue");
+  NSAssert(dispatch_get_specific(IsOnMainQueueKey), @"Must be dispatched on main queue");
 
   if (&ABAddressBookGetAuthorizationStatus)
   {
@@ -222,7 +226,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (void)loadAddressBook 
 {
-  NSAssert(is_main_queue(), @"Must be dispatched on main queue");
+  NSAssert(dispatch_get_specific(IsOnMainQueueKey), @"Must be dispatched on main queue");
 
   switch (self.status) 
   {
@@ -243,9 +247,13 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     [self suspend_ab_timer];
     
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
     CFErrorRef error = NULL;
-    ABAddressBookRef addressBook = (&ABAddressBookCreateWithOptions) ? ABAddressBookCreateWithOptions(NULL, &error) : ABAddressBookCreate();
+    ABAddressBookRef addressBook = ABAddressBookCreateWithOptions(NULL, &error);
     if (error) NSLog(@"%ld", CFErrorGetCode(error));
+#else
+    ABAddressBookRef addressBook = ABAddressBookCreate();
+#endif
 
     NSDate *start = [NSDate date];
 
@@ -283,7 +291,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (void)loadSourcesWithABAddressBookRef: (ABAddressBookRef)addressBook 
 {
-  NSAssert((is_main_queue() == NO), @"Must not be dispatched on main queue");
+  NSAssert(!dispatch_get_specific(IsOnMainQueueKey), @"Must not be dispatched on main queue");
 
   [self setSources: [[NSMutableArray alloc] init]];
 
@@ -325,7 +333,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (void)loadGroupsWithABAddressBookRef: (ABAddressBookRef)addressBook 
 {  
-  NSAssert((is_main_queue() == NO), @"Must not be dispatched on main queue");
+  NSAssert(!dispatch_get_specific(IsOnMainQueueKey), @"Must not be dispatched on main queue");
 
   if (ShowGroups == NO) return;
 
@@ -379,7 +387,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (void)loadContactsWithABAddressBookRef: (ABAddressBookRef)addressBook 
 {
-  NSAssert((is_main_queue() == NO), @"Must not be dispatched on main queue");
+  NSAssert(!dispatch_get_specific(IsOnMainQueueKey), @"Must not be dispatched on main queue");
 
   NSMutableDictionary *tempContactIdentifiers = [[NSMutableDictionary alloc] init];
 
