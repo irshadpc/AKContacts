@@ -191,11 +191,11 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
   AKLabelViewController *labelView = [[AKLabelViewController alloc] initForInstantMessageServiceWithSelectedService: service andCompletionHandler: handler];
   UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: labelView];
   
-  if ([self.controller.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
-    [self.controller.navigationController presentViewController: navigationController animated: YES completion: nil];
-  else
-    [self.controller.navigationController presentModalViewController: navigationController animated: YES];
-
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+  [self.controller.navigationController presentViewController: navigationController animated: YES completion: nil];
+#else
+  [self.controller.navigationController presentModalViewController: navigationController animated: YES];
+#endif
 }
 
 #pragma mark - Class methods
@@ -274,7 +274,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     NSString *label = [AKLabel defaultLabelForABPropertyID: kABPersonInstantMessageProperty];
     [contact setValue: newService andLabel: label forMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: &identifier];
     [self setTag: identifier];
-    service = [contact valueForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: self.tag];
+    // service = [contact valueForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: self.tag];
   }
   else
   {
