@@ -672,10 +672,11 @@ static const float defaultCellHeight = 44.f;
   AKLabelViewController *labelView = [[AKLabelViewController alloc] initWithPropertyID: property andIdentifier: identifier andSelectedLabel: label andCompletionHandler: handler];
   UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: labelView];
   
-  if ([self.navigationController respondsToSelector:@selector(presentViewController:animated:completion:)])
-    [self.navigationController presentViewController: navigationController animated: YES completion: nil];
-  else
-    [self.navigationController presentModalViewController: navigationController animated: YES];
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+  [self.navigationController presentViewController: navigationController animated: YES completion: nil];
+#else
+  [self.navigationController presentModalViewController: navigationController animated: YES];
+#endif
 }
 
 #pragma mark - Button Delegate Methods
@@ -719,11 +720,12 @@ static const float defaultCellHeight = 44.f;
       if ([self.delegate respondsToSelector: @selector(modalViewDidDismissWithContactID:)])
         [self.delegate modalViewDidDismissWithContactID: self.contact.recordID];
 
-      if ([self respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
+      if ([self respondsToSelector: @selector(dismissViewControllerAnimated:completion:)]) {
         [self dismissViewControllerAnimated: YES completion: nil];
-      else
-        [self dismissModalViewControllerAnimated: YES];
-
+      }
+      else {
+        [self dismissViewControllerAnimated: YES completion: nil];
+      }
       return;
     }
   }
@@ -808,10 +810,11 @@ static const float defaultCellHeight = 44.f;
   if (self.contact.recordID == newContactID)
   {
     [[AKAddressBook sharedInstance].contacts removeObjectForKey: [NSNumber numberWithInteger: newContactID]];
-    if ([self.navigationController respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
-      [self.navigationController dismissViewControllerAnimated: YES completion: nil];
-    else
-      [self.navigationController dismissModalViewControllerAnimated: YES];
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+    [self.navigationController dismissViewControllerAnimated: YES completion: nil];
+#else
+    [self.navigationController dismissModalViewControllerAnimated: YES];
+#endif
   }
   else
   {
@@ -842,18 +845,20 @@ static const float defaultCellHeight = 44.f;
     [self.contactImage setImage: imageToSave forState: UIControlStateNormal];
   }
 
-  if ([picker respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
-    [picker dismissViewControllerAnimated: YES completion: nil];
-  else
-    [picker dismissModalViewControllerAnimated: YES];
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+  [picker dismissViewControllerAnimated: YES completion: nil];
+#else
+  [picker dismissModalViewControllerAnimated: YES];
+#endif
 }
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
 {
-  if ([picker respondsToSelector: @selector(dismissViewControllerAnimated:completion:)])
-    [picker dismissViewControllerAnimated: YES completion: nil];
-  else
-    [picker dismissModalViewControllerAnimated: YES];
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+  [picker dismissViewControllerAnimated: YES completion: nil];
+#else
+  [picker dismissModalViewControllerAnimated: YES];
+#endif
 }
 
 @end
