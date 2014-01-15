@@ -35,8 +35,6 @@ FOUNDATION_EXPORT NSString *const AddressBookDidLoadNotification;
 FOUNDATION_EXPORT const void *const IsOnMainQueueKey;
 FOUNDATION_EXPORT const BOOL ShowGroups;
 
-#define is_main_queue() ((&dispatch_get_specific) ? (dispatch_get_specific(IsOnMainQueueKey) != NULL) : (dispatch_get_current_queue() == dispatch_get_main_queue()))
-
 @class AKContact;
 @class AKGroup;
 @class AKSource;
@@ -59,9 +57,9 @@ typedef NS_ENUM(NSInteger, AddressBookStatus)
 
 @property (assign, nonatomic) ABAddressBookRef addressBookRef;
 
-@property (assign, nonatomic, readonly) dispatch_queue_t ab_queue;
+@property (strong, nonatomic, readonly) dispatch_queue_t ab_queue;
 
-@property (assign, nonatomic, readonly) dispatch_semaphore_t ab_semaphore;
+@property (strong, nonatomic, readonly) dispatch_semaphore_t ab_semaphore;
 
 @property (assign, nonatomic) NSInteger status;
 /**
