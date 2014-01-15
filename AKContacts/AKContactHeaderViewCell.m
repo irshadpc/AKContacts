@@ -84,15 +84,13 @@ static const int editModeItem = 8;
   [self setSelectionStyle: UITableViewCellSelectionStyleNone];
 
   // Clear content view
-  for (UIView *subView in [self.contentView subviews])
-  {
+  for (UIView *subView in [self.contentView subviews]) {
     [subView removeFromSuperview];
   }
 
   AKContact *contact = self.controller.contact;
   
-  if ([self.controller isEditing])
-  {
+  if ([self.controller isEditing]) {
     UITextField *textField = [[UITextField alloc] initWithFrame: CGRectZero];
     [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
     [textField setContentVerticalAlignment: UIControlContentVerticalAlignmentCenter];
@@ -104,28 +102,23 @@ static const int editModeItem = 8;
     [self setTextField: textField];
     [self.contentView addSubview: textField];
 
-    if (row == 0)
-    {
+    if (row == 0) {
       [self setAbPropertyID: kABPersonLastNameProperty];
     }
-    else if (row == 1)
-    {
+    else if (row == 1) {
       [self setAbPropertyID: kABPersonFirstNameProperty];
     }
-    else if (row == 2)
-    {
+    else if (row == 2) {
       [self setAbPropertyID: kABPersonOrganizationProperty];
     }
-    else if (row == 3)
-    {
+    else if (row == 3) {
       [self setAbPropertyID: kABPersonJobTitleProperty];
     }
     NSString *placeholder = [AKContact localizedNameForProperty: self.abPropertyID];
     [textField setPlaceholder: placeholder];
     [textField setText: [contact valueForProperty: self.abPropertyID]];
   }
-  else
-  {
+  else {
     [self.backgroundView setHidden: YES]; // Hide background in default mode
     [self.controller.tableView setSeparatorStyle: UITableViewCellSeparatorStyleNone];
 
@@ -136,8 +129,12 @@ static const int editModeItem = 8;
     [contactNameLabel setFont: [UIFont boldSystemFontOfSize: 18.f]];
     
     CGSize constraintSize = CGSizeMake(contactNameLabel.frame.size.width, MAXFLOAT);
-    CGSize contactNameSize = [contactNameLabel.text sizeWithFont: contactNameLabel.font constrainedToSize: constraintSize lineBreakMode: NSLineBreakByWordWrapping];
-    if (contactNameLabel.frame.size.height < contactNameSize.height + 5.f)
+    
+    NSDictionary *attr = @{NSFontAttributeName: contactNameLabel.font};
+    
+    CGRect contactNameSize = [contactNameLabel.text boundingRectWithSize: constraintSize options:(NSStringDrawingUsesLineFragmentOrigin|NSStringDrawingUsesFontLeading) attributes: attr context:nil];
+    
+    if (contactNameLabel.frame.size.height < contactNameSize.size.height + 5.f)
     {
       contactNameLabel.frame = CGRectMake(contactNameLabel.frame.origin.x,
                                           contactNameLabel.frame.origin.y,
@@ -153,20 +150,22 @@ static const int editModeItem = 8;
                                           contactNameLabel.frame.size.height);
     }
     NSString *contactDetails = [contact displayDetails];
-    if (contactDetails != nil)
-    {
-      UILabel *contactDetailsLabel = [[UILabel alloc] initWithFrame: CGRectMake(80.f, 36.f, 210.f, 21.f)];
+    if (contactDetails) {
+      UILabel *contactDetailsLabel = [[UILabel alloc] initWithFrame: CGRectMake(77.f, 36.f, 210.f, 21.f)];
+      [self.contentView addSubview: contactDetailsLabel];
       [contactDetailsLabel setText: contactDetails];
       [contactDetailsLabel setBackgroundColor: [UIColor clearColor]];
+      [contactDetailsLabel setFont: [UIFont systemFontOfSize: 13.f]];
       
-      UIFont *cellFont = [UIFont systemFontOfSize: 14.f];
       CGSize constraintSize = CGSizeMake(contactDetailsLabel.frame.size.width, MAXFLOAT);
-      CGSize contactDetailsSize = [contactDetails sizeWithFont: cellFont constrainedToSize: constraintSize lineBreakMode: NSLineBreakByWordWrapping];
+      
+      NSDictionary *attr = @{NSFontAttributeName: contactDetailsLabel.font};
+      CGRect contactDetailsSize = [contactNameLabel.text boundingRectWithSize: constraintSize options:(NSStringDrawingUsesLineFragmentOrigin|NSStringDrawingUsesFontLeading) attributes: attr context:nil];
       
       contactDetailsLabel.frame = CGRectMake(contactDetailsLabel.frame.origin.x,
                                              contactNameLabel.frame.origin.y + contactNameLabel.frame.size.height,
-                                             contactDetailsSize.width + 5.f,
-                                             contactDetailsSize.height);
+                                             contactDetailsSize.size.width + 5.f,
+                                             contactDetailsSize.size.height);
     }
   }
 }
