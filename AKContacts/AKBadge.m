@@ -63,11 +63,13 @@
   return self;
 }
 
-- (void) autoBadgeSizeWithText:(NSString *)text
+- (void)autoBadgeSizeWithText:(NSString *)text
 {
 	CGSize retValue;
 	CGFloat rectWidth, rectHeight;
-	CGSize stringSize = [text sizeWithFont:[UIFont boldSystemFontOfSize:12]];
+  NSDictionary *attr = @{NSFontAttributeName: [UIFont boldSystemFontOfSize:12]};
+  CGSize stringSize = [text sizeWithAttributes: attr];
+
 	CGFloat flexSpace;
 	if ([text length] >= 2)
   {
@@ -84,7 +86,7 @@
 	[self setNeedsDisplay];
 }
 
--(void) drawRoundedRectWithContext:(CGContextRef)context withRect:(CGRect)rect
+- (void)drawRoundedRectWithContext:(CGContextRef)context withRect:(CGRect)rect
 {
 	CGContextSaveGState(context);
 	
@@ -111,7 +113,7 @@
   
 }
 
--(void) drawShineWithContext:(CGContextRef)context withRect:(CGRect)rect
+- (void)drawShineWithContext:(CGContextRef)context withRect:(CGRect)rect
 {
 	CGContextSaveGState(context);
   
@@ -147,7 +149,7 @@
 	CGContextRestoreGState(context);
 }
 
--(void) drawFrameWithContext:(CGContextRef)context withRect:(CGRect)rect
+- (void)drawFrameWithContext:(CGContextRef)context withRect:(CGRect)rect
 {
 	CGFloat radius = CGRectGetMaxY(rect) * self.cornerRoundness;
 	CGFloat puffer = CGRectGetMaxY(rect) * .1f;
@@ -196,9 +198,11 @@
     {
       textFont = [UIFont systemFontOfSize: sizeOfFont];
     }
-		CGSize textSize = [self.text sizeWithFont: textFont];
-		[self.text drawAtPoint: CGPointMake((rect.size.width/2-textSize.width/2), (rect.size.height/2-textSize.height/2))
-                  withFont: textFont];
+    
+    NSDictionary *attr = @{NSFontAttributeName: textFont, NSForegroundColorAttributeName: [UIColor whiteColor]};
+    CGSize textSize = [self.text sizeWithAttributes: attr];
+    [self.text drawAtPoint: CGPointMake((rect.size.width/2-textSize.width/2), (rect.size.height/2-textSize.height/2))
+            withAttributes: attr];
 	}
 }
 
