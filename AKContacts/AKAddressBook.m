@@ -166,7 +166,9 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
         if (granted)
         {
           NSLog(@"Access granted to addressBook");
-          [self loadAddressBook];
+          dispatch_async(dispatch_get_main_queue(), ^{
+            [self loadAddressBook];
+          });
         }
         else
         {
