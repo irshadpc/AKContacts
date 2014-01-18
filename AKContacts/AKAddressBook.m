@@ -293,17 +293,20 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 {
   NSAssert(!dispatch_get_specific(IsOnMainQueueKey), @"Must not be dispatched on main queue");
 
-        if (self.status == kAddressBookLoading) return;
-    
-  [self setSources: [[NSMutableArray alloc] init]];
+  if (!self.sources) {
+    self.sources = [[NSMutableArray alloc] init];
+  }
 
   NSArray *sources = (NSArray *)CFBridgingRelease(ABAddressBookCopyArrayOfAllSources(addressBook));
 
   if ([sources count] > 1)
   {
-    AKSource *aggregatorSource = [[AKSource alloc] initWithABRecordID: kSourceAggregate];
-    [aggregatorSource setCanCreateRecord: YES];
-    [self.sources addObject: aggregatorSource];
+    AKSource *aggregatorSource = [self sourceForSourceId: kSourceAggregate];
+    if (!aggregatorSource) {
+      aggregatorSource = [[AKSource alloc] initWithABRecordID: kSourceAggregate];
+      aggregatorSource.canCreateRecord = YES;
+      [self.sources addObject: aggregatorSource];
+    }
   }
 
   ABRecordRef source = ABAddressBookCopyDefaultSource(addressBook);
@@ -318,27 +321,27 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     ABSourceType type =  [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABSourceTypeProperty)) integerValue];
     if (type == kABSourceTypeExchangeGAL) continue; // No support for Exchange Global Address List, yet
 
-    AKSource *source = [[AKSource alloc] initWithABRecordID: recordID];
-    [source setIsDefault: (defaultSourceID == recordID) ? YES : NO];
-
-    ABRecordRef tryRecordRef = ABPersonCreateInSource(source.recordRef);
-    if (tryRecordRef != nil)
-    { // Check if source supports create records
-      [source setCanCreateRecord: YES];
-      CFRelease(tryRecordRef);
+    AKSource *source = [self sourceForSourceId: recordID];
+    if (!source) {
+      source = [[AKSource alloc] initWithABRecordID: recordID];
+      source.isDefault = (defaultSourceID == recordID) ? YES : NO;
+      
+      ABRecordRef tryRecordRef = ABPersonCreateInSource(source.recordRef);
+      if (tryRecordRef != nil)
+      { // Check if source supports create records
+        source.canCreateRecord = YES;
+        CFRelease(tryRecordRef);
+      }
+      [self.sources addObject: source];
     }
-
-    [self.sources addObject: source];
   }
-  [self setSourceID: (sources.count > 1) ? kSourceAggregate : defaultSourceID];
+  self.sourceID = (sources.count > 1) ? kSourceAggregate : defaultSourceID;
 }
 
-- (void)loadGroupsWithABAddressBookRef: (ABAddressBookRef)addressBook 
-{  
+- (void)loadGroupsWithABAddressBookRef: (ABAddressBookRef)addressBook
+{
   NSAssert(!dispatch_get_specific(IsOnMainQueueKey), @"Must not be dispatched on main queue");
 
-    if (self.status == kAddressBookLoading) return;
-    
   if (ShowGroups == NO) return;
 
   [self setGroupID: kGroupAggregate];
@@ -347,8 +350,11 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     
   for (AKSource *source in self.sources)
   {
-    AKGroup *aggregateGroup = [[AKGroup alloc] initWithABRecordID: kGroupAggregate];
-    [source.groups addObject: aggregateGroup];
+    AKGroup *aggregateGroup = [source groupForGroupId: kGroupAggregate];
+    if (!aggregateGroup) {
+      aggregateGroup = [[AKGroup alloc] initWithABRecordID: kGroupAggregate];
+      [source.groups addObject: aggregateGroup];
+    }
 
     if (source.recordID < 0) 
     {
@@ -370,15 +376,19 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABGroupNameProperty));
       NSLog(@"% 3d : %@", recordID, name);
 
-      AKGroup *group = [[AKGroup alloc] initWithABRecordID: recordID];
-      [source.groups addObject: group];
+      AKGroup *group = [source groupForGroupId: recordID];
+      if (!group) {
+        group = [[AKGroup alloc] initWithABRecordID: recordID];
+        [source.groups addObject: group];
+      }
 
       NSArray *members = (NSArray *) CFBridgingRelease(ABGroupCopyArrayOfAllMembers(recordRef));
-      for (id member in members) 
+      [group.memberIDs removeAllObjects];
+      for (id member in members)
       {
         ABRecordRef record = (__bridge ABRecordRef)member;
         // From ABGRoup Reference: Groups may not contain other groups
-        if(ABRecordGetRecordType(record) == kABPersonType) 
+        if (ABRecordGetRecordType(record) == kABPersonType)
         {
           NSNumber *contactID = [NSNumber numberWithInteger: ABRecordGetRecordID(record)];
           [group.memberIDs addObject: contactID];
@@ -566,12 +576,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       break;
     }
   }
-
-  if (recordId >= 0)
-  {
-    NSAssert(ret != nil, @"Source does not exist");
-  }
-
   return ret;
 }
 
