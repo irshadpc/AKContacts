@@ -720,12 +720,11 @@ static const float defaultCellHeight = 44.f;
       if ([self.delegate respondsToSelector: @selector(modalViewDidDismissWithContactID:)])
         [self.delegate modalViewDidDismissWithContactID: self.contact.recordID];
 
-      if ([self respondsToSelector: @selector(dismissViewControllerAnimated:completion:)]) {
-        [self dismissViewControllerAnimated: YES completion: nil];
-      }
-      else {
-        [self dismissViewControllerAnimated: YES completion: nil];
-      }
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+      [self dismissViewControllerAnimated: YES completion: nil];
+#else
+      [self dismissViewControllerAnimated: YES completion: nil];
+#endif
       return;
     }
   }
