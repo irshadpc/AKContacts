@@ -314,7 +314,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   CFRelease(source);
 
   for (id obj in sources) 
-  {  
+  {
     ABRecordRef recordRef = (__bridge ABRecordRef)obj;
     ABRecordID recordID = ABRecordGetRecordID(recordRef);
 
@@ -404,6 +404,17 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   NSAssert(!dispatch_get_specific(IsOnMainQueueKey), @"Must not be dispatched on main queue");
 
   NSMutableDictionary *tempContactIdentifiers = [[NSMutableDictionary alloc] init];
+    
+    NSMutableSet *nativeContactIdentifiers = [[NSMutableSet alloc] init];
+
+    NSMutableSet *appContactIdentifiers = [[NSMutableSet alloc] init];
+    if (self.status == kAddressBookLoading)
+    {
+        for (NSString *key in self.allContactIdentifiers) {
+            NSArray *section = [self.allContactIdentifiers objectForKey: key];
+            [appContactIdentifiers addObjectsFromArray: section];
+        }
+    }
 
   NSString *sectionKeys = @"ABCDEFGHIJKLMNOPQRSTUVWXYZ#";
 
@@ -432,59 +443,42 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     
     NSArray *people = (NSArray *)CFBridgingRelease(ABAddressBookCopyArrayOfAllPeopleInSourceWithSortOrdering(addressBook,
                                                                                                              source.recordRef,ABPersonGetSortOrdering()));
-    for (id obj in people) 
+    for (id obj in people)
     {
       ABRecordRef recordRef = (__bridge ABRecordRef)obj;
 
       ABRecordID recordID = ABRecordGetRecordID(recordRef);
       NSNumber *contactID = [NSNumber numberWithInteger: recordID];
 
+        [nativeContactIdentifiers addObject: contactID];
+
       NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef));
 
-      NSLog(@"% 3d : %@", recordID, name);
+      //NSLog(@"% 3d : %@", recordID, name);
 
-      NSString *dictionaryKey = @"#";
+      NSDate *created = (NSDate *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonCreationDateProperty));
+      NSDate *modified = (NSDate *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonModificationDateProperty));
+
+        if (self.status == kAddressBookLoading) {
+
+            if ([self.dateAddressBookLoaded compare: created] == NSOrderedDescending &&
+                [self.dateAddressBookLoaded compare: modified] == NSOrderedDescending) {
+
+            }
+            else {
+                NSLog(@"%@ did change", name);
+            }
+            continue;
+        }
+
+      NSString *sectionKey = @"#";
       if ([name length] > 0)
       {
         NSString *key = [[[[name substringToIndex: 1] decomposedStringWithCanonicalMapping] substringToIndex: 1] uppercaseString];
-        if (isalpha([key characterAtIndex: 0])) dictionaryKey = key;
+        if (isalpha([key characterAtIndex: 0])) sectionKey = key;
       }
 
       [self.delegate setProgress: (CGFloat)++i / self.contactsCount];
-
-      if (self.status == kAddressBookLoading)
-      {
-          NSMutableArray *sectionArray = [self.allContactIdentifiers objectForKey: dictionaryKey];
-          NSUInteger index = [self indexOfRecordID: recordID inArray: sectionArray withAddressBookRef: addressBook];
-
-          NSString *prevKey;
-          NSUInteger prevIndex;
-          for (NSString *sectionKey in self.allContactIdentifiers)
-          {
-              NSArray *section = [self.allContactIdentifiers objectForKey: sectionKey];
-              NSUInteger index = [section indexOfObject: contactID];
-              if (index != NSNotFound) {
-                  prevKey = sectionKey;
-                  prevIndex = index;
-                  break;
-              }
-          }
-          if (![dictionaryKey isEqualToString: prevKey] || index != prevIndex)
-          {
-            if (prevKey && prevIndex != NSNotFound)
-            {
-                NSLog(@"Moving %@ from %@ %d to %@ %d", name, prevKey, prevIndex, dictionaryKey, index);
-                NSMutableArray *prevSectionArray = [self.allContactIdentifiers objectForKey: prevKey];
-                [prevSectionArray removeObjectAtIndex: prevIndex];
-                [sectionArray insertObject: contactID atIndex: index];
-            }
-          }
-          continue;
-      }
-        if (self.status == kAddressBookLoading)
-        {
-            return;
-        }
 
       NSArray *linked = CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople(recordRef));
       for (id obj in linked)
@@ -507,13 +501,21 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
         [aggregateGroup.memberIDs addObject: contactID];
       }
 
-      [self insertRecordID: recordID inDictionary: tempContactIdentifiers forKey: dictionaryKey withAddressBookRef: addressBook];
-    }
-    if (self.status == kAddressBookInitializing)
-    {
-      [self setAllContactIdentifiers: tempContactIdentifiers];
+      [self insertRecordID: recordID inDictionary: tempContactIdentifiers forKey: sectionKey withAddressBookRef: addressBook];
     }
   }
+    
+    
+    if (self.status == kAddressBookInitializing) {
+        self.allContactIdentifiers = tempContactIdentifiers;
+    }
+    else {
+        NSLog(@"Count all: %d Count native: %d", appContactIdentifiers.count, nativeContactIdentifiers.count);
+        [appContactIdentifiers minusSet: nativeContactIdentifiers];
+        NSLog(@"Deleted contactIDs: %@", [appContactIdentifiers allObjects]);
+        
+    }
+
 }
 
 - (void)insertRecordID: (ABRecordID)recordID inDictionary: (NSMutableDictionary *)dictionary forKey: (NSString *)key withAddressBookRef: (ABAddressBookRef)addressBook
