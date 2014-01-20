@@ -405,16 +405,16 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
   NSMutableDictionary *tempContactIdentifiers = [[NSMutableDictionary alloc] init];
     
-    NSMutableSet *nativeContactIdentifiers = [[NSMutableSet alloc] init];
+  NSMutableSet *nativeContactIdentifiers = [[NSMutableSet alloc] init];
 
-    NSMutableSet *appContactIdentifiers = [[NSMutableSet alloc] init];
-    if (self.status == kAddressBookLoading)
-    {
-        for (NSString *key in self.allContactIdentifiers) {
-            NSArray *section = [self.allContactIdentifiers objectForKey: key];
-            [appContactIdentifiers addObjectsFromArray: section];
-        }
+  NSMutableSet *appContactIdentifiers = [[NSMutableSet alloc] init];
+  if (self.status == kAddressBookLoading)
+  {
+    for (NSString *key in self.allContactIdentifiers) {
+      NSArray *section = [self.allContactIdentifiers objectForKey: key];
+      [appContactIdentifiers addObjectsFromArray: section];
     }
+  }
 
   NSString *sectionKeys = @"ABCDEFGHIJKLMNOPQRSTUVWXYZ#";
 
@@ -436,11 +436,12 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   // Get array of records in Address Book
   for (AKSource *source in self.sources)
   {
-    if (source.recordID < 0)
+    if (source.recordID < 0) {
       continue; // Skip custom sources
-    
+    }
+
     AKGroup *aggregateGroup = [source groupForGroupId: kGroupAggregate];
-    
+
     NSArray *people = (NSArray *)CFBridgingRelease(ABAddressBookCopyArrayOfAllPeopleInSourceWithSortOrdering(addressBook,
                                                                                                              source.recordRef,ABPersonGetSortOrdering()));
     for (id obj in people)
@@ -450,33 +451,36 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       ABRecordID recordID = ABRecordGetRecordID(recordRef);
       NSNumber *contactID = [NSNumber numberWithInteger: recordID];
 
-        [nativeContactIdentifiers addObject: contactID];
-
-      NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef));
-
-      //NSLog(@"% 3d : %@", recordID, name);
+      [nativeContactIdentifiers addObject: contactID];
 
       NSDate *created = (NSDate *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonCreationDateProperty));
       NSDate *modified = (NSDate *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonModificationDateProperty));
 
-        if (self.status == kAddressBookLoading) {
-
-            if ([self.dateAddressBookLoaded compare: created] == NSOrderedDescending &&
-                [self.dateAddressBookLoaded compare: modified] == NSOrderedDescending) {
-
-            }
-            else {
-                NSLog(@"%@ did change", name);
-            }
-            continue;
-        }
-
-      NSString *sectionKey = @"#";
-      if ([name length] > 0)
+      if (self.status == kAddressBookLoading)
       {
-        NSString *key = [[[[name substringToIndex: 1] decomposedStringWithCanonicalMapping] substringToIndex: 1] uppercaseString];
-        if (isalpha([key characterAtIndex: 0])) sectionKey = key;
+        if ([self.dateAddressBookLoaded compare: modified] != NSOrderedDescending)
+        {
+          NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef));
+          NSString *sectionKey = [AKContact sectionKeyForName: name];
+          [self moveRecordID: recordID inDictionary: self.allContactIdentifiers forKey: sectionKey withAddressBookRef: addressBook];
+
+          NSLog(@"%@ did change", name);
+        }
+        else if ([self.dateAddressBookLoaded compare: created] != NSOrderedDescending)
+        {
+          NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef));
+          NSString *sectionKey = [AKContact sectionKeyForName: name];
+          [self insertRecordID: recordID inDictionary: self.allContactIdentifiers forKey: sectionKey withAddressBookRef: addressBook];
+
+          NSLog(@"%@ is new", name);
+        }
+        continue;
       }
+
+      NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef));
+      NSString *sectionKey = [AKContact sectionKeyForName: name];
+
+      //NSLog(@"% 3d : %@", recordID, name);
 
       [self.delegate setProgress: (CGFloat)++i / self.contactsCount];
 
@@ -504,18 +508,17 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       [self insertRecordID: recordID inDictionary: tempContactIdentifiers forKey: sectionKey withAddressBookRef: addressBook];
     }
   }
-    
-    
-    if (self.status == kAddressBookInitializing) {
-        self.allContactIdentifiers = tempContactIdentifiers;
-    }
-    else {
-        NSLog(@"Count all: %d Count native: %d", appContactIdentifiers.count, nativeContactIdentifiers.count);
-        [appContactIdentifiers minusSet: nativeContactIdentifiers];
-        NSLog(@"Deleted contactIDs: %@", [appContactIdentifiers allObjects]);
-        
-    }
 
+  if (self.status == kAddressBookInitializing)
+  {
+    self.allContactIdentifiers = tempContactIdentifiers;
+  }
+  else
+  {
+    NSLog(@"Count all: %d Count native: %d", appContactIdentifiers.count, nativeContactIdentifiers.count);
+    [appContactIdentifiers minusSet: nativeContactIdentifiers];
+    NSLog(@"Deleted contactIDs: %@", [appContactIdentifiers allObjects]);
+  }
 }
 
 - (void)insertRecordID: (ABRecordID)recordID inDictionary: (NSMutableDictionary *)dictionary forKey: (NSString *)key withAddressBookRef: (ABAddressBookRef)addressBook
@@ -528,6 +531,35 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   NSUInteger index = [self indexOfRecordID: recordID inArray: tArray withAddressBookRef: addressBook];
 
   [tArray insertObject: [NSNumber numberWithInteger: recordID] atIndex: index];
+}
+
+- (void)moveRecordID: (ABRecordID)recordID inDictionary: (NSMutableDictionary *)dictionary forKey: (NSString *)key withAddressBookRef: (ABAddressBookRef)addressBook
+{
+    NSMutableArray *sectionArray = [self.allContactIdentifiers objectForKey: key];
+
+    NSUInteger prevIndex = [sectionArray indexOfObject: @(recordID)];
+    if (prevIndex != NSNotFound)
+    {   // Got lucky
+        [sectionArray removeObjectAtIndex: prevIndex];
+        NSLog(@"Stayed in same section");
+    }
+    else
+    {   // Moved to another section
+        // This is the slowest part of the algorithm, but should run seldom
+        for (NSString *key in self.allContactIdentifiers)
+        {
+            NSMutableArray *prevSectionArray = [self.allContactIdentifiers objectForKey: key];
+            prevIndex = [prevSectionArray indexOfObject: @(recordID)];
+            if (prevIndex != NSNotFound)
+            {
+                NSLog(@"Moved from section: %@", key);
+                [prevSectionArray removeObjectAtIndex: prevIndex];
+                break;
+            }
+        }
+    }
+    NSUInteger index = [self indexOfRecordID: recordID inArray: sectionArray withAddressBookRef: addressBook];
+    [sectionArray insertObject: @(recordID) atIndex: index];
 }
 
 - (NSUInteger)indexOfRecordID: (ABRecordID) recordID inArray: (NSArray *)array withAddressBookRef: (ABAddressBookRef)addressBook
