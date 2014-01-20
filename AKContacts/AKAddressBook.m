@@ -535,27 +535,26 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 {
     NSMutableArray *sectionArray = [self.allContactIdentifiers objectForKey: key];
 
-    NSUInteger prevIndex = [sectionArray indexOfObject: @(recordID)];
-    if (prevIndex != NSNotFound)
+    NSUInteger index = [sectionArray indexOfObject: @(recordID)];
+    if (index != NSNotFound)
     {   // Got lucky
-        [sectionArray removeObjectAtIndex: prevIndex];
+        [sectionArray removeObjectAtIndex: index];
         NSLog(@"Stayed in same section");
     }
     else
     {   // Moved to another section
-        // This is the slowest part of the algorithm, but should run seldom
         for (NSString *sectionKey in self.allContactIdentifiers)
-        {
+        {   // This is slow but should run seldom
             if ([sectionKey isEqualToString: key])
             {   // It's not here if the else branch is executes
                 continue;
             }
             NSMutableArray *prevSectionArray = [self.allContactIdentifiers objectForKey: key];
-            prevIndex = [prevSectionArray indexOfObject: @(recordID)];
-            if (prevIndex != NSNotFound)
+            index = [prevSectionArray indexOfObject: @(recordID)];
+            if (index != NSNotFound)
             {
                 NSLog(@"Moved from section: %@", key);
-                [prevSectionArray removeObjectAtIndex: prevIndex];
+                [prevSectionArray removeObjectAtIndex: index];
                 break;
             }
         }
