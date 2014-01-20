@@ -446,6 +446,9 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
                                                                                                              source.recordRef,ABPersonGetSortOrdering()));
     for (id obj in people)
     {
+      i += 1;
+      if (i % (self.contactsCount / 100) == 0) [self.delegate setProgress: (CGFloat)i / self.contactsCount];
+        
       ABRecordRef recordRef = (__bridge ABRecordRef)obj;
 
       ABRecordID recordID = ABRecordGetRecordID(recordRef);
@@ -458,7 +461,15 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
       if (self.status == kAddressBookLoading)
       {
-        if ([self.dateAddressBookLoaded compare: modified] != NSOrderedDescending)
+        if ([self.dateAddressBookLoaded compare: created] != NSOrderedDescending)
+        { // Created should be checked first
+          NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef));
+          NSString *sectionKey = [AKContact sectionKeyForName: name];
+          [self insertRecordID: recordID inDictionary: self.allContactIdentifiers forKey: sectionKey withAddressBookRef: addressBook];
+
+          NSLog(@"%@ is new", name);
+        }
+        else if ([self.dateAddressBookLoaded compare: modified] != NSOrderedDescending)
         {
           NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef));
           NSString *sectionKey = [AKContact sectionKeyForName: name];
@@ -467,14 +478,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
           NSLog(@"%@ did change", name);
         }
-        else if ([self.dateAddressBookLoaded compare: created] != NSOrderedDescending)
-        {
-          NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef));
-          NSString *sectionKey = [AKContact sectionKeyForName: name];
-          [self insertRecordID: recordID inDictionary: self.allContactIdentifiers forKey: sectionKey withAddressBookRef: addressBook];
-
-          NSLog(@"%@ is new", name);
-        }
         continue;
       }
 
@@ -482,8 +485,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       NSString *sectionKey = [AKContact sectionKeyForName: name];
 
       //NSLog(@"% 3d : %@", recordID, name);
-
-      [self.delegate setProgress: (CGFloat)++i / self.contactsCount];
 
       NSArray *linked = CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople(recordRef));
       for (id obj in linked)
@@ -518,7 +519,11 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   {
     NSLog(@"Count all: %d Count native: %d", appContactIdentifiers.count, nativeContactIdentifiers.count);
     [appContactIdentifiers minusSet: nativeContactIdentifiers];
-    NSLog(@"Deleted contactIDs: %@", [appContactIdentifiers allObjects]);
+    NSLog(@"Deleted contactIDs: %@", appContactIdentifiers);
+    for (NSNumber *contactID in appContactIdentifiers)
+    {   // Section is unknown
+        [self deleteRecordID: contactID.integerValue inDictionary: self.allContactIdentifiers forKey: nil withAddressBookRef: addressBook];
+    }
   }
 }
 
@@ -533,9 +538,13 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (void)deleteRecordID: (ABRecordID)recordID inDictionary: (NSMutableDictionary *)dictionary forKey: (NSString *)key withAddressBookRef: (ABAddressBookRef)addressBook
 {
-    NSMutableArray *sectionArray = [self.allContactIdentifiers objectForKey: key];
+    NSUInteger index = NSNotFound;
+    NSMutableArray *sectionArray = nil;
+    if (key) {
+        sectionArray = [self.allContactIdentifiers objectForKey: key];
+        index = [sectionArray indexOfObject: @(recordID)];
+    }
 
-    NSUInteger index = [sectionArray indexOfObject: @(recordID)];
     if (index != NSNotFound)
     {   // Got lucky
         [sectionArray removeObjectAtIndex: index];
@@ -549,11 +558,11 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
             {   // It's not here if the else branch is executes
                 continue;
             }
-            NSMutableArray *prevSectionArray = [self.allContactIdentifiers objectForKey: key];
+            NSMutableArray *prevSectionArray = [self.allContactIdentifiers objectForKey: sectionKey];
             index = [prevSectionArray indexOfObject: @(recordID)];
             if (index != NSNotFound)
             {
-                NSLog(@"Moved from section: %@", key);
+                NSLog(@"Moved from section: %@", sectionKey);
                 [prevSectionArray removeObjectAtIndex: index];
                 break;
             }
