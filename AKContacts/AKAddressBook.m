@@ -462,7 +462,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
         {
           NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef));
           NSString *sectionKey = [AKContact sectionKeyForName: name];
-          [self moveRecordID: recordID inDictionary: self.allContactIdentifiers forKey: sectionKey withAddressBookRef: addressBook];
+          [self deleteRecordID: recordID inDictionary: self.allContactIdentifiers forKey: sectionKey withAddressBookRef: addressBook];
+          [self insertRecordID: recordID inDictionary: self.allContactIdentifiers forKey: sectionKey withAddressBookRef: addressBook];
 
           NSLog(@"%@ did change", name);
         }
@@ -523,17 +524,14 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (void)insertRecordID: (ABRecordID)recordID inDictionary: (NSMutableDictionary *)dictionary forKey: (NSString *)key withAddressBookRef: (ABAddressBookRef)addressBook
 {
-  // Put the recordID in the corresponding section of contactIdentifiers
-  NSMutableArray *tArray = (NSMutableArray *)[dictionary objectForKey: key];
-  if (!tArray) tArray = (NSMutableArray *)[dictionary objectForKey: @"#"];
-  // Sort alphabetically
+  NSMutableArray *sectionArray = (NSMutableArray *)[dictionary objectForKey: key];
 
-  NSUInteger index = [self indexOfRecordID: recordID inArray: tArray withAddressBookRef: addressBook];
+  NSUInteger index = [self indexOfRecordID: recordID inArray: sectionArray withAddressBookRef: addressBook];
 
-  [tArray insertObject: [NSNumber numberWithInteger: recordID] atIndex: index];
+  [sectionArray insertObject: [NSNumber numberWithInteger: recordID] atIndex: index];
 }
 
-- (void)moveRecordID: (ABRecordID)recordID inDictionary: (NSMutableDictionary *)dictionary forKey: (NSString *)key withAddressBookRef: (ABAddressBookRef)addressBook
+- (void)deleteRecordID: (ABRecordID)recordID inDictionary: (NSMutableDictionary *)dictionary forKey: (NSString *)key withAddressBookRef: (ABAddressBookRef)addressBook
 {
     NSMutableArray *sectionArray = [self.allContactIdentifiers objectForKey: key];
 
@@ -546,8 +544,12 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     else
     {   // Moved to another section
         // This is the slowest part of the algorithm, but should run seldom
-        for (NSString *key in self.allContactIdentifiers)
+        for (NSString *sectionKey in self.allContactIdentifiers)
         {
+            if ([sectionKey isEqualToString: key])
+            {   // It's not here if the else branch is executes
+                continue;
+            }
             NSMutableArray *prevSectionArray = [self.allContactIdentifiers objectForKey: key];
             prevIndex = [prevSectionArray indexOfObject: @(recordID)];
             if (prevIndex != NSNotFound)
@@ -558,8 +560,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
             }
         }
     }
-    NSUInteger index = [self indexOfRecordID: recordID inArray: sectionArray withAddressBookRef: addressBook];
-    [sectionArray insertObject: @(recordID) atIndex: index];
 }
 
 - (NSUInteger)indexOfRecordID: (ABRecordID) recordID inArray: (NSArray *)array withAddressBookRef: (ABAddressBookRef)addressBook
