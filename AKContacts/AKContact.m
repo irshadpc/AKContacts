@@ -243,15 +243,7 @@ const int newContactID = -1<<9;
 
 - (NSString *)dictionaryKeyBySortOrdering: (ABPersonSortOrdering)ordering
 {
-  NSString *ret = @"#";
-  if ([[self displayNameByOrdering: ordering] length] > 0)
-  {
-    NSString *key = [[[[[self displayNameByOrdering: ordering] substringToIndex: 1]
-                                 decomposedStringWithCanonicalMapping] substringToIndex: 1] uppercaseString];
-    if (isalpha([key characterAtIndex: 0]))
-      ret = key;
-  }
-  return ret;
+  return [AKContact sectionKeyForName: [self displayNameByOrdering: ordering]];
 }
 
 - (NSData*)imageData
@@ -411,6 +403,17 @@ const int newContactID = -1<<9;
 + (NSString *)localizedNameForProperty: (ABPropertyID)property
 {
   return (NSString *)CFBridgingRelease(ABPersonCopyLocalizedPropertyName(property));
+}
+
++ (NSString *)sectionKeyForName: (NSString *)name
+{
+  NSString *sectionKey = @"#";
+  if ([name length] > 0)
+  {
+    NSString *key = [[[[name substringToIndex: 1] decomposedStringWithCanonicalMapping] substringToIndex: 1] uppercaseString];
+    if (isalpha([key characterAtIndex: 0])) sectionKey = key;
+  }
+  return sectionKey;
 }
 
 @end

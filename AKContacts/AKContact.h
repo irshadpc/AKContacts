@@ -70,5 +70,6 @@ FOUNDATION_EXPORT const int newContactID;
 - (void)revert;
 
 + (NSString *)localizedNameForProperty: (ABPropertyID)property;
++ (NSString *)sectionKeyForName: (NSString *)name;
 
 @end
