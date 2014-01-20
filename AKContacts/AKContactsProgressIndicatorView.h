@@ -32,6 +32,6 @@
 
 @interface AKContactsProgressIndicatorView : UIView <AKAddressBookDelegate>
 
-@property (unsafe_unretained, nonatomic) float progress;
+@property (assign, nonatomic) CGFloat progress;
 
 @end
