@@ -52,11 +52,11 @@ static const CGFloat kRadius = 11.f;
 
         CAShapeLayer *s = [CAShapeLayer layer];
         UIColor *stroke = [UIColor colorWithRed: .196f green: .3098f blue: .52f alpha: .8f];
-        [s setStrokeColor: stroke.CGColor];
-        [s setLineWidth: kStrokeWidth];
-        [s setFillColor: [UIColor clearColor].CGColor];
+        s.strokeColor = stroke.CGColor;
+        s.lineWidth = kStrokeWidth;
+        s.fillColor = [UIColor clearColor].CGColor;
         [[self layer] addSublayer: s];
-        [self setSpinLayer:s];
+        self.spinLayer = s;
         [[AKAddressBook sharedInstance] setDelegate: self];
 
         [self setProgress: 0.f];
@@ -73,10 +73,12 @@ static const CGFloat kRadius = 11.f;
 {
     _progress = progress;
 
-    [CATransaction begin];
-    [CATransaction setDisableActions: YES];
-    [[self spinLayer] setStrokeEnd: _progress];
-    [CATransaction commit];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [CATransaction begin];
+        [CATransaction setDisableActions: YES];
+        [[self spinLayer] setStrokeEnd: _progress];
+        [CATransaction commit];
+    });
 
     if (progress == 1.f)
     {
