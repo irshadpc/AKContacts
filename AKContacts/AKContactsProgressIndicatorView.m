@@ -35,7 +35,7 @@ static const CGFloat kRadius = 11.f;
 
 @interface AKContactsProgressIndicatorView ()
 
-@property (assign, nonatomic) CAShapeLayer *spinLayer;
+@property (strong, nonatomic) CAShapeLayer *spinLayer;
 
 @end
 
@@ -50,41 +50,26 @@ static const CGFloat kRadius = 11.f;
         [activity startAnimating];
         [self addSubview: activity];
 
-        CAShapeLayer *s = [CAShapeLayer layer];
+        _spinLayer = [CAShapeLayer layer];
         UIColor *stroke = [UIColor colorWithRed: .196f green: .3098f blue: .52f alpha: .8f];
-        s.strokeColor = stroke.CGColor;
-        s.lineWidth = kStrokeWidth;
-        s.fillColor = [UIColor clearColor].CGColor;
-        [[self layer] addSublayer: s];
-        self.spinLayer = s;
-        [[AKAddressBook sharedInstance] setDelegate: self];
+        _spinLayer.strokeColor = stroke.CGColor;
+        _spinLayer.lineWidth = kStrokeWidth;
+        _spinLayer.fillColor = [UIColor clearColor].CGColor;
+        _spinLayer.strokeEnd = 0.f;
+        [[self layer] addSublayer: _spinLayer];
+        [AKAddressBook sharedInstance].delegate = self;
 
-        [self setProgress: 0.f];
+        [self addObserver: self forKeyPath: @"progressCurrent" options: NSKeyValueObservingOptionNew context: NULL];
+        _progressTotal = 0;
+        _progressCurrent = 0;
     }
     return self;
 }
 
 - (void)dealloc
 {
-  [[AKAddressBook sharedInstance] setDelegate: nil];
-}
-
-- (void)setProgress: (CGFloat)progress
-{
-    _progress = progress;
-
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [CATransaction begin];
-        [CATransaction setDisableActions: YES];
-        [[self spinLayer] setStrokeEnd: _progress];
-        [CATransaction commit];
-    });
-
-    if (progress == 1.f)
-    {
-        [[AKAddressBook sharedInstance] setDelegate: nil];
-        [self removeFromSuperview];
-    }
+  [self removeObserver: self forKeyPath: @"progressCurrent"];
+  [AKAddressBook sharedInstance].delegate = nil;
 }
 
 - (void)layoutSubviews
@@ -97,6 +82,25 @@ static const CGFloat kRadius = 11.f;
                                                          startAngle: -M_PI_2 endAngle:(2.0 * M_PI - M_PI_2) clockwise: YES];
     [[self spinLayer] setPath: [outerPath CGPath]];
     [[self spinLayer] setFrame: [self bounds]];
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+    if (self.progressCurrent % (self.progressTotal / 100) == 0)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [CATransaction begin];
+            [CATransaction setDisableActions: YES];
+            [[self spinLayer] setStrokeEnd: (CGFloat)self.progressCurrent / self.progressTotal];
+            [CATransaction commit];
+        });
+        
+        if (self.progressCurrent == 1.f)
+        {
+            [[AKAddressBook sharedInstance] setDelegate: nil];
+            [self removeFromSuperview];
+        }
+    }
 }
 
 @end

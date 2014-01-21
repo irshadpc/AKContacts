@@ -32,6 +32,7 @@
 
 @interface AKContactsProgressIndicatorView : UIView <AKAddressBookDelegate>
 
-@property (assign, nonatomic) CGFloat progress;
+@property (assign, nonatomic) NSUInteger progressTotal;
+@property (assign, nonatomic) NSUInteger progressCurrent;
 
 @end
