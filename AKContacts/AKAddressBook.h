@@ -48,7 +48,8 @@ typedef NS_ENUM(NSInteger, AddressBookStatus)
 };
 
 @protocol AKAddressBookDelegate <NSObject>
-- (void)setProgress: (CGFloat)progress;
+- (void)setProgressTotal: (NSUInteger)progressTotal;
+- (void)setProgressCurrent: (NSUInteger)progressCurrent;
 @end
 
 @interface AKAddressBook : NSObject
