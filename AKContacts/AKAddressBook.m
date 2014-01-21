@@ -432,6 +432,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
   [self setContactsCount: ABAddressBookGetPersonCount(addressBook)];
   NSLog(@"Number of contacts: %d", self.contactsCount);
+  [self.delegate setProgressTotal: self.contactsCount];
   NSInteger i = 0;
   // Get array of records in Address Book
   for (AKSource *source in self.sources)
@@ -446,9 +447,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
                                                                                                              source.recordRef,ABPersonGetSortOrdering()));
     for (id obj in people)
     {
-      i += 1;
-      if (i % (self.contactsCount / 100) == 0) [self.delegate setProgress: (CGFloat)i / self.contactsCount];
-        
+      [self.delegate setProgressCurrent: ++i];
+
       ABRecordRef recordRef = (__bridge ABRecordRef)obj;
 
       ABRecordID recordID = ABRecordGetRecordID(recordRef);
@@ -517,7 +517,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   }
   else
   {
-    NSLog(@"Count all: %d Count native: %d", appContactIdentifiers.count, nativeContactIdentifiers.count);
     [appContactIdentifiers minusSet: nativeContactIdentifiers];
     NSLog(@"Deleted contactIDs: %@", appContactIdentifiers);
     for (NSNumber *contactID in appContactIdentifiers)
