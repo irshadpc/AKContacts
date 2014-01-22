@@ -86,7 +86,8 @@ static const CGFloat kRadius = 11.f;
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    if (self.progressCurrent % (self.progressTotal / 100) == 0)
+    NSUInteger denom = (self.progressTotal > 100) ? self.progressTotal / 100 : self.progressTotal;
+    if (self.progressCurrent % denom == 0)
     {
         dispatch_async(dispatch_get_main_queue(), ^{
             [CATransaction begin];
