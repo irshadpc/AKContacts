@@ -30,8 +30,6 @@
 #import <AddressBook/AddressBook.h>
 #import <AddressBookUI/AddressBookUI.h>
 
-FOUNDATION_EXPORT NSString *const AddressBookDidInitializeNotification;
-FOUNDATION_EXPORT NSString *const AddressBookDidLoadNotification;
 FOUNDATION_EXPORT const void *const IsOnMainQueueKey;
 FOUNDATION_EXPORT const BOOL ShowGroups;
 
@@ -84,6 +82,9 @@ typedef NS_ENUM(NSInteger, AddressBookStatus)
 @property (assign, nonatomic) BOOL needReload;
 
 @property (assign, nonatomic) NSInteger contactsCount;
+
+@property (assign, nonatomic) ABPersonSortOrdering sortOrdering;
+@property (assign, nonatomic) ABPersonCompositeNameFormat compositeNameFormat;
 
 + (AKAddressBook *)sharedInstance;
 - (void)requestAddressBookAccess;

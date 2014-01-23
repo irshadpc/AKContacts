@@ -33,9 +33,6 @@
 
 NSString *const AKAddressBookQueueName = @"AKAddressBookQueue";
 
-NSString *const AddressBookDidInitializeNotification = @"AddressBookDidInitializeNotification";
-NSString *const AddressBookDidLoadNotification = @"AddressBookDidLoadNotification";
-
 const BOOL ShowGroups = YES;
 
 static const NSTimeInterval UnusedContactsReleaseTime = 600;
@@ -231,12 +228,12 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   switch (self.status) 
   {
     case kAddressBookOffline:
-      [self setStatus: kAddressBookInitializing];
+      self.status = kAddressBookInitializing;
       break;
     case kAddressBookOnline:
       // self.addressBookRef needs a revert to recognize external changes
       ABAddressBookRevert(self.addressBookRef);
-      [self setStatus: kAddressBookLoading];
+      self.status = kAddressBookLoading;
       break;
   }
 
@@ -257,6 +254,9 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     NSDate *start = [NSDate date];
 
+    self.sortOrdering = ABPersonGetSortOrdering();
+    self.compositeNameFormat = ABPersonGetCompositeNameFormatForRecord(NULL);
+
     // Do not change order of loading
     [self loadSourcesWithABAddressBookRef: addressBook];
 
@@ -265,24 +265,12 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     [self loadContactsWithABAddressBookRef: addressBook];
 
     CFRelease(addressBook);
-    
-    [self setDateAddressBookLoaded: [NSDate date]];
+
+    self.dateAddressBookLoaded = [NSDate date];
     NSLog(@"Address book loaded in %.2f", fabs([self.dateAddressBookLoaded timeIntervalSinceDate: start]));
 
-    if (self.status == kAddressBookInitializing) 
-    {
-      [self setStatus: kAddressBookOnline];
-      dispatch_async(dispatch_get_main_queue(), ^{
-        [[NSNotificationCenter defaultCenter] postNotificationName: AddressBookDidInitializeNotification object: nil];
-      });
-    }
-    else if (self.status == kAddressBookLoading) 
-    {
-      [self setStatus: kAddressBookOnline];
-    }
-    dispatch_async(dispatch_get_main_queue(), ^{
-      [[NSNotificationCenter defaultCenter] postNotificationName: AddressBookDidLoadNotification object: nil];
-    });
+    self.status = kAddressBookOnline;
+
     [self resume_ab_timer];
   };
 
@@ -390,8 +378,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
         // From ABGRoup Reference: Groups may not contain other groups
         if (ABRecordGetRecordType(record) == kABPersonType)
         {
-          NSNumber *contactID = [NSNumber numberWithInteger: ABRecordGetRecordID(record)];
-          [group.memberIDs addObject: contactID];
+          [group.memberIDs addObject: @(ABRecordGetRecordID(record))];
         }
       }
     }
@@ -462,7 +449,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       if (self.status == kAddressBookLoading)
       {
         if ([self.dateAddressBookLoaded compare: created] != NSOrderedDescending)
-        { // Created should be checked first
+        { // Created should be compared first
           NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef));
           NSString *sectionKey = [AKContact sectionKeyForName: name];
           [self insertRecordID: recordID inDictionary: self.allContactIdentifiers forKey: sectionKey withAddressBookRef: addressBook];
