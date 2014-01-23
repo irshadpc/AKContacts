@@ -51,13 +51,14 @@
         for (NSString *key in keyArray)
         {
             NSArray *arrayForKey = [akAddressBook.allContactIdentifiers objectForKey: key];
-            NSMutableArray *sectionArray = [NSKeyedUnarchiver unarchiveObjectWithData: [NSKeyedArchiver archivedDataWithRootObject: arrayForKey]]; // Mutable deep copy
-            
+            NSMutableArray *sectionArray = [arrayForKey mutableCopy];
+
             NSMutableArray *recordsToRemove = [[NSMutableArray alloc] init];
             for (NSNumber *contactID in sectionArray)
             {
-                if (groupMembers != nil && [groupMembers member: contactID] == nil)
-                    [recordsToRemove addObject: contactID];
+              if (groupMembers != nil && ![groupMembers member: contactID]) {
+                [recordsToRemove addObject: contactID];
+              }
             }
             [sectionArray removeObjectsInArray: recordsToRemove];
             if ([sectionArray count] > 0)
