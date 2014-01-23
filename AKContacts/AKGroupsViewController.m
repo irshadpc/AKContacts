@@ -90,11 +90,14 @@ static const float defaultCellHeight = 44.f;
                                                                              action: @selector(addButtonTouchUpInside:)];
   [self.navigationItem setRightBarButtonItem: addButton];
 
-  [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AddressBookDidLoadNotification object: nil];
-
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AKGroupPickerViewDidDismissNotification object: nil];
 
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AKContactPickerViewDidDismissNotification object: nil];
+
+  [[AKAddressBook sharedInstance] addObserver: self
+                                   forKeyPath: @"status"
+                                      options: NSKeyValueObservingOptionNew
+                                      context: nil];
 }
 
 - (void)setEditing:(BOOL)editing animated:(BOOL)animate
@@ -452,6 +455,18 @@ static const float defaultCellHeight = 44.f;
   [tableView deselectRowAtIndexPath: indexPath animated: YES];
 }
 
+#pragma mark - Key-Value Observing
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+  // This is not dispatched on main queue
+  
+  if (object == [AKAddressBook sharedInstance] && // Comparing the address
+      [keyPath isEqualToString: @"status"])
+  { // Status property of AKAddressBook changed
+    [self reloadTableViewData];
+  }
+}
+
 #pragma mark - Memory management
 
 - (void)didReceiveMemoryWarning
@@ -464,6 +479,7 @@ static const float defaultCellHeight = 44.f;
 
 - (void)dealloc
 {
+  [[AKAddressBook sharedInstance] removeObserver: self forKeyPath: @"status"];
   [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 
