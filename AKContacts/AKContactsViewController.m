@@ -114,19 +114,17 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AKContactPickerViewDidDismissNotification object: nil];
 
-  [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AddressBookDidLoadNotification object: nil];
-    
+  [[AKAddressBook sharedInstance] addObserver: self
+                                   forKeyPath: @"status"
+                                      options: NSKeyValueObservingOptionNew
+                                      context: nil];
+  
   [self.dataSource resetSearch];
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
   [super viewWillAppear:animated];
-
-  [[AKAddressBook sharedInstance] addObserver: self
-                                   forKeyPath: @"status"
-                                      options: NSKeyValueObservingOptionNew
-                                      context: nil];
 
   [self toggleBackButton];
   
@@ -159,7 +157,6 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 {
   [super viewWillDisappear:animated];
 
-  [[AKAddressBook sharedInstance] removeObserver: self forKeyPath: @"status"];
   [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillShowNotification object: nil];
   [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillHideNotification object: nil];
 }
@@ -188,7 +185,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   id rootViewController = [self.navigationController.viewControllers objectAtIndex: 0];
   
   if ([rootViewController isKindOfClass: [AKGroupsViewController class]])
-  {
+  { // Update group count badge
     [(AKGroupsViewController *)rootViewController reloadTableViewData];
   }
 }
@@ -255,9 +252,9 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
   if (object == [AKAddressBook sharedInstance] && // Comparing the address
       [keyPath isEqualToString: @"status"])
-  {
-    // Status property of AKAddressBook changed
+  { // Status property of AKAddressBook changed
     [self reloadTableViewData];
+
     [self toggleBackButton];
   }
 }
@@ -313,7 +310,9 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
     [self.dataSource resetSearch];
 
+    CGPoint offset = self.tableView.contentOffset;
     [self.tableView reloadData];
+    self.tableView.contentOffset = offset;
   };
 
   if (dispatch_get_specific(IsOnMainQueueKey)) block();
@@ -640,6 +639,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
 - (void)dealloc
 {
+  [[AKAddressBook sharedInstance] removeObserver: self forKeyPath: @"status"];
   [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 
