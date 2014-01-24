@@ -91,9 +91,9 @@ const int newContactID = -1<<9;
 - (NSString *)sortName
 {
     NSString *ret = nil;
-    NSInteger kind = [(NSNumber *)[self valueForProperty: kABPersonKindProperty] integerValue];
+    NSNumber *kind = (NSNumber *)[self valueForProperty: kABPersonKindProperty];
 
-    if (kind == [(NSNumber *)kABPersonKindPerson integerValue])
+    if ([kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
     {
         NSString *first = [self valueForProperty: kABPersonSortByFirstName];
         NSString *last = [self valueForProperty: kABPersonSortByLastName];
@@ -107,7 +107,7 @@ const int newContactID = -1<<9;
             ret = [NSString stringWithFormat: @"%@%@%@", last, self.nameDelimiter, first];
         }
     }
-    else if (kind == [(NSNumber *)kABPersonKindOrganization integerValue])
+    else if ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
     {
         ret = [self valueForProperty: kABPersonOrganizationProperty];
     }
@@ -158,9 +158,9 @@ const int newContactID = -1<<9;
 - (NSString *)phoneticName
 {
   NSString *ret = nil;
-  NSInteger kind = [(NSNumber *)[self valueForProperty: kABPersonKindProperty] integerValue];
+  NSNumber *kind = (NSNumber *)[self valueForProperty: kABPersonKindProperty];
 
-  if (kind == [(NSNumber *)kABPersonKindPerson integerValue])
+  if ([kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
   {
     NSMutableArray *array = [[NSMutableArray alloc] init];
 
@@ -183,7 +183,7 @@ const int newContactID = -1<<9;
 
     ret = [array componentsJoinedByString: self.nameDelimiter];
   }
-  else if (kind == [(NSNumber *)kABPersonKindOrganization integerValue])
+  else if ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
   {
     ret = [self valueForProperty: kABPersonOrganizationProperty];
   }
@@ -207,13 +207,13 @@ const int newContactID = -1<<9;
 - (NSString *)displayDetails
 {
   NSString *ret = nil;
-  NSInteger kind = [(NSNumber *)[self valueForProperty: kABPersonKindProperty] integerValue];
+  NSNumber *kind = (NSNumber *)[self valueForProperty: kABPersonKindProperty];
   
-  if (kind == [(NSNumber *)kABPersonKindOrganization integerValue])
+  if ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
   {
     ret = [self valueForProperty: kABPersonDepartmentProperty];
   }
-  else if (kind == [(NSNumber *)kABPersonKindPerson integerValue])
+  else if ([kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
   {
     NSMutableArray *array = [[NSMutableArray alloc] init];
 
@@ -302,8 +302,8 @@ const int newContactID = -1<<9;
   }
   else
   {
-    NSInteger kind = [(NSNumber *)[self valueForProperty: kABPersonKindProperty] integerValue];
-    NSString *imageName = (kind == [(NSNumber *)kABPersonKindOrganization integerValue]) ? @"Company.png" : @"Contact.png";
+    NSNumber *kind = (NSNumber *)[self valueForProperty: kABPersonKindProperty];
+    NSString *imageName = ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization]) ? @"Company.png" : @"Contact.png";
     ret = [UIImage imageNamed: imageName];
   }
   return ret;
