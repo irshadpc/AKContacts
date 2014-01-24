@@ -37,25 +37,15 @@ FOUNDATION_EXPORT const int newContactID;
 
 - (ABRecordRef)recordRef;
 /**
- * Return full name using system default naming convention
- * eg: first, last or last, first
- **/
-- (NSString *)name;
-
-/**
  * Return displayName sans diacritics and whitespace
  **/
 - (NSString *)searchName;
-- (NSString *)displayNameByOrdering: (ABPersonSortOrdering)ordering;
-- (NSString *)phoneticNameByOrdering: (ABPersonSortOrdering)ordering;
+- (NSString *)sortName;
+- (NSString *)compositeName;
+- (NSString *)phoneticName;
+- (NSString *)nameDelimiter;
 - (NSString *)displayDetails;
 - (NSArray *)linkedContactIDs;
-
-/**
- * Return the lookup alphabet letter for the name of the contact
- **/
-- (NSString *)dictionaryKey;
-- (NSString *)dictionaryKeyBySortOrdering: (ABPersonSortOrdering)ordering;
 
 - (NSData *)imageData;
 - (void)setImageData: (NSData *)data;
