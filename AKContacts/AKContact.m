@@ -378,13 +378,13 @@ const int newContactID = -1<<9;
     
     NSString *sectionKey = [AKContact sectionKeyForName: [self sortName]];
 
-    [addressBook insertRecordID: self.recordID inDictionary: [addressBook allContactIdentifiers] forKey: sectionKey withAddressBookRef: addressBookRef];
-    
+    [addressBook insertRecordID: self.recordID withKey: sectionKey andAddressBookRef: addressBookRef];
+
     if (addressBook.groupID >= 0)
     { // Add to group
       AKSource *source = [addressBook sourceForSourceId: addressBook.sourceID];
       AKGroup *group = [source groupForGroupId: addressBook.groupID];
-      [group addMemberWithID: self.recordID];
+      [group insertMemberWithID: self.recordID];
     }
   }
 }
