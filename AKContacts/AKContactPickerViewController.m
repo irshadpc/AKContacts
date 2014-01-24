@@ -236,7 +236,7 @@ NSString *const AKContactPickerViewDidDismissNotification = @"AKContactPickerVie
   {
     [cell setAccessoryType: UITableViewCellAccessoryCheckmark];
     
-    [group addMemberWithID: contactID];
+    [group insertMemberWithID: contactID];
   }
   else
   {

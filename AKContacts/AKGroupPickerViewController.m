@@ -169,7 +169,7 @@ NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDid
   {
     [cell setAccessoryType: UITableViewCellAccessoryCheckmark];
 
-    [group addMemberWithID: self.contactID];
+    [group insertMemberWithID: self.contactID];
   }
   else
   {
