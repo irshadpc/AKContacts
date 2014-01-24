@@ -83,8 +83,7 @@ typedef NS_ENUM(NSInteger, AddressBookStatus)
 
 @property (assign, nonatomic) NSInteger contactsCount;
 
-@property (assign, nonatomic) ABPersonSortOrdering sortOrdering;
-@property (assign, nonatomic) ABPersonCompositeNameFormat compositeNameFormat;
+@property (assign, nonatomic, readonly) ABPersonSortOrdering sortOrdering;
 
 + (AKAddressBook *)sharedInstance;
 - (void)requestAddressBookAccess;
