@@ -90,7 +90,7 @@ NSString *const DefaultsKeyGroups = @"Groups";
   }
 }
 
-- (void)addMemberWithID: (ABRecordID)recordID
+- (void)insertMemberWithID: (ABRecordID)recordID
 {
   dispatch_block_t block = ^{
     
