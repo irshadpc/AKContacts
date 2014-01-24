@@ -77,7 +77,7 @@
   AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: recordID];
 
   [self.textLabel setText: [source typeName]];
-  [self.detailTextLabel setText: [contact name]];
+  [self.detailTextLabel setText: contact.compositeName];
 }
 
 @end

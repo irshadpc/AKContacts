@@ -197,7 +197,8 @@ NSString *const AKContactPickerViewDidDismissNotification = @"AKContactPickerVie
   [cell setSelectionStyle: UITableViewCellSelectionStyleBlue];
 
   [cell setAccessoryType: ([group.memberIDs member: [NSNumber numberWithInteger: contact.recordID]]) ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone];
-  if (![contact name])
+  NSString *compositeName = contact.compositeName;
+  if (!compositeName)
   {
     cell.textLabel.font = [UIFont italicSystemFontOfSize: 20.f];
     cell.textLabel.text = NSLocalizedString(@"No Name", @"");
@@ -205,7 +206,7 @@ NSString *const AKContactPickerViewDidDismissNotification = @"AKContactPickerVie
   else
   {
     cell.textLabel.font = [UIFont boldSystemFontOfSize: 20.f];
-    cell.textLabel.text = [contact name];
+    cell.textLabel.text = compositeName;
   }
 
   return (UITableViewCell *)cell;

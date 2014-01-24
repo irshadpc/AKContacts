@@ -68,7 +68,8 @@
   [self.textLabel setFont: [UIFont systemFontOfSize: 20.f]];
 
   [self setAccessoryView: nil];
-  if (![contact name])
+  NSString *compositeName = contact.compositeName;
+  if (!compositeName)
   {
     [self.textLabel setFont: [UIFont italicSystemFontOfSize: 20.f]];
     [self.textLabel setText: NSLocalizedString(@"No Name", @"")];
@@ -77,19 +78,19 @@
   {
     if ([self.textLabel respondsToSelector:@selector(setAttributedText:)])
     {
-      NSMutableAttributedString *text = [[NSMutableAttributedString alloc] initWithString: contact.name];
+      NSMutableAttributedString *text = [[NSMutableAttributedString alloc] initWithString: compositeName];
       [text addAttribute: NSFontAttributeName value: [UIFont systemFontOfSize: 20.f] range: NSMakeRange(0, text.length - 1)];
       NSString *lastName = [contact valueForProperty: kABPersonLastNameProperty];
       if (lastName != nil)
       {
-        NSRange range = [contact.name rangeOfString: lastName];
+        NSRange range = [compositeName rangeOfString: lastName];
         [text addAttribute: NSFontAttributeName value: [UIFont boldSystemFontOfSize: 20.f] range: range];
       }
       [self.textLabel setAttributedText: text];
     }
     else
     {
-      [self.textLabel setText: contact.name];
+      [self.textLabel setText: compositeName];
     }
   }
 }
