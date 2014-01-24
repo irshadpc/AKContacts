@@ -58,6 +58,8 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
  */
 @property (strong, nonatomic) NSDate *dateAddressBookLoaded;
 
+@property (assign, nonatomic) ABPersonSortOrdering sortOrdering;
+
 -(void)reloadAddressBook;
 -(void)loadSourcesWithABAddressBookRef: (ABAddressBookRef)addressBook;
 -(void)loadGroupsWithABAddressBookRef: (ABAddressBookRef)addressBook;
@@ -94,10 +96,10 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   return akAddressBook;
 }
 
-- (id)init 
+- (id)init
 {
   self = [super init];
-  if (self) 
+  if (self)
   {
     _ab_queue = dispatch_queue_create([AKAddressBookQueueName UTF8String], NULL);
 
@@ -139,6 +141,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 #else
     _addressBookRef = ABAddressBookCreate();
 #endif
+
+    _sortOrdering = ABPersonGetSortOrdering();
 
     ABAddressBookRegisterExternalChangeCallback(_addressBookRef, addressBookChanged, (__bridge void*) self);
   }
@@ -253,9 +257,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 #endif
 
     NSDate *start = [NSDate date];
-
-    self.sortOrdering = ABPersonGetSortOrdering();
-    self.compositeNameFormat = ABPersonGetCompositeNameFormatForRecord(NULL);
 
     // Do not change order of loading
     [self loadSourcesWithABAddressBookRef: addressBook];
@@ -391,7 +392,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   NSAssert(!dispatch_get_specific(IsOnMainQueueKey), @"Must not be dispatched on main queue");
 
   NSMutableDictionary *tempContactIdentifiers = [[NSMutableDictionary alloc] init];
-    
+
   NSMutableSet *nativeContactIdentifiers = [[NSMutableSet alloc] init];
 
   NSMutableSet *appContactIdentifiers = [[NSMutableSet alloc] init];
@@ -430,8 +431,9 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     AKGroup *aggregateGroup = [source groupForGroupId: kGroupAggregate];
 
-    NSArray *people = (NSArray *)CFBridgingRelease(ABAddressBookCopyArrayOfAllPeopleInSourceWithSortOrdering(addressBook,
-                                                                                                             source.recordRef,ABPersonGetSortOrdering()));
+    // ABAddressBookCopyArrayOfAllPeopleInSource calls ABAddressBookCopyArrayOfAllPeopleInSourceWithSortOrdering
+    // Perfomance is not affected by which of the two is called
+    NSArray *people = (NSArray *)CFBridgingRelease(ABAddressBookCopyArrayOfAllPeopleInSourceWithSortOrdering(addressBook, source.recordRef, self.sortOrdering));
     for (id obj in people)
     {
       [self.delegate setProgressCurrent: ++i];
@@ -468,10 +470,9 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
         continue;
       }
 
-      NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef));
-      NSString *sectionKey = [AKContact sectionKeyForName: name];
+      NSString *sectionKey = [AKContact sectionKeyForName: [self nameToDetermineSectionForRecordRef: recordRef]];
 
-      //NSLog(@"% 3d : %@", recordID, name);
+      NSLog(@"% 3d : %@", recordID, CFBridgingRelease(ABRecordCopyCompositeName(recordRef)));
 
       NSArray *linked = CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople(recordRef));
       for (id obj in linked)
@@ -516,7 +517,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 - (void)insertRecordID: (ABRecordID)recordID inDictionary: (NSMutableDictionary *)dictionary forKey: (NSString *)key withAddressBookRef: (ABAddressBookRef)addressBook
 {
   NSMutableArray *sectionArray = (NSMutableArray *)[dictionary objectForKey: key];
-
+    
   NSUInteger index = [self indexOfRecordID: recordID inArray: sectionArray withAddressBookRef: addressBook];
 
   [sectionArray insertObject: [NSNumber numberWithInteger: recordID] atIndex: index];
@@ -558,20 +559,110 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (NSUInteger)indexOfRecordID: (ABRecordID) recordID inArray: (NSArray *)array withAddressBookRef: (ABAddressBookRef)addressBook
 {
-  NSComparator comparator = ^(id obj1, id obj2) {
-      ABRecordRef recordRef_1 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj1 integerValue]);
-      ABRecordRef recordRef_2 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj2 integerValue]);
-        
-      NSString *name_1 = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef_1));
-      NSString *name_2 = (NSString *)CFBridgingRelease(ABRecordCopyCompositeName(recordRef_2));
-        
-      return (NSComparisonResult)[name_1 compare: name_2];
-  };
+    NSInteger organization = [(NSNumber *)kABPersonKindOrganization integerValue];
+    NSInteger person = [(NSNumber *)kABPersonKindPerson integerValue];
+
+    static NSComparator comparator = nil;
+    if (!comparator) {
+        comparator = ^NSComparisonResult(id obj1, id obj2) {
+            ABRecordRef recordRef1 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj1 integerValue]);
+            ABRecordRef recordRef2 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj2 integerValue]);
+
+            NSInteger kind1 = [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef1, kABPersonKindProperty)) integerValue];
+            NSInteger kind2 = [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef2, kABPersonKindProperty)) integerValue];
+
+            ABPropertyID prop1 = (self.sortOrdering == kABPersonSortByFirstName) ? kABPersonFirstNameProperty : kABPersonLastNameProperty;
+            ABPropertyID prop2 = (self.sortOrdering == kABPersonSortByFirstName) ? kABPersonFirstNameProperty : kABPersonLastNameProperty;
+            
+            NSString *elem1, *elem2;
+            NSComparisonResult ret = NSOrderedSame;
+
+            if (kind1 == person && kind2 == person)
+            {
+                elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
+                elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
+
+                ret = [elem1 localizedCaseInsensitiveCompare: elem2];
+                if (ret == NSOrderedSame)
+                {
+                    prop1 = prop2 = (self.sortOrdering == kABPersonSortByFirstName) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
+
+                    elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
+                    elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
+
+                    ret = [elem1 localizedCaseInsensitiveCompare: elem2];
+                }
+            }
+            else if (kind1 == person && kind2 == organization)
+            {
+                prop2 = kABPersonOrganizationProperty;
+
+                elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
+                elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
+
+                ret = [elem1 localizedCaseInsensitiveCompare: elem2];
+                if (ret == NSOrderedSame)
+                {
+                    prop1 = (self.sortOrdering == kABPersonSortByFirstName) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
+
+                    elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
+                    ret = [elem1 localizedCaseInsensitiveCompare: elem2];
+                }
+            }
+            else if (kind1 == organization && kind2 == person)
+            {
+                prop1 = kABPersonOrganizationProperty;
+
+                elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
+                elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
+
+                ret = [elem1 localizedCaseInsensitiveCompare: elem2];
+                if (ret == NSOrderedSame)
+                {
+                    prop2 = (self.sortOrdering == kABPersonSortByFirstName) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
+
+                    elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
+                    ret = [elem1 localizedCaseInsensitiveCompare: elem2];
+                }
+            }
+            else if (kind1 == organization && kind2 == organization)
+            {
+                prop1 = prop2 = kABPersonOrganizationProperty;
+
+                elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
+                elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
+
+                ret = [elem1 localizedCaseInsensitiveCompare: elem2];
+            }
+            return ret;
+        };
+    }
 
   return [array indexOfObject: [NSNumber numberWithInteger: recordID]
                 inSortedRange: (NSRange){0, array.count}
                       options: NSBinarySearchingInsertionIndex
               usingComparator: comparator];
+}
+
+- (NSString *)nameToDetermineSectionForRecordRef: (ABRecordRef)recordRef
+{
+    NSString *ret;
+    NSInteger kind = [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonKindProperty)) integerValue];
+    if (kind == [(NSNumber *)kABPersonKindPerson integerValue])
+    {
+        ABPropertyID property = (self.sortOrdering == kABPersonSortByFirstName) ? kABPersonFirstNameProperty : kABPersonLastNameProperty;
+        ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, property));
+        if (!ret.length)
+        {
+            property = (property == kABPersonFirstNameProperty) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
+            ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, property));
+        }
+    }
+    else if (kind == [(NSNumber *)kABPersonKindOrganization integerValue])
+    {
+        ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonOrganizationProperty));
+    }
+    return ret;
 }
 
 - (AKSource *)defaultSource
