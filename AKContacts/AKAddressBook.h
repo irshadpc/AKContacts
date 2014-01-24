@@ -45,6 +45,18 @@ typedef NS_ENUM(NSInteger, AddressBookStatus)
   kAddressBookOnline
 };
 
+typedef struct AKSourceGroup {
+    NSInteger source;
+    NSInteger group;
+} AKSourceGroup;
+
+NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
+    AKSourceGroup ret;
+    ret.source = source;
+    ret.group = group;
+    return ret;
+}
+
 @protocol AKAddressBookDelegate <NSObject>
 - (void)setProgressTotal: (NSUInteger)progressTotal;
 - (void)setProgressCurrent: (NSUInteger)progressCurrent;
@@ -87,12 +99,20 @@ typedef NS_ENUM(NSInteger, AddressBookStatus)
 
 + (AKAddressBook *)sharedInstance;
 - (void)requestAddressBookAccess;
-- (void)insertRecordID: (ABRecordID)recordID inDictionary: (NSMutableDictionary *)dictionary forKey: (NSString *)key withAddressBookRef: (ABAddressBookRef)addressBook;
+- (void)insertRecordID: (ABRecordID)recordID withKey: (NSString *)key andAddressBookRef: (ABAddressBookRef)addressBook;
 - (NSUInteger)indexOfRecordID: (ABRecordID) recordID inArray: (NSArray *)array withAddressBookRef: (ABAddressBookRef)addressBook;
 - (AKSource *)defaultSource;
 - (AKSource *)sourceForSourceId: (ABRecordID)recordId;
 - (AKContact *)contactForContactId: (ABRecordID)recordId;
 - (AKSource *)sourceForContactId: (ABRecordID)recordId;
 - (void)removeRecordID: (ABRecordID)recordID;
+/**
+ * This does not add recordID to native group, to do that use AKGroup addMemberWithID
+ */
+- (void)insertRecordID: (ABRecordID)recordID inSourceGroup: (AKSourceGroup)sourceGroup;
+/**
+ * This does not remove recordID from native group, to do that use AKGroup removeMemberWithID
+ */
+- (void)deleteRecordID: (ABRecordID)recordID fromSourceGroup: (AKSourceGroup)sourceGroup;
 
 @end
