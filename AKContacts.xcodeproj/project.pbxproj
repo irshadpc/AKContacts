@@ -53,6 +53,7 @@
 		C6C2066616E39D790033C58A /* AKSource.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2066516E39D760033C58A /* AKSource.m */; };
 		C6C2066916E436BE0033C58A /* AKAddressBook.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2066816E436BE0033C58A /* AKAddressBook.m */; };
 		C6C89337172B1CD100FA4A4F /* AKContactButtonsViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C89336172B1CD100FA4A4F /* AKContactButtonsViewCell.m */; };
+		C6E35CE41898224200E0FD5C /* AKAddressBook+Loader.m in Sources */ = {isa = PBXBuildFile; fileRef = C6E35CE31898224200E0FD5C /* AKAddressBook+Loader.m */; };
 		F35CCDD8172EE10700466697 /* AKMessenger.m in Sources */ = {isa = PBXBuildFile; fileRef = F35CCDD7172EE10700466697 /* AKMessenger.m */; };
 		F35CCE61172F13BF00466697 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F35CCE60172F13BF00466697 /* MessageUI.framework */; };
 		F3826A2B1886DD640096A043 /* AKContactsTableViewDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = F3826A2A1886DD640096A043 /* AKContactsTableViewDataSource.m */; };
@@ -147,6 +148,8 @@
 		C6C2066816E436BE0033C58A /* AKAddressBook.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKAddressBook.m; sourceTree = "<group>"; };
 		C6C89335172B1CD000FA4A4F /* AKContactButtonsViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKContactButtonsViewCell.h; sourceTree = "<group>"; };
 		C6C89336172B1CD100FA4A4F /* AKContactButtonsViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactButtonsViewCell.m; sourceTree = "<group>"; };
+		C6E35CE21898224200E0FD5C /* AKAddressBook+Loader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "AKAddressBook+Loader.h"; sourceTree = "<group>"; };
+		C6E35CE31898224200E0FD5C /* AKAddressBook+Loader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "AKAddressBook+Loader.m"; sourceTree = "<group>"; };
 		F35CCDD6172EE10700466697 /* AKMessenger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKMessenger.h; sourceTree = "<group>"; };
 		F35CCDD7172EE10700466697 /* AKMessenger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKMessenger.m; sourceTree = "<group>"; };
 		F35CCE60172F13BF00466697 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
@@ -305,6 +308,8 @@
 				C682DEDC1714B54000CC4A70 /* Contacts */,
 				C6C2066716E436BE0033C58A /* AKAddressBook.h */,
 				C6C2066816E436BE0033C58A /* AKAddressBook.m */,
+				C6E35CE21898224200E0FD5C /* AKAddressBook+Loader.h */,
+				C6E35CE31898224200E0FD5C /* AKAddressBook+Loader.m */,
 				F35CCDD6172EE10700466697 /* AKMessenger.h */,
 				F35CCDD7172EE10700466697 /* AKMessenger.m */,
 			);
@@ -461,6 +466,11 @@
 			attributes = {
 				LastUpgradeCheck = 0460;
 				ORGANIZATIONNAME = "Adam Kornafeld";
+				TargetAttributes = {
+					C669518716B6FD7100D030A2 = {
+						DevelopmentTeam = 7HZPCRHJW5;
+					};
+				};
 			};
 			buildConfigurationList = C669518316B6FD7100D030A2 /* Build configuration list for PBXProject "AKContacts" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -544,6 +554,7 @@
 				C6C2066316E18A810033C58A /* AKGroupsViewController.m in Sources */,
 				C6C2066616E39D790033C58A /* AKSource.m in Sources */,
 				C6C2066916E436BE0033C58A /* AKAddressBook.m in Sources */,
+				C6E35CE41898224200E0FD5C /* AKAddressBook+Loader.m in Sources */,
 				C620EA7D16F932640035CA1F /* AKGroupsViewCell.m in Sources */,
 				C682DEFB171DF9A300CC4A70 /* AKContactDeleteButtonViewCell.m in Sources */,
 				C6C89337172B1CD100FA4A4F /* AKContactButtonsViewCell.m in Sources */,
@@ -659,12 +670,15 @@
 		C66951BB16B6FD7100D030A2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "AKContactsDemo/AKContacts-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				INFOPLIST_FILE = "$(SRCROOT)/AKContactsDemo/AKContacts-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -672,12 +686,15 @@
 		C66951BC16B6FD7100D030A2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "AKContactsDemo/AKContacts-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = "NS_BLOCK_ASSERTIONS=1";
 				INFOPLIST_FILE = "$(SRCROOT)/AKContactsDemo/AKContacts-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
