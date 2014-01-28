@@ -95,8 +95,8 @@ const int newContactID = -1<<9;
 
     if ([kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
     {
-        NSString *first = [self valueForProperty: kABPersonSortByFirstName];
-        NSString *last = [self valueForProperty: kABPersonSortByLastName];
+        NSString *first = [self valueForProperty: kABPersonFirstNameProperty];
+        NSString *last = [self valueForProperty: kABPersonLastNameProperty];
 
         if (kABPersonSortByFirstName == [AKAddressBook sharedInstance].sortOrdering)
         {
@@ -117,9 +117,9 @@ const int newContactID = -1<<9;
 - (NSString *)compositeName
 {
   NSString *ret = nil;
-  NSInteger kind = [(NSNumber *)[self valueForProperty: kABPersonKindProperty] integerValue];
+  NSNumber *kind = (NSNumber *)[self valueForProperty: kABPersonKindProperty];
 
-  if (kind == [(NSNumber *)kABPersonKindPerson integerValue])
+  if ([kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
   {
     NSMutableArray *array = [[NSMutableArray alloc] init];
     NSString *prefix = [self valueForProperty: kABPersonPrefixProperty];
@@ -148,7 +148,7 @@ const int newContactID = -1<<9;
 
     ret = [array componentsJoinedByString: self.nameDelimiter];
   }
-  else if (kind == [(NSNumber *)kABPersonKindOrganization integerValue])
+  else if ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
   {
     ret = [self valueForProperty: kABPersonOrganizationProperty];
   }
