@@ -93,14 +93,16 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 
 @property (assign, nonatomic) BOOL needReload;
 
-@property (assign, nonatomic) NSInteger contactsCount;
+@property (assign, nonatomic, readonly) NSInteger contactsCount;
+
+@property (strong, nonatomic, readonly) NSDate *dateAddressBookLoaded;
 
 @property (assign, nonatomic, readonly) ABPersonSortOrdering sortOrdering;
 
 + (AKAddressBook *)sharedInstance;
 - (void)requestAddressBookAccess;
-- (void)insertRecordID: (ABRecordID)recordID withKey: (NSString *)key andAddressBookRef: (ABAddressBookRef)addressBook;
-- (NSUInteger)indexOfRecordID: (ABRecordID) recordID inArray: (NSArray *)array withAddressBookRef: (ABAddressBookRef)addressBook;
+- (void)contactIdentifiersInsertRecordID: (ABRecordID)recordID withAddressBookRef: (ABAddressBookRef)addressBook;
+- (void)contactIdentifiersDeleteRecordID: (ABRecordID)recordID withAddressBookRef: (ABAddressBookRef)addressBook;
 - (AKSource *)defaultSource;
 - (AKSource *)sourceForSourceId: (ABRecordID)recordId;
 - (AKContact *)contactForContactId: (ABRecordID)recordId;

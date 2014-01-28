@@ -30,6 +30,7 @@
 #import "AKContact.h"
 #import "AKGroup.h"
 #import "AKSource.h"
+#import "AKAddressBook+Loader.h"
 
 NSString *const AKAddressBookQueueName = @"AKAddressBookQueue";
 
@@ -51,20 +52,13 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 @property (strong, nonatomic) dispatch_source_t ab_timer;
 @property (assign, nonatomic) BOOL ab_timer_suspended;
 
-/**
- * ABAddressBookRegisterExternalChangeCallback tends to fire multiple times
- * for a single change, so we store the last date when the addressbook
- * is reloaded and skip callbacks that fire too close to this date
- */
 @property (strong, nonatomic) NSDate *dateAddressBookLoaded;
 
 @property (assign, nonatomic) ABPersonSortOrdering sortOrdering;
 
--(void)reloadAddressBook;
--(void)loadSourcesWithABAddressBookRef: (ABAddressBookRef)addressBook;
--(void)loadGroupsWithABAddressBookRef: (ABAddressBookRef)addressBook;
--(void)loadContactsWithABAddressBookRef: (ABAddressBookRef)addressBook;
+@property (assign, nonatomic) NSInteger contactsCount;
 
+-(void)reloadAddressBook;
 /**
  * AKContacts are released from the contacts dictionary
  * after being unused for at least UnusedContactsReleaseTime seconds
@@ -241,299 +235,57 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       break;
   }
 
-  /*
-   * Loading the addressbook runs in the background and uses a local ABAddressBookRef
-   */
-  dispatch_block_t block = ^{
+  [self suspend_ab_timer];
 
-    [self suspend_ab_timer];
+  NSDate *start = [NSDate date];
+
+  [self setContactsCount: ABAddressBookGetPersonCount(self.addressBookRef)];
+
+  [self loadAddressBookWithCompletionHandler:^(BOOL success) {
+    if (success) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        self.dateAddressBookLoaded = [NSDate date];
+        NSLog(@"Address book loaded in %.2f", fabs([self.dateAddressBookLoaded timeIntervalSinceDate: start]));
+
+        self.status = kAddressBookOnline;
+
+        [self resume_ab_timer];
+      });
+    }
+  }];
+}
+
+- (void)contactIdentifiersInsertRecordID: (ABRecordID)recordID withAddressBookRef: (ABAddressBookRef)addressBook
+{
+    ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBook, recordID);
+    NSString *name = [AKAddressBook nameToDetermineSectionForRecordRef: recordRef withSortOrdering: self.sortOrdering];
+    NSString *sectionKey = [AKContact sectionKeyForName: name];
     
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
-    CFErrorRef error = NULL;
-    ABAddressBookRef addressBook = ABAddressBookCreateWithOptions(NULL, &error);
-    if (error) NSLog(@"%ld", CFErrorGetCode(error));
-#else
-    ABAddressBookRef addressBook = ABAddressBookCreate();
-#endif
-
-    NSDate *start = [NSDate date];
-
-    // Do not change order of loading
-    [self loadSourcesWithABAddressBookRef: addressBook];
-
-    [self loadGroupsWithABAddressBookRef: addressBook];
-
-    [self loadContactsWithABAddressBookRef: addressBook];
-
-    CFRelease(addressBook);
-
-    self.dateAddressBookLoaded = [NSDate date];
-    NSLog(@"Address book loaded in %.2f", fabs([self.dateAddressBookLoaded timeIntervalSinceDate: start]));
-
-    self.status = kAddressBookOnline;
-
-    [self resume_ab_timer];
-  };
-
-  dispatch_async(_ab_queue, block);
-}
-
-- (void)loadSourcesWithABAddressBookRef: (ABAddressBookRef)addressBook 
-{
-  NSAssert(!dispatch_get_specific(IsOnMainQueueKey), @"Must not be dispatched on main queue");
-
-  if (!self.sources) {
-    self.sources = [[NSMutableArray alloc] init];
-  }
-
-  NSArray *sources = (NSArray *)CFBridgingRelease(ABAddressBookCopyArrayOfAllSources(addressBook));
-
-  if ([sources count] > 1)
-  {
-    AKSource *aggregatorSource = [self sourceForSourceId: kSourceAggregate];
-    if (!aggregatorSource) {
-      aggregatorSource = [[AKSource alloc] initWithABRecordID: kSourceAggregate];
-      aggregatorSource.canCreateRecord = YES;
-      [self.sources addObject: aggregatorSource];
-    }
-  }
-
-  ABRecordRef source = ABAddressBookCopyDefaultSource(addressBook);
-  ABRecordID defaultSourceID = ABRecordGetRecordID(source);
-  CFRelease(source);
-
-  for (id obj in sources) 
-  {
-    ABRecordRef recordRef = (__bridge ABRecordRef)obj;
-    ABRecordID recordID = ABRecordGetRecordID(recordRef);
-
-    ABSourceType type =  [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABSourceTypeProperty)) integerValue];
-    if (type == kABSourceTypeExchangeGAL) continue; // No support for Exchange Global Address List, yet
-
-    AKSource *source = [self sourceForSourceId: recordID];
-    if (!source) {
-      source = [[AKSource alloc] initWithABRecordID: recordID];
-      source.isDefault = (defaultSourceID == recordID) ? YES : NO;
-      
-      ABRecordRef tryRecordRef = ABPersonCreateInSource(source.recordRef);
-      if (tryRecordRef != nil)
-      { // Check if source supports create records
-        source.canCreateRecord = YES;
-        CFRelease(tryRecordRef);
-      }
-      [self.sources addObject: source];
-    }
-  }
-  self.sourceID = (sources.count > 1) ? kSourceAggregate : defaultSourceID;
-}
-
-- (void)loadGroupsWithABAddressBookRef: (ABAddressBookRef)addressBook
-{
-  NSAssert(!dispatch_get_specific(IsOnMainQueueKey), @"Must not be dispatched on main queue");
-
-  if (ShowGroups == NO) return;
-
-  [self setGroupID: kGroupAggregate];
-
-  AKGroup *mainAggregateGroup = nil;
+    NSMutableArray *sectionArray = (NSMutableArray *)[self.allContactIdentifiers objectForKey: sectionKey];
     
-  for (AKSource *source in self.sources)
-  {
-    AKGroup *aggregateGroup = [source groupForGroupId: kGroupAggregate];
-    if (!aggregateGroup) {
-      aggregateGroup = [[AKGroup alloc] initWithABRecordID: kGroupAggregate];
-      [source.groups addObject: aggregateGroup];
-    }
-
-    if (source.recordID < 0) 
-    {
-      if (source.recordID == kSourceAggregate)
-      {
-        mainAggregateGroup = aggregateGroup;
-        [mainAggregateGroup setIsMainAggregate: YES];
-      }
-      continue; // Skip custom sources
-    }
-
-    NSArray *groups = (NSArray *) CFBridgingRelease(ABAddressBookCopyArrayOfAllGroupsInSource(addressBook, source.recordRef));
-
-    for (id obj in groups) 
-    {
-      ABRecordRef recordRef = (__bridge ABRecordRef)obj;
-      ABRecordID recordID = ABRecordGetRecordID(recordRef);
-
-      NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABGroupNameProperty));
-      NSLog(@"% 3d : %@", recordID, name);
-
-      AKGroup *group = [source groupForGroupId: recordID];
-      if (!group) {
-        group = [[AKGroup alloc] initWithABRecordID: recordID];
-        [source.groups addObject: group];
-      }
-
-      NSArray *members = (NSArray *) CFBridgingRelease(ABGroupCopyArrayOfAllMembers(recordRef));
-      [group.memberIDs removeAllObjects];
-      for (id member in members)
-      {
-        ABRecordRef record = (__bridge ABRecordRef)member;
-        // From ABGRoup Reference: Groups may not contain other groups
-        if (ABRecordGetRecordType(record) == kABPersonType)
-        {
-          [group.memberIDs addObject: @(ABRecordGetRecordID(record))];
-        }
-      }
-    }
-    [source revertGroupsOrder];
-  }
+    NSUInteger index = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray withSortOrdering: self.sortOrdering andAddressBookRef: addressBook];
+    
+    [sectionArray insertObject: [NSNumber numberWithInteger: recordID] atIndex: index];
 }
 
-- (void)loadContactsWithABAddressBookRef: (ABAddressBookRef)addressBook 
+- (void)contactIdentifiersDeleteRecordID: (ABRecordID)recordID withAddressBookRef: (ABAddressBookRef)addressBook
 {
-  NSAssert(!dispatch_get_specific(IsOnMainQueueKey), @"Must not be dispatched on main queue");
-
-  if (!self.allContactIdentifiers)
-  {
-    self.allContactIdentifiers = [[NSMutableDictionary alloc] init];
-      NSString *sectionKeys = @"ABCDEFGHIJKLMNOPQRSTUVWXYZ#";
-      for (int i = 0; i < [sectionKeys length]; i++)
-      {
-          NSString *sectionKey = [NSString stringWithFormat: @"%c", [sectionKeys characterAtIndex: i]];
-          NSMutableArray *sectionArray = [[NSMutableArray alloc] init];
-          [self.allContactIdentifiers setObject: sectionArray forKey: sectionKey];
-      }
-  }
-
-  NSMutableSet *appContactIdentifiers = [[NSMutableSet alloc] init];
-  if (self.status == kAddressBookLoading)
-  {
-    for (NSString *key in self.allContactIdentifiers) {
-      NSArray *section = [self.allContactIdentifiers objectForKey: key];
-      [appContactIdentifiers addObjectsFromArray: section];
-    }
-  }
-
-  AKSource *aggregateSource = [self sourceForSourceId: kSourceAggregate];
-  AKGroup *mainAggregateGroup = [aggregateSource groupForGroupId: kGroupAggregate];
-
-  NSMutableSet *nativeContactIdentifiers = [[NSMutableSet alloc] init];
-  NSMutableSet *linkedRecords = [[NSMutableSet alloc] init];
-  NSMutableSet *createdRecords = [[NSMutableSet alloc] init];
-  NSMutableSet *changedRecords = [[NSMutableSet alloc] init];
-
-  [self setContactsCount: ABAddressBookGetPersonCount(addressBook)];
-  NSLog(@"Number of contacts: %d", self.contactsCount);
-  [self.delegate setProgressTotal: self.contactsCount];
-  NSInteger i = 0;
-  // Get array of records in Address Book
-  for (AKSource *source in self.sources)
-  {
-    if (source.recordID < 0) {
-      continue; // Skip custom sources
-    }
-
-    AKGroup *aggregateGroup = [source groupForGroupId: kGroupAggregate];
-
-    // ABAddressBookCopyArrayOfAllPeopleInSource calls ABAddressBookCopyArrayOfAllPeopleInSourceWithSortOrdering
-    // Perfomance is not affected by which of the two is called
-    NSArray *people = (NSArray *)CFBridgingRelease(ABAddressBookCopyArrayOfAllPeopleInSourceWithSortOrdering(addressBook, source.recordRef, self.sortOrdering));
-    for (id obj in people)
-    {
-      [self.delegate setProgressCurrent: ++i];
-
-      ABRecordRef recordRef = (__bridge ABRecordRef)obj;
-
-      ABRecordID recordID = ABRecordGetRecordID(recordRef);
-      NSNumber *contactID = [NSNumber numberWithInteger: recordID];
-
-      [nativeContactIdentifiers addObject: contactID];
-
-      NSDate *created = (NSDate *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonCreationDateProperty));
-      NSDate *modified = (NSDate *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonModificationDateProperty));
-
-      NSArray *linked = CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople(recordRef));
-      for (id obj in linked)
-      {
-        ABRecordRef linkedRef = (__bridge ABRecordRef)obj;
-        ABRecordID linkedID = ABRecordGetRecordID(linkedRef);
-        if (linkedID != recordID)
-        {
-          [linkedRecords addObject: [NSNumber numberWithInteger: linkedID]];
-        }
-      }
-
-      if (!self.dateAddressBookLoaded || [self.dateAddressBookLoaded compare: created] != NSOrderedDescending)
-      { // Created should be compared first
-        [createdRecords addObject: contactID];
-      }
-      else if ([self.dateAddressBookLoaded compare: modified] != NSOrderedDescending)
-      { // Contact changed
-        [changedRecords addObject: contactID];
-      }
-
-      //NSLog(@"% 3d : %@", recordID, CFBridgingRelease(ABRecordCopyCompositeName(recordRef)));
-
-      if (![mainAggregateGroup.memberIDs member: contactID] && ![linkedRecords member: contactID])
-      {
-        [mainAggregateGroup.memberIDs addObject: contactID];
-      }
-
-      if (![aggregateGroup.memberIDs member: contactID])
-      {
-        [aggregateGroup.memberIDs addObject: contactID];
-      }
-    }
-  }
-
-  if (self.status == kAddressBookLoading)
-  {
-    [appContactIdentifiers minusSet: nativeContactIdentifiers];
-    NSLog(@"Deleted contactIDs: %@", appContactIdentifiers);
-    for (NSNumber *contactID in appContactIdentifiers)
-    {   // Section is unknown
-        [self deleteRecordID: contactID.integerValue withKey: nil andAddressBookRef: addressBook];
-    }
-  }
-
-  for (NSNumber *recordID in createdRecords)
-  {
-      ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBook, recordID.integerValue);
-      NSLog(@"% 3d : %@ is new", recordID.integerValue, CFBridgingRelease(ABRecordCopyCompositeName(recordRef)));
-      NSString *sectionKey = [AKContact sectionKeyForName: [self nameToDetermineSectionForRecordRef: recordRef]];
-      [self insertRecordID: recordID.integerValue withKey: sectionKey andAddressBookRef: addressBook];
-  }
-  for (NSNumber *recordID in changedRecords)
-  {
-      ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBook, recordID.integerValue);
-      NSLog(@"% 3d : %@ did change", recordID.integerValue, CFBridgingRelease(ABRecordCopyCompositeName(recordRef)));
-      NSString *sectionKey = [AKContact sectionKeyForName: [self nameToDetermineSectionForRecordRef: recordRef]];
-      [self deleteRecordID: recordID.integerValue withKey: sectionKey andAddressBookRef: addressBook];
-      [self insertRecordID: recordID.integerValue withKey: sectionKey andAddressBookRef: addressBook];
-  }
-}
-
-- (void)insertRecordID: (ABRecordID)recordID withKey: (NSString *)key andAddressBookRef: (ABAddressBookRef)addressBook
-{
-  NSMutableArray *sectionArray = (NSMutableArray *)[self.allContactIdentifiers objectForKey: key];
-
-  NSUInteger index = [self indexOfRecordID: recordID inArray: sectionArray withAddressBookRef: addressBook];
-
-  [sectionArray insertObject: [NSNumber numberWithInteger: recordID] atIndex: index];
-}
-
-- (void)deleteRecordID: (ABRecordID)recordID withKey: (NSString *)key andAddressBookRef: (ABAddressBookRef)addressBook
-{
+    ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBook, recordID);
+    NSString *name = [AKAddressBook nameToDetermineSectionForRecordRef: recordRef withSortOrdering: self.sortOrdering];
+    NSString *sectionKey = [AKContact sectionKeyForName: name];
+    
     NSUInteger index = NSNotFound;
     NSMutableArray *sectionArray = nil;
-    if (key) {
-        sectionArray = [self.allContactIdentifiers objectForKey: key];
+    if (sectionKey) {
+        sectionArray = [self.allContactIdentifiers objectForKey: sectionKey];
         index = [sectionArray indexOfObject: @(recordID)];
     }
-
+    
     if (index == NSNotFound)
     {   // Moved to another section
         for (NSString *sectionKey in self.allContactIdentifiers)
         {   // This is slow but should run seldom
-            if ([sectionKey isEqualToString: key])
+            if ([sectionKey isEqualToString: sectionKey])
             {   // It cannot be here
                 continue;
             }
@@ -550,114 +302,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     {
         [sectionArray removeObjectAtIndex: index];
     }
-}
-
-- (NSUInteger)indexOfRecordID: (ABRecordID) recordID inArray: (NSArray *)array withAddressBookRef: (ABAddressBookRef)addressBook
-{
-    NSInteger organization = [(NSNumber *)kABPersonKindOrganization integerValue];
-    NSInteger person = [(NSNumber *)kABPersonKindPerson integerValue];
-
-    static NSComparator comparator = nil;
-    if (!comparator) {
-        comparator = ^NSComparisonResult(id obj1, id obj2) {
-            ABRecordRef recordRef1 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj1 integerValue]);
-            ABRecordRef recordRef2 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj2 integerValue]);
-
-            NSInteger kind1 = [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef1, kABPersonKindProperty)) integerValue];
-            NSInteger kind2 = [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef2, kABPersonKindProperty)) integerValue];
-
-            ABPropertyID prop1 = (self.sortOrdering == kABPersonSortByFirstName) ? kABPersonFirstNameProperty : kABPersonLastNameProperty;
-            ABPropertyID prop2 = (self.sortOrdering == kABPersonSortByFirstName) ? kABPersonFirstNameProperty : kABPersonLastNameProperty;
-            
-            NSString *elem1, *elem2;
-            NSComparisonResult ret = NSOrderedSame;
-
-            if (kind1 == person && kind2 == person)
-            {
-                elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
-                elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
-
-                ret = [elem1 localizedCaseInsensitiveCompare: elem2];
-                if (ret == NSOrderedSame)
-                {
-                    prop1 = prop2 = (self.sortOrdering == kABPersonSortByFirstName) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
-
-                    elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
-                    elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
-
-                    ret = [elem1 localizedCaseInsensitiveCompare: elem2];
-                }
-            }
-            else if (kind1 == person && kind2 == organization)
-            {
-                prop2 = kABPersonOrganizationProperty;
-
-                elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
-                elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
-
-                ret = [elem1 localizedCaseInsensitiveCompare: elem2];
-                if (ret == NSOrderedSame)
-                {
-                    prop1 = (self.sortOrdering == kABPersonSortByFirstName) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
-
-                    elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
-                    ret = [elem1 localizedCaseInsensitiveCompare: elem2];
-                }
-            }
-            else if (kind1 == organization && kind2 == person)
-            {
-                prop1 = kABPersonOrganizationProperty;
-
-                elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
-                elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
-
-                ret = [elem1 localizedCaseInsensitiveCompare: elem2];
-                if (ret == NSOrderedSame)
-                {
-                    prop2 = (self.sortOrdering == kABPersonSortByFirstName) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
-
-                    elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
-                    ret = [elem1 localizedCaseInsensitiveCompare: elem2];
-                }
-            }
-            else if (kind1 == organization && kind2 == organization)
-            {
-                prop1 = prop2 = kABPersonOrganizationProperty;
-
-                elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
-                elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
-
-                ret = [elem1 localizedCaseInsensitiveCompare: elem2];
-            }
-            return ret;
-        };
-    }
-
-  return [array indexOfObject: @(recordID)
-                inSortedRange: (NSRange){0, array.count}
-                      options: NSBinarySearchingInsertionIndex
-              usingComparator: comparator];
-}
-
-- (NSString *)nameToDetermineSectionForRecordRef: (ABRecordRef)recordRef
-{
-    NSString *ret;
-    NSInteger kind = [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonKindProperty)) integerValue];
-    if (kind == [(NSNumber *)kABPersonKindPerson integerValue])
-    {
-        ABPropertyID property = (self.sortOrdering == kABPersonSortByFirstName) ? kABPersonFirstNameProperty : kABPersonLastNameProperty;
-        ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, property));
-        if (!ret.length)
-        {
-            property = (property == kABPersonFirstNameProperty) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
-            ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, property));
-        }
-    }
-    else if (kind == [(NSNumber *)kABPersonKindOrganization integerValue])
-    {
-        ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonOrganizationProperty));
-    }
-    return ret;
 }
 
 - (void)insertRecordID: (ABRecordID)recordID inSourceGroup: (AKSourceGroup)sourceGroup
