@@ -157,9 +157,9 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
   if (&ABAddressBookGetAuthorizationStatus)
   {
-    ABAuthorizationStatus stat = ABAddressBookGetAuthorizationStatus();
+    ABAuthorizationStatus authStatus = ABAddressBookGetAuthorizationStatus();
 
-    if (stat == kABAuthorizationStatusNotDetermined)
+    if (authStatus == kABAuthorizationStatusNotDetermined)
     {
       void (^block)(bool granted, CFErrorRef error) = ^(bool granted, CFErrorRef error){
         if (granted)
@@ -176,15 +176,15 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       };
       ABAddressBookRequestAccessWithCompletion(self.addressBookRef, block);
     }
-    else if (stat == kABAuthorizationStatusDenied)
+    else if (authStatus == kABAuthorizationStatusDenied)
     {
       NSLog(@"kABAuthorizationStatusDenied");
     }
-    else if (stat == kABAuthorizationStatusRestricted)
+    else if (authStatus == kABAuthorizationStatusRestricted)
     {
       NSLog(@"kABAuthorizationStatusRestricted");
     }
-    else if (stat == kABAuthorizationStatusAuthorized) 
+    else if (authStatus == kABAuthorizationStatusAuthorized)
     {
       [self loadAddressBook];
     }
@@ -257,51 +257,57 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (void)contactIdentifiersInsertRecordID: (ABRecordID)recordID withAddressBookRef: (ABAddressBookRef)addressBook
 {
-    ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBook, recordID);
-    NSString *name = [AKAddressBook nameToDetermineSectionForRecordRef: recordRef withSortOrdering: self.sortOrdering];
-    NSString *sectionKey = [AKContact sectionKeyForName: name];
-    
-    NSMutableArray *sectionArray = (NSMutableArray *)[self.allContactIdentifiers objectForKey: sectionKey];
-    
-    NSUInteger index = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray withSortOrdering: self.sortOrdering andAddressBookRef: addressBook];
-    
-    [sectionArray insertObject: [NSNumber numberWithInteger: recordID] atIndex: index];
+  ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBook, recordID);
+  NSString *name = [AKAddressBook nameToDetermineSectionForRecordRef: recordRef withSortOrdering: self.sortOrdering];
+  NSString *sectionKey = [AKContact sectionKeyForName: name];
+
+  NSMutableArray *sectionArray = (NSMutableArray *)[self.allContactIdentifiers objectForKey: sectionKey];
+
+  NSUInteger index = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray withSortOrdering: self.sortOrdering andAddressBookRef: addressBook];
+
+  [sectionArray insertObject: [NSNumber numberWithInteger: recordID] atIndex: index];
 }
 
 - (void)contactIdentifiersDeleteRecordID: (ABRecordID)recordID withAddressBookRef: (ABAddressBookRef)addressBook
 {
-    ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBook, recordID);
+  NSString *sectionKey;
+  NSUInteger index = NSNotFound;
+  NSMutableArray *sectionArray = nil;
+
+  ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBook, recordID);
+  if (recordRef)
+  {
     NSString *name = [AKAddressBook nameToDetermineSectionForRecordRef: recordRef withSortOrdering: self.sortOrdering];
-    NSString *sectionKey = [AKContact sectionKeyForName: name];
-    
-    NSUInteger index = NSNotFound;
-    NSMutableArray *sectionArray = nil;
-    if (sectionKey) {
-        sectionArray = [self.allContactIdentifiers objectForKey: sectionKey];
-        index = [sectionArray indexOfObject: @(recordID)];
+    sectionKey = [AKContact sectionKeyForName: name];
+  }
+
+  if (sectionKey)
+  {
+    sectionArray = [self.allContactIdentifiers objectForKey: sectionKey];
+    index = [sectionArray indexOfObject: @(recordID)];
+  }
+
+  if (index == NSNotFound)
+  { // Moved to another section
+    for (NSString *key in self.allContactIdentifiers)
+    { // This is slow but should run seldom
+      if ([sectionKey isEqualToString: key])
+      {  // It cannot be here
+        continue;
+      }
+      sectionArray = [self.allContactIdentifiers objectForKey: key];
+      index = [sectionArray indexOfObject: @(recordID)];
+      if (index != NSNotFound)
+      {
+        NSLog(@"Moved from section: %@", key);
+        break;
+      }
     }
-    
-    if (index == NSNotFound)
-    {   // Moved to another section
-        for (NSString *sectionKey in self.allContactIdentifiers)
-        {   // This is slow but should run seldom
-            if ([sectionKey isEqualToString: sectionKey])
-            {   // It cannot be here
-                continue;
-            }
-            sectionArray = [self.allContactIdentifiers objectForKey: sectionKey];
-            index = [sectionArray indexOfObject: @(recordID)];
-            if (index != NSNotFound)
-            {
-                NSLog(@"Moved from section: %@", sectionKey);
-                break;
-            }
-        }
-    }
-    if (index != NSNotFound)
-    {
-        [sectionArray removeObjectAtIndex: index];
-    }
+  }
+  if (index != NSNotFound)
+  {
+    [sectionArray removeObjectAtIndex: index];
+  }
 }
 
 - (void)insertRecordID: (ABRecordID)recordID inSourceGroup: (AKSourceGroup)sourceGroup
@@ -369,7 +375,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 {
   NSNumber *contactID = [NSNumber numberWithInteger: recordId];
   AKContact *ret = [self.contacts objectForKey: contactID];
-  if (ret == nil)
+  if (!ret)
   {
     ret = [[AKContact alloc] initWithABRecordID: recordId];
     if (recordId != newContactID)
