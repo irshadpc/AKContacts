@@ -134,7 +134,6 @@ const int newContactID = -1<<9;
       if (first) [array addObject: first];
       if (middle) [array addObject: middle];
       if (last) [array addObject: last];
-      
     }
     else
     {
@@ -146,7 +145,10 @@ const int newContactID = -1<<9;
     NSString *suffix = [self valueForProperty: kABPersonSuffixProperty];
     if (suffix) [array addObject: suffix];
 
-    ret = [array componentsJoinedByString: self.nameDelimiter];
+    if (array.count)
+    {
+        ret = [array componentsJoinedByString: self.nameDelimiter];
+    }
   }
   else if ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
   {
