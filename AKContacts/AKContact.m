@@ -370,15 +370,13 @@ const int newContactID = -1<<9;
   if (self.recordID == newContactID)
   {
     super.recordID = ABRecordGetRecordID(self.recordRef);
-    
+
     AKAddressBook *addressBook = [AKAddressBook sharedInstance];
-    
+
     [addressBook.contacts setObject: self forKey: [NSNumber numberWithInteger: self.recordID]];
     [addressBook.contacts removeObjectForKey: [NSNumber numberWithInteger: newContactID]];
-    
-    NSString *sectionKey = [AKContact sectionKeyForName: [self sortName]];
 
-    [addressBook insertRecordID: self.recordID withKey: sectionKey andAddressBookRef: addressBookRef];
+    [addressBook contactIdentifiersInsertRecordID: self.recordID withAddressBookRef: addressBookRef];
 
     if (addressBook.groupID >= 0)
     { // Add to group
