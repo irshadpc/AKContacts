@@ -257,7 +257,7 @@
         NSLog(@"Deleted contactIDs: %@", appContactIdentifiers);
         for (NSNumber *contactID in appContactIdentifiers)
         {   // Section is unknown
-            [self contactIdentifiersInsertRecordID: contactID.integerValue withAddressBookRef: addressBook];
+            [self contactIdentifiersDeleteRecordID: contactID.integerValue withAddressBookRef: addressBook];
         }
     }
     
@@ -306,96 +306,10 @@
 
 + (NSUInteger)indexOfRecordID: (ABRecordID) recordID inArray: (NSArray *)array withSortOrdering: (ABPersonSortOrdering)sortOrdering andAddressBookRef: (ABAddressBookRef)addressBook
 {
-    NSInteger organization = [(NSNumber *)kABPersonKindOrganization integerValue];
-    NSInteger person = [(NSNumber *)kABPersonKindPerson integerValue];
-    
-    static NSComparator comparator = nil;
-    if (!comparator) {
-        comparator = ^NSComparisonResult(id obj1, id obj2) {
-            ABRecordRef recordRef1 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj1 integerValue]);
-            ABRecordRef recordRef2 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj2 integerValue]);
-            
-            NSInteger kind1 = [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef1, kABPersonKindProperty)) integerValue];
-            NSInteger kind2 = [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef2, kABPersonKindProperty)) integerValue];
-            
-            ABPropertyID prop1 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonFirstNameProperty : kABPersonLastNameProperty;
-            ABPropertyID prop2 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonFirstNameProperty : kABPersonLastNameProperty;
-            
-            NSString *elem1, *elem2;
-            NSComparisonResult ret = NSOrderedSame;
-            
-            if (kind1 == person && kind2 == person)
-            {
-                elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
-                elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
-                
-                ret = [elem1 localizedCaseInsensitiveCompare: elem2];
-                if (ret == NSOrderedSame)
-                {
-                    prop1 = prop2 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
-                    
-                    elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
-                    elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
-                    
-                    ret = [elem1 localizedCaseInsensitiveCompare: elem2];
-                }
-            }
-            else if (kind1 == person && kind2 == organization)
-            {
-                prop2 = kABPersonOrganizationProperty;
-                
-                elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
-                elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
-                
-                ret = [elem1 localizedCaseInsensitiveCompare: elem2];
-                if (ret == NSOrderedSame)
-                {
-                    prop1 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
-                    
-                    elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
-                    ret = [elem1 localizedCaseInsensitiveCompare: elem2];
-                }
-            }
-            else if (kind1 == organization && kind2 == person)
-            {
-                prop1 = kABPersonOrganizationProperty;
-                
-                elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
-                elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
-                
-                ret = [elem1 localizedCaseInsensitiveCompare: elem2];
-                if (ret == NSOrderedSame)
-                {
-                    prop2 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
-                    
-                    elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
-                    ret = [elem1 localizedCaseInsensitiveCompare: elem2];
-                }
-            }
-            else if (kind1 == organization && kind2 == organization)
-            {
-                prop1 = prop2 = kABPersonOrganizationProperty;
-                
-                elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
-                elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
-                
-                ret = [elem1 localizedCaseInsensitiveCompare: elem2];
-            }
-            return ret;
-        };
-    }
-    
-    
-    //    NSString *name = [self sortNameForRecordID: recordID inAddressBook: addressBook];
-    
-    //    NSComparator comparator = ^NSComparisonResult(id obj1, id obj2) {
-    //        return [(NSString *)obj1 localizedCaseInsensitiveCompare: (NSString *)obj2];
-    //    };
-    
     return [array indexOfObject: @(recordID)
                   inSortedRange: (NSRange){0, array.count}
                         options: NSBinarySearchingInsertionIndex
-                usingComparator: comparator];
+                usingComparator: [AKAddressBook recordIDBasedComparatorWithSortOrdering: sortOrdering andAddressBook: addressBook]];
 }
 
 + (NSString *)nameToDetermineSectionForRecordRef: (ABRecordRef)recordRef withSortOrdering: (ABPersonSortOrdering)sortOrdering
@@ -417,6 +331,86 @@
         ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonOrganizationProperty));
     }
     return ret;
+}
+
++ (NSComparator)recordIDBasedComparatorWithSortOrdering: (ABPersonSortOrdering)sortOrdering andAddressBook: (ABAddressBookRef)addressBook
+{
+    NSInteger organization = [(NSNumber *)kABPersonKindOrganization integerValue];
+    NSInteger person = [(NSNumber *)kABPersonKindPerson integerValue];
+    
+    NSComparator comparator = ^NSComparisonResult(id obj1, id obj2) {
+        ABRecordRef recordRef2 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj2 integerValue]);
+        ABRecordRef recordRef1 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj1 integerValue]);
+        
+        NSInteger kind1 = [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef1, kABPersonKindProperty)) integerValue];
+        NSInteger kind2 = [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef2, kABPersonKindProperty)) integerValue];
+        
+        ABPropertyID prop1 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonFirstNameProperty : kABPersonLastNameProperty;
+        ABPropertyID prop2 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonFirstNameProperty : kABPersonLastNameProperty;
+        
+        NSString *elem1, *elem2;
+        NSComparisonResult ret = NSOrderedSame;
+        
+        if (kind1 == person && kind2 == person)
+        {
+            elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
+            elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
+            
+            ret = [elem1 localizedCaseInsensitiveCompare: elem2];
+            if (ret == NSOrderedSame)
+            {
+                prop1 = prop2 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
+                
+                elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
+                elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
+                
+                ret = [elem1 localizedCaseInsensitiveCompare: elem2];
+            }
+        }
+        else if (kind1 == person && kind2 == organization)
+        {
+            prop2 = kABPersonOrganizationProperty;
+            
+            elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
+            elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
+            
+            ret = [elem1 localizedCaseInsensitiveCompare: elem2];
+            if (ret == NSOrderedSame)
+            {
+                prop1 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
+                
+                elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
+                ret = [elem1 localizedCaseInsensitiveCompare: elem2];
+            }
+        }
+        else if (kind1 == organization && kind2 == person)
+        {
+            prop1 = kABPersonOrganizationProperty;
+            
+            elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
+            elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
+            
+            ret = [elem1 localizedCaseInsensitiveCompare: elem2];
+            if (ret == NSOrderedSame)
+            {
+                prop2 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
+                
+                elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
+                ret = [elem1 localizedCaseInsensitiveCompare: elem2];
+            }
+        }
+        else if (kind1 == organization && kind2 == organization)
+        {
+            prop1 = prop2 = kABPersonOrganizationProperty;
+            
+            elem1 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef1, prop1));
+            elem2 = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef2, prop2));
+            
+            ret = [elem1 localizedCaseInsensitiveCompare: elem2];
+        }
+        return ret;
+    };
+    return comparator;
 }
 
 @end
