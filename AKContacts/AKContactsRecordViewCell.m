@@ -80,7 +80,7 @@
     {
       NSMutableAttributedString *text = [[NSMutableAttributedString alloc] initWithString: compositeName];
       [text addAttribute: NSFontAttributeName value: [UIFont systemFontOfSize: 20.f] range: NSMakeRange(0, text.length - 1)];
-      NSNumber *kind = [contact valueForProperty: kABPersonKindProperty];
+      NSNumber *kind = (NSNumber *)[contact valueForProperty: kABPersonKindProperty];
       if ([kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
       {
         NSString *lastName = [contact valueForProperty: kABPersonLastNameProperty];
