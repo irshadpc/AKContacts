@@ -28,6 +28,7 @@
 
 #import "AKContact.h"
 #import "AKAddressBook.h"
+#import "AKAddressBook+Loader.h"
 #import "AKGroup.h"
 #import "AKSource.h"
 
