@@ -57,7 +57,7 @@ static const CGFloat kRadius = 11.f;
         _spinLayer.fillColor = [UIColor clearColor].CGColor;
         _spinLayer.strokeEnd = 0.f;
         [[self layer] addSublayer: _spinLayer];
-        [AKAddressBook sharedInstance].delegate = self;
+        [AKAddressBook sharedInstance].progressDelegate = self;
 
         [self addObserver: self forKeyPath: @"progressCurrent" options: NSKeyValueObservingOptionNew context: NULL];
         _progressTotal = 0;
@@ -69,7 +69,7 @@ static const CGFloat kRadius = 11.f;
 - (void)dealloc
 {
   [self removeObserver: self forKeyPath: @"progressCurrent"];
-  [AKAddressBook sharedInstance].delegate = nil;
+  [AKAddressBook sharedInstance].progressDelegate = nil;
 }
 
 - (void)layoutSubviews
@@ -95,12 +95,10 @@ static const CGFloat kRadius = 11.f;
             [[self spinLayer] setStrokeEnd: (CGFloat)self.progressCurrent / self.progressTotal];
             [CATransaction commit];
         });
-        
-        if (self.progressCurrent == 1.f)
-        {
-            [[AKAddressBook sharedInstance] setDelegate: nil];
-            [self removeFromSuperview];
-        }
+    }
+    if (self.progressCurrent == self.progressTotal)
+    {
+        [self removeFromSuperview];
     }
 }
 
