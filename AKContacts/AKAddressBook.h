@@ -101,20 +101,10 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 
 + (AKAddressBook *)sharedInstance;
 - (void)requestAddressBookAccess;
-- (void)contactIdentifiersInsertRecordID: (ABRecordID)recordID withAddressBookRef: (ABAddressBookRef)addressBook;
-- (void)contactIdentifiersDeleteRecordID: (ABRecordID)recordID withAddressBookRef: (ABAddressBookRef)addressBook;
 - (AKSource *)defaultSource;
 - (AKSource *)sourceForSourceId: (ABRecordID)recordId;
 - (AKContact *)contactForContactId: (ABRecordID)recordId;
 - (AKSource *)sourceForContactId: (ABRecordID)recordId;
 - (void)removeRecordID: (ABRecordID)recordID;
-/**
- * This does not add recordID to native group, to do that use AKGroup addMemberWithID
- */
-- (void)insertRecordID: (ABRecordID)recordID inSourceGroup: (AKSourceGroup)sourceGroup;
-/**
- * This does not remove recordID from native group, to do that use AKGroup removeMemberWithID
- */
-- (void)deleteRecordID: (ABRecordID)recordID fromSourceGroup: (AKSourceGroup)sourceGroup;
 
 @end
