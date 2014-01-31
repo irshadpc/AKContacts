@@ -32,13 +32,13 @@
 #import "AKContact.h"
 #import "AKContactPickerViewController.h"
 #import "AKContactViewController.h"
-#import "AKAddressBook.h"
 #import "AKGroup.h"
 #import "AKSource.h"
 #import "AKGroupPickerViewController.h"
 #import "AKGroupsViewController.h"
 #import "AKContactPickerViewController.h"
 #import "AKContactsTableViewDataSource.h"
+#import "AKAddressBook+Loader.h"
 
 #import <AddressBook/AddressBook.h>
 #import <AddressBookUI/AddressBookUI.h>
@@ -84,6 +84,14 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
 #pragma mark - View lifecycle
 
+- (void)dealloc
+{
+  NSString *keyPath = NSStringFromSelector(@selector(status));
+  [[AKAddressBook sharedInstance] removeObserver: self forKeyPath: keyPath];
+  [[NSNotificationCenter defaultCenter] removeObserver: self];
+  [AKAddressBook sharedInstance].dataSourceDelegate = nil;
+}
+
 - (void)loadView
 {
   CGFloat width = [UIScreen mainScreen].bounds.size.width;
@@ -111,14 +119,17 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   self.edgesForExtendedLayout = UIRectEdgeLeft | UIRectEdgeBottom | UIRectEdgeRight;
 
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AKGroupPickerViewDidDismissNotification object: nil];
-  
+
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AKContactPickerViewDidDismissNotification object: nil];
 
+  NSString *keyPath = NSStringFromSelector(@selector(status));
   [[AKAddressBook sharedInstance] addObserver: self
-                                   forKeyPath: @"status"
-                                      options: NSKeyValueObservingOptionNew
+                                   forKeyPath: keyPath
+                                      options: NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld
                                       context: nil];
-  
+
+  [AKAddressBook sharedInstance].dataSourceDelegate = self;
+
   [self.dataSource resetSearch];
 }
 
@@ -127,7 +138,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   [super viewWillAppear:animated];
 
   [self toggleBackButton];
-  
+
   [self setRightBarButtonItem];
 
   if ([self.searchBar.text length] > 0)
@@ -247,15 +258,22 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   }
 }
 
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-  // This is not dispatched on main queue
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{ // This is not dispatched on main queue
 
-  if (object == [AKAddressBook sharedInstance] && // Comparing the address
-      [keyPath isEqualToString: @"status"])
-  { // Status property of AKAddressBook changed
-    [self reloadTableViewData];
+  NSString *statusKeyPath = NSStringFromSelector(@selector(status));
+  if (object == [AKAddressBook sharedInstance] && [keyPath isEqualToString: statusKeyPath])
+  {
+    NSInteger oldValue = [[change objectForKey: NSKeyValueChangeOldKey] integerValue];
+    NSInteger newValue = [[change objectForKey: NSKeyValueChangeNewKey] integerValue];
 
-    [self toggleBackButton];
+    if (!(oldValue == kAddressBookLoading && newValue == kAddressBookOnline) &&
+        !(oldValue == kAddressBookOnline && newValue == kAddressBookLoading))
+    {
+        [self reloadTableViewData];
+
+        [self toggleBackButton];
+    }
   }
 }
 
@@ -323,7 +341,10 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-  if ([AKAddressBook sharedInstance].status == kAddressBookOnline)
+  AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+
+  if (akAddressBook.status == kAddressBookOnline ||
+      akAddressBook.status == kAddressBookLoading)
     return (self.dataSource.displayedContactsCount > 0) ? [self.dataSource.keys count] : 1;
   else
     return 1;
@@ -336,7 +357,8 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
 
-  if (akAddressBook.status == kAddressBookOnline)
+  if (akAddressBook.status == kAddressBookOnline ||
+      akAddressBook.status == kAddressBookLoading)
   {
     if (self.dataSource.displayedContactsCount > 0)
     {
@@ -355,7 +377,8 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 {
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
 
-  if (akAddressBook.status == kAddressBookOnline)
+  if (akAddressBook.status == kAddressBookOnline ||
+      akAddressBook.status == kAddressBookLoading)
   {
     if (self.dataSource.displayedContactsCount == 0)
     {
@@ -368,8 +391,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   }
   else
   {
-    if (akAddressBook.status == kAddressBookInitializing ||
-        akAddressBook.status == kAddressBookLoading)
+    if (akAddressBook.status == kAddressBookInitializing)
     {
       return [self loadingCellAtIndexPath: indexPath];
     }
@@ -627,20 +649,63 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   }
 }
 
-#pragma mark - Memory management
+#pragma mark - AKAddressBookDataSourceDelegate
 
-- (void)didReceiveMemoryWarning
+- (void)addressBookWillBeginUpdates: (AKAddressBook *)addressBook
 {
-  // Releases the view if it doesn't have a superview.
-  [super didReceiveMemoryWarning];
-  
-  // Release any cached data, images, etc that aren't in use.
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self.tableView beginUpdates];
+  });
 }
 
-- (void)dealloc
+- (void)addressBook: (AKAddressBook *)addressBook didInsertRecordID: (ABRecordID)recordID
 {
-  [[AKAddressBook sharedInstance] removeObserver: self forKeyPath: @"status"];
-  [[NSNotificationCenter defaultCenter] removeObserver: self];
+  dispatch_block_t block = ^{
+    AKContact *contact = [addressBook contactForContactId: recordID];
+    NSString *sectionKey = [AKContact sectionKeyForName: contact.sortName];
+
+    NSMutableArray *sectionArray = [self.dataSource.contactIdentifiers objectForKey: sectionKey];
+
+    NSUInteger row = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray
+                                   withSortOrdering: addressBook.sortOrdering
+                                  andAddressBookRef: addressBook.addressBookRef];
+
+    [sectionArray insertObject: @(recordID) atIndex: row];
+
+    NSUInteger section = [self.dataSource.keys indexOfObject: sectionKey];
+    NSArray *sections = @[[NSIndexPath indexPathForRow: row inSection: section]];
+    [self.tableView insertRowsAtIndexPaths: sections withRowAnimation: UITableViewRowAnimationAutomatic];
+  };
+  dispatch_async(dispatch_get_main_queue(), block);
+}
+
+- (void)addressBook: (AKAddressBook *)addressBook didRemoveRecordID: (ABRecordID)recordID
+{
+  dispatch_block_t block = ^{
+    for (NSString *key in self.dataSource.contactIdentifiers)
+    {
+      NSMutableArray *sectionArray = [self.dataSource.contactIdentifiers objectForKey: key];
+      NSUInteger row = [sectionArray indexOfObject: @(recordID)];
+      if (row != NSNotFound)
+      {
+        NSUInteger section = [self.dataSource.keys indexOfObject: key];
+
+        NSArray *sections = @[[NSIndexPath indexPathForRow: row inSection: section]];
+        [sectionArray removeObjectAtIndex: row];
+
+        [self.tableView deleteRowsAtIndexPaths: sections withRowAnimation: UITableViewRowAnimationAutomatic];
+        break;
+      }
+    }
+  };
+  dispatch_async(dispatch_get_main_queue(), block);
+}
+
+- (void)addressBookDidEndUpdates: (AKAddressBook *)addressBook
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self.tableView endUpdates];
+  });
 }
 
 @end
