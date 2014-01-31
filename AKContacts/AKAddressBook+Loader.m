@@ -270,13 +270,19 @@
     for (NSNumber *recordID in createdRecords)
     {
         [self.progressDelegate setProgressCurrent: ++i];
-        //NSLog(@"% 3d : %@ is new", recordID.integerValue, CFBridgingRelease(ABRecordCopyCompositeName(ABAddressBookGetPersonWithRecordID(addressBook, recordID.integerValue))));
+        if (self.status == kAddressBookLoading)
+        {
+            NSLog(@"% 3d : %@ is new", recordID.integerValue, CFBridgingRelease(ABRecordCopyCompositeName(ABAddressBookGetPersonWithRecordID(addressBook, recordID.integerValue))));
+        }
         [self contactIdentifiersInsertRecordID: recordID.integerValue withAddressBookRef: addressBook];
     }
     for (NSNumber *recordID in changedRecords)
     {
         [self.progressDelegate setProgressCurrent: ++i];
-        //NSLog(@"% 3d : %@ did change", recordID.integerValue, CFBridgingRelease(ABRecordCopyCompositeName(ABAddressBookGetPersonWithRecordID(addressBook, recordID.integerValue))));
+        if (self.status == kAddressBookLoading)
+        {
+            NSLog(@"% 3d : %@ did change", recordID.integerValue, CFBridgingRelease(ABRecordCopyCompositeName(ABAddressBookGetPersonWithRecordID(addressBook, recordID.integerValue))));
+        }
         [self contactIdentifiersDeleteRecordID: recordID.integerValue withAddressBookRef: addressBook];
         [self contactIdentifiersInsertRecordID: recordID.integerValue withAddressBookRef: addressBook];
     }
