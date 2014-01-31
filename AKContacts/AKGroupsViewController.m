@@ -66,6 +66,13 @@ static const float defaultCellHeight = 44.f;
 
 #pragma mark - View lifecycle
 
+- (void)dealloc
+{
+  NSString *keyPath = NSStringFromSelector(@selector(status));
+  [[AKAddressBook sharedInstance] removeObserver: self forKeyPath: keyPath];
+  [[NSNotificationCenter defaultCenter] removeObserver: self];
+}
+
 - (void)loadView
 {
   CGFloat width = [UIScreen mainScreen].bounds.size.width;
@@ -94,8 +101,9 @@ static const float defaultCellHeight = 44.f;
 
   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadTableViewData) name: AKContactPickerViewDidDismissNotification object: nil];
 
+  NSString *keyPath = NSStringFromSelector(@selector(status));
   [[AKAddressBook sharedInstance] addObserver: self
-                                   forKeyPath: @"status"
+                                   forKeyPath: keyPath
                                       options: NSKeyValueObservingOptionNew
                                       context: nil];
 }
@@ -457,30 +465,18 @@ static const float defaultCellHeight = 44.f;
 
 #pragma mark - Key-Value Observing
 
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-  // This is not dispatched on main queue
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{ // This is not dispatched on main queue
   
-  if (object == [AKAddressBook sharedInstance] && // Comparing the address
-      [keyPath isEqualToString: @"status"])
+  AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+  if (object == addressBook && // Comparing the address
+      [keyPath isEqualToString: NSStringFromSelector(@selector(status))])
   { // Status property of AKAddressBook changed
-    [self reloadTableViewData];
+    if (addressBook.status == kAddressBookOnline)
+    {
+      [self reloadTableViewData];
+    }
   }
-}
-
-#pragma mark - Memory management
-
-- (void)didReceiveMemoryWarning
-{
-  // Releases the view if it doesn't have a superview.
-  [super didReceiveMemoryWarning];
-  
-  // Release any cached data, images, etc that aren't in use.
-}
-
-- (void)dealloc
-{
-  [[AKAddressBook sharedInstance] removeObserver: self forKeyPath: @"status"];
-  [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 
 @end
