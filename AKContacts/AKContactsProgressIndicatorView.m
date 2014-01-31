@@ -59,7 +59,8 @@ static const CGFloat kRadius = 11.f;
         [[self layer] addSublayer: _spinLayer];
         [AKAddressBook sharedInstance].progressDelegate = self;
 
-        [self addObserver: self forKeyPath: @"progressCurrent" options: NSKeyValueObservingOptionNew context: NULL];
+        NSString *keyPath = NSStringFromSelector(@selector(progressCurrent));
+        [self addObserver: self forKeyPath: keyPath options: NSKeyValueObservingOptionNew context: NULL];
         _progressTotal = 0;
         _progressCurrent = 0;
     }
@@ -68,7 +69,8 @@ static const CGFloat kRadius = 11.f;
 
 - (void)dealloc
 {
-  [self removeObserver: self forKeyPath: @"progressCurrent"];
+  NSString *keyPath = NSStringFromSelector(@selector(progressCurrent));
+  [self removeObserver: self forKeyPath: keyPath];
   [AKAddressBook sharedInstance].progressDelegate = nil;
 }
 
@@ -85,21 +87,21 @@ static const CGFloat kRadius = 11.f;
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
-{
-    NSUInteger denom = (self.progressTotal > 100) ? self.progressTotal / 100 : self.progressTotal;
-    if (self.progressCurrent % denom == 0)
-    {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [CATransaction begin];
-            [CATransaction setDisableActions: YES];
-            [[self spinLayer] setStrokeEnd: (CGFloat)self.progressCurrent / self.progressTotal];
-            [CATransaction commit];
-        });
-    }
-    if (self.progressCurrent == self.progressTotal)
-    {
-        [self removeFromSuperview];
-    }
+{ // This is not dispatched on main queue
+  NSUInteger denom = (self.progressTotal > 100) ? self.progressTotal / 100 : self.progressTotal;
+  if (self.progressCurrent % denom == 0)
+  {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [CATransaction begin];
+      [CATransaction setDisableActions: YES];
+      [[self spinLayer] setStrokeEnd: (CGFloat)self.progressCurrent / self.progressTotal];
+      [CATransaction commit];
+    });
+  }
+  if (self.progressCurrent == self.progressTotal)
+  {
+    [self removeFromSuperview];
+  }
 }
 
 @end
