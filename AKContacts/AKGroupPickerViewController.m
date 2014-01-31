@@ -64,11 +64,6 @@ NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDid
   [self.navigationItem setRightBarButtonItem: barButtonItem];
 }
 
-- (void)didReceiveMemoryWarning
-{
-  [super didReceiveMemoryWarning];
-}
-
 #pragma mark - Custom methods
 
 - (void)cancelButtonTouchUpInside: (id)sender

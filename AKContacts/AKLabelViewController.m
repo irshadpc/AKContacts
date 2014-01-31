@@ -693,14 +693,6 @@
   [self.tableView setScrollIndicatorInsets: contentInsets];
 }
 
-#pragma mark - Memory management
-
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
-}
-
 #pragma mark - Data Source
 
 - (void)commitLabels
