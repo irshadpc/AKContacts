@@ -66,10 +66,10 @@ const int newContactID = -1<<9;
 
         ABAddressBookSave(addressBook.addressBookRef, &error);
         if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-        
+
         // Do not set super.recordID here!
         ABRecordID recordID = ABRecordGetRecordID(recordRef);
-        CFRelease(recordRef);
+        CFRelease(recordRef); // Do not leak
 
         super.recordRef = ABAddressBookGetPersonWithRecordID(addressBook.addressBookRef, recordID);
       }
