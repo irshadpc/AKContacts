@@ -118,6 +118,6 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 - (AKSource *)sourceForSourceId: (ABRecordID)recordId;
 - (AKContact *)contactForContactId: (ABRecordID)recordId;
 - (AKSource *)sourceForContactId: (ABRecordID)recordId;
-- (void)removeRecordID: (ABRecordID)recordID;
+- (void)deleteRecordID: (ABRecordID)recordID;
 
 @end

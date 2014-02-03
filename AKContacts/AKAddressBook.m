@@ -213,7 +213,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     }
   }
 
-  if (self.status != kAddressBookLoading && self.needReload == YES)
+  if (self.status != kAddressBookLoading && self.needReload)
   {
     [self loadAddressBook];
   }
@@ -321,13 +321,14 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   return ret;
 }
 
-- (void)removeRecordID: (ABRecordID)recordID
+- (void)deleteRecordID: (ABRecordID)recordID
 {
   AKContact *contact = [self contactForContactId: recordID];
 
-  for (NSMutableArray *array in [self.allContactIdentifiers allValues])
+  for (NSString *key in self.allContactIdentifiers)
   {
-    [array removeObject: [NSNumber numberWithInteger: recordID]];
+    NSMutableArray *sectionArray = [self.allContactIdentifiers objectForKey: key];
+    [sectionArray removeObject: @(recordID)];
   }
 
   [self setNeedReload: NO];
