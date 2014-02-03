@@ -35,6 +35,7 @@ FOUNDATION_EXPORT const int newContactID;
 
 @interface AKContact : AKRecord
 
+- (instancetype)initWithABRecordID: (ABRecordID) recordID;
 - (ABRecordRef)recordRef;
 /**
  * Return displayName sans diacritics and whitespace

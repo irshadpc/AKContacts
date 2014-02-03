@@ -40,19 +40,24 @@ const int newContactID = -1<<9;
 
 @implementation AKContact
 
+- (instancetype)initWithABRecordID: (ABRecordID) recordID
+{
+    self = [super initWithABRecordID: recordID andRecordType: kABPersonType];
+    if (self)
+    {
+
+    }
+    return  self;
+}
+
 - (ABRecordRef)recordRef
 {
   __block ABRecordRef ret;
 
   dispatch_block_t block = ^{
-    if (super.recordRef == nil)
-    {
       AKAddressBook *addressBook = [AKAddressBook sharedInstance];
-      if (self.recordID != newContactID)
-      {
-        super.recordRef = ABAddressBookGetPersonWithRecordID(addressBook.addressBookRef, super.recordID);
-      }
-      else
+      ABRecordID recordID = super.recordID;
+      if (recordID == newContactID)
       {
         AKSource *source = [addressBook sourceForSourceId: addressBook.sourceID];
 
@@ -68,13 +73,10 @@ const int newContactID = -1<<9;
         if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
 
         // Do not set super.recordID here!
-        ABRecordID recordID = ABRecordGetRecordID(recordRef);
+        recordID = ABRecordGetRecordID(recordRef);
         CFRelease(recordRef); // Do not leak
-
-        super.recordRef = ABAddressBookGetPersonWithRecordID(addressBook.addressBookRef, recordID);
       }
-    }
-    ret = super.recordRef;
+    ret = ABAddressBookGetPersonWithRecordID(addressBook.addressBookRef, recordID);
     super.age = [NSDate date];
   };
 
