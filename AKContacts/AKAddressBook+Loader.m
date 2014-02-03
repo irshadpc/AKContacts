@@ -83,7 +83,7 @@
             source = [[AKSource alloc] initWithABRecordID: recordID];
             source.isDefault = (defaultSourceID == recordID) ? YES : NO;
             
-            ABRecordRef tryRecordRef = ABPersonCreateInSource(source.recordRef);
+            ABRecordRef tryRecordRef = ABPersonCreateInSource(recordRef);
             if (tryRecordRef != nil)
             { // Check if source supports create records
                 source.canCreateRecord = YES;
