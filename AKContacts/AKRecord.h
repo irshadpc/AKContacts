@@ -31,16 +31,13 @@
 
 @interface AKRecord : NSObject
 
-@property (assign, nonatomic) ABRecordRef recordRef;
+@property (assign, nonatomic) ABRecordType recordType;
 @property (assign, nonatomic) ABRecordID recordID;
 @property (strong, nonatomic) NSDate *age;
 
-- (instancetype)initWithABRecordID: (ABRecordID) recordID;
+- (instancetype)initWithABRecordID: (ABRecordID) recordID andRecordType: (ABRecordType)recordType;
+- (ABRecordRef)recordRef;
 - (NSString *)description;
-/**
- * Return kABPersonType, kABGroupType or kABSourceType
-**/
-- (ABRecordType)recordType;
 /**
  * Return a value corresponding to an ABPropertyID.
  * Return type can be NSString, NSDate

@@ -39,20 +39,49 @@
 
 #pragma mark - Instance methods
 
-- (instancetype)initWithABRecordID: (ABRecordID) recordID
+- (instancetype)initWithABRecordID: (ABRecordID) recordID andRecordType: (ABRecordType)recordType
 {
   self = [super init];
   if (self)
   {
     _recordID = recordID;
+    _recordType = recordType;
   }
   return  self;
+}
+
+- (ABRecordRef)recordRef
+{
+  __block ABRecordRef ret;
+
+  dispatch_block_t block = ^{
+    if (self.recordID >= 0)
+    {
+      ABAddressBookRef addressBookRef = [[AKAddressBook sharedInstance] addressBookRef];
+      switch (self.recordType) {
+        case kABPersonType:
+          ret = ABAddressBookGetPersonWithRecordID(addressBookRef, self.recordID);
+          break;
+        case kABGroupType:
+          ret = ABAddressBookGetGroupWithRecordID(addressBookRef, self.recordID);
+          break;
+        case kABSourceType:
+          ret = ABAddressBookGetSourceWithRecordID(addressBookRef, self.recordID);
+          break;
+      }
+    }
+  };
+
+  if (dispatch_get_specific(IsOnMainQueueKey)) block();
+  else dispatch_sync(dispatch_get_main_queue(), block);
+
+  return ret;
 }
 
 - (NSString *)description
 {
   NSString *type = nil;
-  switch ([self recordType])
+  switch (self.recordType)
   {
     case kABPersonType:
       type = @"Person";
@@ -64,33 +93,17 @@
       type = @"Source";
       break;
   }
-  return [NSString stringWithFormat: @"<AK%@ %p> %d", type, _recordRef, _recordID];
-}
-
-- (ABRecordType)recordType
-{
-  __block ABRecordType ret;
-
-  if (self.recordRef == nil && self.recordID < 0) return kABGroupType; // Lazy init of recordRef
-
-  dispatch_block_t block = ^{
-		  ret = ABRecordGetRecordType(_recordRef);
-	};
-
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
-  else dispatch_sync(dispatch_get_main_queue(), block);
-
-  return ret;
+  return [NSString stringWithFormat: @"<AK%@ %p> %d", type, self.recordRef, self.recordID];
 }
 
 - (id)valueForProperty: (ABPropertyID)property
 {
-  if (self.recordRef == nil && self.recordID < 0) return nil; // Lazy init of recordRef
+  if (self.recordID < 0) return nil;
 
   __block id ret;
 
   dispatch_block_t block = ^{
-    ret = (id)CFBridgingRelease(ABRecordCopyValue(_recordRef, property));
+    ret = (id)CFBridgingRelease(ABRecordCopyValue(self.recordRef, property));
   };
 
   if (dispatch_get_specific(IsOnMainQueueKey)) block();
@@ -101,7 +114,7 @@
 
 - (void)setValue: (id)value forProperty: (ABPropertyID)property
 {
-  if (self.recordRef == nil && self.recordID < 0) return; // Lazy init of recordRef
+  if (self.recordID < 0) return;
 
   dispatch_block_t block = ^{
     CFErrorRef error = NULL;
@@ -122,12 +135,12 @@
 
 - (NSInteger)countForProperty: (ABPropertyID) property
 {  
-  if (self.recordRef == nil && self.recordID < 0) return 0; // Lazy init of recordRef
-  
+  if (self.recordID < 0) return 0;
+
   __block NSInteger ret = 0;
   
   dispatch_block_t block = ^{
-    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(_recordRef, property);
+    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.recordRef, property);
     if (multiValueRecord) {
       ret = ABMultiValueGetCount(multiValueRecord);
       CFRelease(multiValueRecord);
@@ -142,12 +155,12 @@
 
 - (NSArray *)identifiersForProperty: (ABPropertyID) property
 {
-  if (self.recordRef == nil && self.recordID < 0) return nil; // Lazy init of recordRef
+  if (self.recordID < 0) return nil;
   
   __block NSArray *ret = nil;
   
   dispatch_block_t block = ^{
-    ABMultiValueRef multiValueRecord =(ABMultiValueRef)ABRecordCopyValue(_recordRef, property);
+    ABMultiValueRef multiValueRecord =(ABMultiValueRef)ABRecordCopyValue(self.recordRef, property);
     if (multiValueRecord) {
       NSInteger count = ABMultiValueGetCount(multiValueRecord);
       NSMutableArray *identifiers = [[NSMutableArray alloc] initWithCapacity: count];
@@ -168,12 +181,12 @@
 
 - (id)valueForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier
 {
-  if (self.recordRef == nil && self.recordID < 0) return nil; // Lazy init of recordRef
-  
+  if (self.recordID < 0) return nil;
+
   __block id ret = nil;
   
   dispatch_block_t block = ^{
-    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(_recordRef, property);
+    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.recordRef, property);
     if (multiValueRecord)
     {
       CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
@@ -193,13 +206,13 @@
 
 - (NSString *)labelForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier
 {
-  if (self.recordRef == nil && self.recordID < 0) return nil; // Lazy init of recordRef
+  if (self.recordID < 0) return nil;
   
   __block NSString *ret = nil;
   
   dispatch_block_t block = ^{
 
-    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(_recordRef, property);
+    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.recordRef, property);
     if (multiValueRecord)
     {
       CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
@@ -237,10 +250,10 @@
 
 - (void)setValue: (id)value andLabel: (NSString *)label forMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger *)identifier
 {
-  if (self.recordRef == nil && self.recordID < 0) return; // Lazy init of recordRef
+  if (self.recordID < 0) return;
   
   dispatch_block_t block = ^{
-    ABMultiValueRef record = (ABMultiValueRef)ABRecordCopyValue(_recordRef, property);
+    ABMultiValueRef record = (ABMultiValueRef)ABRecordCopyValue(self.recordRef, property);
     ABMutableMultiValueRef mutableRecord = NULL;
     if (record != NULL)
     {
