@@ -47,7 +47,7 @@ NSString *const defaultsSourceKey = @"Source_%d";
 
 - (instancetype)initWithABRecordID: (ABRecordID) recordID
 {
-  self = [super initWithABRecordID: recordID];
+  self = [super initWithABRecordID: recordID andRecordType: kABSourceType];
   if (self)
   {
     _isDefault = NO;
@@ -61,13 +61,12 @@ NSString *const defaultsSourceKey = @"Source_%d";
   __block ABRecordRef ret;
 
   dispatch_block_t block = ^{
-    if (super.recordRef == nil && super.recordID >= 0)
+    if (super.recordID >= 0)
     {
       ABAddressBookRef addressBookRef = [[AKAddressBook sharedInstance] addressBookRef];
-      super.recordRef = ABAddressBookGetSourceWithRecordID(addressBookRef, super.recordID);
+      ret = ABAddressBookGetSourceWithRecordID(addressBookRef, super.recordID);
     }
-    ret = super.recordRef;
-	};
+  };
 
   if (dispatch_get_specific(IsOnMainQueueKey)) block();
   else dispatch_sync(dispatch_get_main_queue(), block);

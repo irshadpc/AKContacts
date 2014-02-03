@@ -38,7 +38,7 @@ NSString *const DefaultsKeyGroups = @"Groups";
 
 - (instancetype)initWithABRecordID: (ABRecordID) recordID
 {
-  self = [super initWithABRecordID: recordID];
+  self = [super initWithABRecordID: recordID andRecordType: kABGroupType];
   if (self)
   {
     _memberIDs = [[NSMutableSet alloc] init];
@@ -51,12 +51,11 @@ NSString *const DefaultsKeyGroups = @"Groups";
   __block ABRecordRef ret;
 
   dispatch_block_t block = ^{
-    if (super.recordRef == nil && super.recordID >= 0)
+    if (super.recordID >= 0)
     {
       ABAddressBookRef addressBookRef = [[AKAddressBook sharedInstance] addressBookRef];
-      super.recordRef = ABAddressBookGetGroupWithRecordID(addressBookRef, super.recordID);
+      ret = ABAddressBookGetGroupWithRecordID(addressBookRef, super.recordID);
     }
-    ret = super.recordRef;
   };
 
   if (dispatch_get_specific(IsOnMainQueueKey)) block();
