@@ -8,6 +8,15 @@
 
 #import <Foundation/Foundation.h>
 
+@class AKContactsTableViewDataSource;
+
+@protocol AKContactsTableViewDataSourceDelegate <NSObject>
+- (void)dataSourceWillBeginSearch: (AKContactsTableViewDataSource *)dataSource;
+- (void)dataSourceDidBeginSearch: (AKContactsTableViewDataSource *)dataSource;
+- (void)dataSourceWillEndSearch: (AKContactsTableViewDataSource *)dataSource;
+- (void)dataSourceDidEndSearch: (AKContactsTableViewDataSource *)dataSource;
+@end
+
 @interface AKContactsTableViewDataSource : NSObject
 
 /**
@@ -18,6 +27,8 @@
  * Subset of allContactIdentifiers that are displayed
  **/
 @property (strong, nonatomic) NSMutableDictionary *contactIdentifiers;
+
+@property (assign, nonatomic) id<AKContactsTableViewDataSourceDelegate> delegate;
 
 - (NSInteger)displayedContactsCount;
 

@@ -122,9 +122,9 @@
         
         dispatch_semaphore_signal(akAddressBook.ab_semaphore);
         
-        dispatch_async(dispatch_get_main_queue(), ^{
-          //  [self.tableView reloadData];
-        });
+      if ([self.delegate respondsToSelector: @selector(dataSourceDidEndSearch:)]) {
+        [self.delegate dataSourceDidEndSearch: self];
+      }
     };
     
     dispatch_async(akAddressBook.ab_queue, block);
