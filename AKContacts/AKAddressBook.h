@@ -64,7 +64,7 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 
 @end
 
-@protocol AKAddressBookDataSourceDelegate <NSObject>
+@protocol AKAddressBookPresentationDelegate <NSObject>
 
 - (void)addressBookWillBeginUpdates: (AKAddressBook *)addressBook;
 - (void)addressBook: (AKAddressBook *)addressBook didInsertRecordID: (ABRecordID)recordID;
@@ -77,7 +77,7 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 
 @property (assign, nonatomic) id<AKAddressBookProgressDelegate> progressDelegate;
 
-@property (assign, nonatomic) id<AKAddressBookDataSourceDelegate> dataSourceDelegate;
+@property (assign, nonatomic) id<AKAddressBookPresentationDelegate> presentationDelegate;
 
 @property (assign, nonatomic) ABAddressBookRef addressBookRef;
 

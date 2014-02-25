@@ -251,9 +251,9 @@
 
     if (self.status == kAddressBookLoading)
     {
-      if ([self.dataSourceDelegate respondsToSelector: @selector(addressBookWillBeginUpdates:)])
+      if ([self.presentationDelegate respondsToSelector: @selector(addressBookWillBeginUpdates:)])
       {
-        [self.dataSourceDelegate addressBookWillBeginUpdates: self];
+        [self.presentationDelegate addressBookWillBeginUpdates: self];
       }
     }
 
@@ -289,9 +289,9 @@
     
     if (self.status == kAddressBookLoading)
     {
-      if ([self.dataSourceDelegate respondsToSelector:@selector(addressBookDidEndUpdates:)])
+      if ([self.presentationDelegate respondsToSelector:@selector(addressBookDidEndUpdates:)])
       {
-        [self.dataSourceDelegate addressBookDidEndUpdates: self];
+        [self.presentationDelegate addressBookDidEndUpdates: self];
       }
     }
 }
@@ -312,9 +312,9 @@
 
   if (self.status == kAddressBookLoading)
   {
-    if ([self.dataSourceDelegate respondsToSelector:@selector(addressBook:didInsertRecordID:)])
+    if ([self.presentationDelegate respondsToSelector:@selector(addressBook:didInsertRecordID:)])
     {
-      [self.dataSourceDelegate addressBook: self didInsertRecordID: recordID];
+      [self.presentationDelegate addressBook: self didInsertRecordID: recordID];
     }
   }
 }
@@ -357,9 +357,9 @@
 
     if (self.status == kAddressBookLoading)
     {
-      if ([self.dataSourceDelegate respondsToSelector:@selector(addressBook:didRemoveRecordID:)])
+      if ([self.presentationDelegate respondsToSelector:@selector(addressBook:didRemoveRecordID:)])
       {
-        [self.dataSourceDelegate addressBook: self didRemoveRecordID: recordID];
+        [self.presentationDelegate addressBook: self didRemoveRecordID: recordID];
       }
     }
   }
