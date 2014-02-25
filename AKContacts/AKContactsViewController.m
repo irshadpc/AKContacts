@@ -37,7 +37,6 @@
 #import "AKGroupPickerViewController.h"
 #import "AKGroupsViewController.h"
 #import "AKContactPickerViewController.h"
-#import "AKContactsTableViewDataSource.h"
 #import "AKAddressBook+Loader.h"
 
 #import <AddressBook/AddressBook.h>
@@ -89,7 +88,8 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   NSString *keyPath = NSStringFromSelector(@selector(status));
   [[AKAddressBook sharedInstance] removeObserver: self forKeyPath: keyPath];
   [[NSNotificationCenter defaultCenter] removeObserver: self];
-  [AKAddressBook sharedInstance].dataSourceDelegate = nil;
+  [AKAddressBook sharedInstance].presentationDelegate = nil;
+  self.dataSource.delegate = nil;
 }
 
 - (void)loadView
@@ -101,6 +101,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   }
   self.tableView = [[UITableView alloc] initWithFrame: CGRectMake(0.f, 0.f, width, height) style: UITableViewStylePlain];
   self.dataSource = [[AKContactsTableViewDataSource alloc] init];
+  self.dataSource.delegate = self;
   self.tableView.dataSource = self;
   self.tableView.delegate = self;
 
@@ -128,7 +129,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
                                       options: NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld
                                       context: nil];
 
-  [AKAddressBook sharedInstance].dataSourceDelegate = self;
+  [AKAddressBook sharedInstance].presentationDelegate = self;
 
   [self.dataSource resetSearch];
 }
@@ -649,7 +650,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   }
 }
 
-#pragma mark - AKAddressBookDataSourceDelegate
+#pragma mark - AKAddressBookPresentationDelegate
 
 - (void)addressBookWillBeginUpdates: (AKAddressBook *)addressBook
 {
@@ -705,6 +706,30 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 {
   dispatch_async(dispatch_get_main_queue(), ^{
     [self.tableView endUpdates];
+  });
+}
+
+#pragma mark - AKContactsTableViewDataSource
+
+- (void)dataSourceWillBeginSearch: (AKContactsTableViewDataSource *)dataSource
+{
+  
+}
+
+- (void)dataSourceDidBeginSearch: (AKContactsTableViewDataSource *)dataSource
+{
+  
+}
+
+- (void)dataSourceWillEndSearch: (AKContactsTableViewDataSource *)dataSource
+{
+  
+}
+
+- (void)dataSourceDidEndSearch: (AKContactsTableViewDataSource *)dataSource
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self.tableView reloadData];
   });
 }
 

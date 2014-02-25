@@ -28,10 +28,9 @@
 
 #import <UIKit/UIKit.h>
 #import "AKAddressBook.h"
+#import "AKContactsTableViewDataSource.h"
 
-@class AKContactsTableViewDataSource;
-
-@interface AKContactsViewController : UIViewController <AKAddressBookDataSourceDelegate>
+@interface AKContactsViewController : UIViewController <AKAddressBookPresentationDelegate, AKContactsTableViewDataSourceDelegate>
 
 @property (strong, nonatomic, readonly) AKContactsTableViewDataSource *dataSource;
 
