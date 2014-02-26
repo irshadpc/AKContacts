@@ -397,12 +397,11 @@ const int newContactID = -1<<9;
   ABAddressBookRef addressBookRef = [AKAddressBook sharedInstance].addressBookRef;
 
   if (self.recordID == newContactID)
-  { // Reference super.recordRef not self.recordRef here
-
+  {
     [[AKAddressBook sharedInstance] setNeedReload: NO];
 
     CFErrorRef error = NULL;
-    ABAddressBookRemoveRecord(addressBookRef, super.recordRef, &error);
+    ABAddressBookRemoveRecord(addressBookRef, self.recordRef, &error);
     if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
 
     ABAddressBookSave(addressBookRef, &error);
