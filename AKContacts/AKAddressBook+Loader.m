@@ -164,6 +164,7 @@
     {
         self.contactIDsSortedByFirst = [[NSMutableDictionary alloc] init];
         self.contactIDsSortedByLast = [[NSMutableDictionary alloc] init];
+        self.contactIDsSortedByPhone = [[NSMutableDictionary alloc] init];
 
         NSString *sectionKeys = @"ABCDEFGHIJKLMNOPQRSTUVWXYZ#";
         for (int i = 0; i < [sectionKeys length]; i++)
@@ -236,6 +237,8 @@
                 }
             }
 
+            [self processPhoneNumbersOfRecordRef: recordRef withRecordID: recordID andABAddressBookRef: addressBook];
+            
             if (!self.dateAddressBookLoaded || [self.dateAddressBookLoaded compare: created] != NSOrderedDescending)
             { // Created should be compared first
                 [createdRecords addObject: contactID];
@@ -301,6 +304,30 @@
       {
         [self.presentationDelegate addressBookDidEndUpdates: self];
       }
+    }
+}
+
+- (void)processPhoneNumbersOfRecordRef: (ABRecordRef)recordRef withRecordID: (ABRecordID)recordID andABAddressBookRef: (ABAddressBookRef)addressBook
+{
+    ABMultiValueRef multiValueRecord =(ABMultiValueRef)ABRecordCopyValue(recordRef, kABPersonPhoneProperty);
+    if (multiValueRecord)
+    {
+        NSCharacterSet *nonDecimalDigits = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
+        
+        NSInteger count = ABMultiValueGetCount(multiValueRecord);
+        for (NSInteger i = 0; i < count; ++i) {
+            NSString *value = (NSString *)CFBridgingRelease(ABMultiValueCopyValueAtIndex(multiValueRecord, i));
+            NSString *digits = [[value componentsSeparatedByCharactersInSet: nonDecimalDigits] componentsJoinedByString: @""];
+            if (digits.length)
+            {
+                NSString *key = [digits substringToIndex: 1];
+                NSMutableArray *sectionArray = [self.contactIDsSortedByPhone objectForKey: key];
+
+                NSUInteger index = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray withSortOrdering: self.sortOrdering andAddressBookRef: addressBook];
+                [sectionArray insertObject: @(recordID) atIndex: index];
+            }
+        }
+        CFRelease(multiValueRecord);
     }
 }
 
