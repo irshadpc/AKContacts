@@ -85,13 +85,13 @@ NSString *const AKContactPickerViewDidDismissNotification = @"AKContactPickerVie
   AKGroup *group = [source groupForGroupId: kGroupAggregate];
   NSMutableSet *groupMembers = [group memberIDs];
 
-  NSArray *keyArray = [[akAddressBook.allContactIdentifiers allKeys] sortedArrayUsingSelector: @selector(compare:)];
+  NSArray *keyArray = [[akAddressBook.contactIDs allKeys] sortedArrayUsingSelector: @selector(compare:)];
 
   [self setContactIdentifiers: [[NSMutableDictionary alloc] init]];
 
   for (NSString *key in keyArray)
   {
-    NSArray *arrayForKey = [akAddressBook.allContactIdentifiers objectForKey: key];
+    NSArray *arrayForKey = [akAddressBook.contactIDs objectForKey: key];
     NSMutableArray *sectionArray = [NSKeyedUnarchiver unarchiveObjectWithData: [NSKeyedArchiver archivedDataWithRootObject: arrayForKey]]; // Mutable deep copy
 
     NSMutableArray *recordsToRemove = [[NSMutableArray alloc] init];

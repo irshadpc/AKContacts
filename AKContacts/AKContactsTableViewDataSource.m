@@ -36,21 +36,21 @@
     AKGroup *group = [source groupForGroupId: akAddressBook.groupID];
     NSMutableSet *groupMembers = [group memberIDs];
     
-    NSArray *keyArray = [akAddressBook.allContactIdentifiers.allKeys sortedArrayUsingSelector: @selector(compare:)];
+    NSArray *keyArray = [akAddressBook.contactIDs.allKeys sortedArrayUsingSelector: @selector(compare:)];
 
     if ([groupMembers count] == akAddressBook.contactsCount)
     { // Shortcut for aggregate group if there's only a single source
-        NSMutableDictionary *contactIdentifiers = [NSKeyedUnarchiver unarchiveObjectWithData: [NSKeyedArchiver archivedDataWithRootObject: akAddressBook.allContactIdentifiers]]; // Mutable deep copy
+        NSMutableDictionary *contactIdentifiers = [NSKeyedUnarchiver unarchiveObjectWithData: [NSKeyedArchiver archivedDataWithRootObject: akAddressBook.contactIDs]]; // Mutable deep copy
         self.contactIdentifiers = contactIdentifiers;
         [self.keys addObjectsFromArray: keyArray];
     }
     else
     {
-        [self setContactIdentifiers: [[NSMutableDictionary alloc] initWithCapacity: [akAddressBook.allContactIdentifiers count]]];
+        [self setContactIdentifiers: [[NSMutableDictionary alloc] initWithCapacity: [akAddressBook.contactIDs count]]];
         
         for (NSString *key in keyArray)
         {
-            NSArray *arrayForKey = [akAddressBook.allContactIdentifiers objectForKey: key];
+            NSArray *arrayForKey = [akAddressBook.contactIDs objectForKey: key];
             NSMutableArray *sectionArray = [arrayForKey mutableCopy];
 
             NSMutableArray *recordsToRemove = [[NSMutableArray alloc] init];
