@@ -255,6 +255,11 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   }];
 }
 
+- (NSDictionary *)contactIDs
+{
+    return (self.sortOrdering == kABPersonSortByFirstName) ? self.contactIDsSortedByFirst : self.contactIDsSortedByLast;
+}
+
 - (AKSource *)defaultSource
 {
   AKSource *ret = nil;
@@ -325,9 +330,14 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 {
   AKContact *contact = [self contactForContactId: recordID];
 
-  for (NSString *key in self.allContactIdentifiers)
+  for (NSString *key in self.contactIDsSortedByFirst)
   {
-    NSMutableArray *sectionArray = [self.allContactIdentifiers objectForKey: key];
+    NSMutableArray *sectionArray = [self.contactIDsSortedByFirst objectForKey: key];
+    [sectionArray removeObject: @(recordID)];
+  }
+  for (NSString *key in self.contactIDsSortedByLast)
+  {
+    NSMutableArray *sectionArray = [self.contactIDsSortedByLast objectForKey: key];
     [sectionArray removeObject: @(recordID)];
   }
 

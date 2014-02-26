@@ -97,7 +97,9 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 /**
  * Arrays of AKContact objects with their alphabetic lookup letters as keys
  **/
-@property (strong, nonatomic) NSMutableDictionary *allContactIdentifiers;
+@property (strong, nonatomic) NSMutableDictionary *contactIDsSortedByFirst;
+@property (strong, nonatomic) NSMutableDictionary *contactIDsSortedByLast;
+
 /**
  * ID of displayed source and group
  **/
@@ -114,6 +116,7 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 
 + (AKAddressBook *)sharedInstance;
 - (void)requestAddressBookAccess;
+- (NSDictionary *)contactIDs;
 - (AKSource *)defaultSource;
 - (AKSource *)sourceForSourceId: (ABRecordID)recordId;
 - (AKContact *)contactForContactId: (ABRecordID)recordId;
