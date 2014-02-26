@@ -122,7 +122,7 @@ NSString *const AKContactPickerViewDidDismissNotification = @"AKContactPickerVie
   AKSource *source = [akAddressBook sourceForSourceId: akAddressBook.sourceID];
   AKGroup *group = [source groupForGroupId: akAddressBook.groupID];
 
-  [group revert];
+  [group revertMembers];
 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
   [self.navigationController dismissViewControllerAnimated: YES completion: nil];
@@ -138,7 +138,7 @@ NSString *const AKContactPickerViewDidDismissNotification = @"AKContactPickerVie
   AKSource *source = [akAddressBook sourceForSourceId: akAddressBook.sourceID];
   AKGroup *group = [source groupForGroupId: akAddressBook.groupID];
 
-  [group commit];
+  [group commitMembers];
 
   [[NSNotificationCenter defaultCenter] postNotificationName: AKContactPickerViewDidDismissNotification object: nil];
 

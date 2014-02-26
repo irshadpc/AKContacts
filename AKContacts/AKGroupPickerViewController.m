@@ -74,7 +74,7 @@ NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDid
 
   for (AKGroup *group in source.groups)
   {
-    [group revert];
+    [group revertMembers];
   }
 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
@@ -92,7 +92,7 @@ NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDid
   
   for (AKGroup *group in source.groups)
   {
-    [group commit];
+    [group commitMembers];
   }
 
   [[NSNotificationCenter defaultCenter] postNotificationName: AKGroupPickerViewDidDismissNotification object: nil];
