@@ -27,10 +27,5 @@
  * The index where a record should appear in an alphabetically sorted array
  */
 + (NSUInteger)indexOfRecordID: (ABRecordID) recordID inArray: (NSArray *)array withSortOrdering: (ABPersonSortOrdering)sortOrdering andAddressBookRef: (ABAddressBookRef)addressBook;
-/**
- * Return the name of a record from which the section can be determined
- * This name does not include any prefix or suffix
- */
-+ (NSString *)nameToDetermineSectionForRecordRef: (ABRecordRef)recordRef withSortOrdering: (ABPersonSortOrdering)sortOrdering;
 
 @end

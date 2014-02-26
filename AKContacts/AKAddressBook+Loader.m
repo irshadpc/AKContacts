@@ -160,7 +160,7 @@
 {
     NSAssert(!dispatch_get_specific(IsOnMainQueueKey), @"Must not be dispatched on main queue");
 
-    if (!self.contactIDsSortedByFirst || !self.contactIDsSortedByLast)
+    if (!self.contactIDsSortedByFirst || !self.contactIDsSortedByLast || !self.contactIDsSortedByPhone)
     {
         self.contactIDsSortedByFirst = [[NSMutableDictionary alloc] init];
         self.contactIDsSortedByLast = [[NSMutableDictionary alloc] init];
@@ -171,6 +171,12 @@
             NSString *sectionKey = [sectionKeys substringWithRange: NSMakeRange(i, 1)];
             [self.contactIDsSortedByFirst setObject: [[NSMutableArray alloc] init] forKey: sectionKey];
             [self.contactIDsSortedByLast setObject: [[NSMutableArray alloc] init] forKey: sectionKey];
+        }
+        sectionKeys = @"0123456789";
+        for (int i = 0; i < [sectionKeys length]; i++)
+        {
+            NSString *sectionKey = [sectionKeys substringWithRange: NSMakeRange(i, 1)];
+            [self.contactIDsSortedByPhone setObject: [[NSMutableArray alloc] init] forKey: sectionKey];
         }
     }
 
@@ -303,7 +309,7 @@
 - (void)contactIdentifiersInsertRecordID: (ABRecordID)recordID withAddressBookRef: (ABAddressBookRef)addressBook
 {
   ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBook, recordID);
-  NSString *name = [AKAddressBook nameToDetermineSectionForRecordRef: recordRef withSortOrdering: self.sortOrdering];
+  NSString *name = [AKContact nameToDetermineSectionForRecordRef: recordRef withSortOrdering: self.sortOrdering];
   NSString *sectionKey = [AKContact sectionKeyForName: name];
 
   NSMutableArray *firstNameArray = (NSMutableArray *)[self.contactIDsSortedByFirst objectForKey: sectionKey];
@@ -330,8 +336,8 @@
   ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBook, recordID);
   if (recordRef)
   { // Can still exist when it is removed and added due to a name change
-    NSString *nameByFirst = [AKAddressBook nameToDetermineSectionForRecordRef: recordRef withSortOrdering: kABPersonSortByFirstName];
-    NSString *nameByLast = [AKAddressBook nameToDetermineSectionForRecordRef: recordRef withSortOrdering: kABPersonSortByLastName];
+    NSString *nameByFirst = [AKContact nameToDetermineSectionForRecordRef: recordRef withSortOrdering: kABPersonSortByFirstName];
+    NSString *nameByLast = [AKContact nameToDetermineSectionForRecordRef: recordRef withSortOrdering: kABPersonSortByLastName];
     sectionKeyByFirst = [AKContact sectionKeyForName: nameByFirst];
     sectionKeyByLast = [AKContact sectionKeyForName: nameByLast];
   }
@@ -356,55 +362,6 @@
                   inSortedRange: (NSRange){0, array.count}
                         options: NSBinarySearchingInsertionIndex
                 usingComparator: [AKAddressBook recordIDBasedComparatorWithSortOrdering: sortOrdering andAddressBook: addressBook]];
-}
-
-+ (NSString *)nameToDetermineSectionForRecordRef: (ABRecordRef)recordRef withSortOrdering: (ABPersonSortOrdering)sortOrdering
-{
-    NSString *ret;
-    NSNumber *kind = (NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonKindProperty));
-    if ([kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
-    {
-        ABPropertyID property = (sortOrdering == kABPersonSortByFirstName) ? kABPersonFirstNameProperty : kABPersonLastNameProperty;
-        ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, property));
-        if (!ret.length)
-        {
-            property = (property == kABPersonFirstNameProperty) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
-            ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, property));
-        }
-    }
-    else if ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
-    {
-        ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonOrganizationProperty));
-    }
-    return ret;
-}
-
-+ (NSString *)sortNameForRecordID: (ABRecordID)recordID withSortOrdering: (ABPersonSortOrdering)sortOrdering inAddressBook: (ABAddressBookRef)addressBook
-{
-    ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBook, recordID);
-    
-    NSNumber *kind = (NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonKindProperty));
-    
-    NSString *ret;
-    if ([kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
-    {
-        NSString *first = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonFirstNameProperty));
-        NSString *last = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonLastNameProperty));
-        
-        if (kABPersonSortByFirstName == sortOrdering)
-        {
-            ret = [NSString stringWithFormat: @"%@ %@", first, last];
-        }
-        else
-        {
-            ret = [NSString stringWithFormat: @"%@ %@", last, first];
-        }
-    }
-    else if ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
-    {
-        ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonOrganizationProperty));
-    }
-    return ret;
 }
 
 + (NSUInteger)removeRecordID: (ABRecordID)recordID withSectionKey: (NSString *)sectionKey fromContactIdentifierDictionary: (NSMutableDictionary *)contactIDs
