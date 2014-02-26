@@ -62,5 +62,10 @@ FOUNDATION_EXPORT const int newContactID;
 
 + (NSString *)localizedNameForProperty: (ABPropertyID)property;
 + (NSString *)sectionKeyForName: (NSString *)name;
+/**
+ * Return the name of a record from which the section can be determined
+ * This name does not include any prefix or suffix
+ */
++ (NSString *)nameToDetermineSectionForRecordRef: (ABRecordRef)recordRef withSortOrdering: (ABPersonSortOrdering)sortOrdering;
 
 @end

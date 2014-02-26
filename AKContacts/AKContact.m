@@ -432,12 +432,33 @@ const int newContactID = -1<<9;
 + (NSString *)sectionKeyForName: (NSString *)name
 {
   NSString *sectionKey = @"#";
-  if ([name length] > 0)
+  if (name.length)
   {
     NSString *key = [[[[name substringToIndex: 1] decomposedStringWithCanonicalMapping] substringToIndex: 1] uppercaseString];
     if (isalpha([key characterAtIndex: 0])) sectionKey = key;
   }
   return sectionKey;
+}
+
++ (NSString *)nameToDetermineSectionForRecordRef: (ABRecordRef)recordRef withSortOrdering: (ABPersonSortOrdering)sortOrdering
+{
+    NSString *ret;
+    NSNumber *kind = (NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonKindProperty));
+    if ([kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
+    {
+        ABPropertyID property = (sortOrdering == kABPersonSortByFirstName) ? kABPersonFirstNameProperty : kABPersonLastNameProperty;
+        ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, property));
+        if (!ret.length)
+        {
+            property = (property == kABPersonFirstNameProperty) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
+            ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, property));
+        }
+    }
+    else if ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
+    {
+        ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonOrganizationProperty));
+    }
+    return ret;
 }
 
 @end
