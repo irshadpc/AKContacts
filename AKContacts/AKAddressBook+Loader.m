@@ -160,23 +160,25 @@
 {
     NSAssert(!dispatch_get_specific(IsOnMainQueueKey), @"Must not be dispatched on main queue");
 
-    if (!self.allContactIdentifiers)
+    if (!self.contactIDsSortedByFirst || !self.contactIDsSortedByLast)
     {
-        self.allContactIdentifiers = [[NSMutableDictionary alloc] init];
+        self.contactIDsSortedByFirst = [[NSMutableDictionary alloc] init];
+        self.contactIDsSortedByLast = [[NSMutableDictionary alloc] init];
+
         NSString *sectionKeys = @"ABCDEFGHIJKLMNOPQRSTUVWXYZ#";
         for (int i = 0; i < [sectionKeys length]; i++)
         {
-            NSString *sectionKey = [NSString stringWithFormat: @"%c", [sectionKeys characterAtIndex: i]];
-            NSMutableArray *sectionArray = [[NSMutableArray alloc] init];
-            [self.allContactIdentifiers setObject: sectionArray forKey: sectionKey];
+            NSString *sectionKey = [sectionKeys substringWithRange: NSMakeRange(i, 1)];
+            [self.contactIDsSortedByFirst setObject: [[NSMutableArray alloc] init] forKey: sectionKey];
+            [self.contactIDsSortedByLast setObject: [[NSMutableArray alloc] init] forKey: sectionKey];
         }
     }
 
     NSMutableSet *appContactIdentifiers = [[NSMutableSet alloc] init];
     if (self.status == kAddressBookLoading)
     {
-        for (NSString *key in self.allContactIdentifiers) {
-            NSArray *section = [self.allContactIdentifiers objectForKey: key];
+        for (NSString *key in self.contactIDsSortedByFirst) {
+            NSArray *section = [self.contactIDsSortedByFirst objectForKey: key];
             [appContactIdentifiers addObjectsFromArray: section];
         }
     }
@@ -304,12 +306,14 @@
   NSString *name = [AKAddressBook nameToDetermineSectionForRecordRef: recordRef withSortOrdering: self.sortOrdering];
   NSString *sectionKey = [AKContact sectionKeyForName: name];
 
-  NSMutableArray *sectionArray = (NSMutableArray *)[self.allContactIdentifiers objectForKey: sectionKey];
+  NSMutableArray *firstNameArray = (NSMutableArray *)[self.contactIDsSortedByFirst objectForKey: sectionKey];
+  NSMutableArray *lastNameArray = (NSMutableArray *)[self.contactIDsSortedByLast objectForKey: sectionKey];
 
-  NSUInteger index = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray withSortOrdering: self.sortOrdering andAddressBookRef: addressBook];
-
-  [sectionArray insertObject: [NSNumber numberWithInteger: recordID] atIndex: index];
-
+  NSUInteger index = [AKAddressBook indexOfRecordID: recordID inArray: firstNameArray withSortOrdering: kABPersonSortByFirstName andAddressBookRef: addressBook];
+  [firstNameArray insertObject: @(recordID) atIndex: index];
+  index = [AKAddressBook indexOfRecordID: recordID inArray: lastNameArray withSortOrdering: kABPersonSortByLastName andAddressBookRef: addressBook];
+  [lastNameArray insertObject: @(recordID) atIndex: index];
+    
   if (self.status == kAddressBookLoading)
   {
     if ([self.presentationDelegate respondsToSelector:@selector(addressBook:didInsertRecordID:)])
@@ -321,46 +325,25 @@
 
 - (void)contactIdentifiersDeleteRecordID: (ABRecordID)recordID withAddressBookRef: (ABAddressBookRef)addressBook
 {
-  NSString *sectionKey;
-  NSUInteger index = NSNotFound;
-  NSMutableArray *sectionArray = nil;
+  NSString *sectionKeyByFirst, *sectionKeyByLast;
 
   ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBook, recordID);
   if (recordRef)
   { // Can still exist when it is removed and added due to a name change
-    NSString *name = [AKAddressBook nameToDetermineSectionForRecordRef: recordRef withSortOrdering: self.sortOrdering];
-    sectionKey = [AKContact sectionKeyForName: name];
+    NSString *nameByFirst = [AKAddressBook nameToDetermineSectionForRecordRef: recordRef withSortOrdering: kABPersonSortByFirstName];
+    NSString *nameByLast = [AKAddressBook nameToDetermineSectionForRecordRef: recordRef withSortOrdering: kABPersonSortByLastName];
+    sectionKeyByFirst = [AKContact sectionKeyForName: nameByFirst];
+    sectionKeyByLast = [AKContact sectionKeyForName: nameByLast];
   }
 
-  if (sectionKey)
+  NSUInteger indexByFirst = [AKAddressBook removeRecordID: recordID withSectionKey: sectionKeyByFirst fromContactIdentifierDictionary: self.contactIDsSortedByFirst];
+  NSUInteger indexByLast = [AKAddressBook removeRecordID: recordID withSectionKey: sectionKeyByLast fromContactIdentifierDictionary: self.contactIDsSortedByLast];
+
+  if ((indexByFirst != NSNotFound || indexByLast != NSNotFound) && self.status == kAddressBookLoading)
   {
-    sectionArray = [self.allContactIdentifiers objectForKey: sectionKey];
-    index = [sectionArray indexOfObject: @(recordID)];
-  }
-
-  if (index == NSNotFound)
-  { // Moved to another section
-    for (NSString *key in self.allContactIdentifiers)
-    { // This is slow but should run seldom
-      sectionArray = [self.allContactIdentifiers objectForKey: key];
-      index = [sectionArray indexOfObject: @(recordID)];
-      if (index != NSNotFound)
-      {
-        NSLog(@"Moved from section: %@", key);
-        break;
-      }
-    }
-  }
-  if (index != NSNotFound)
-  {
-    [sectionArray removeObjectAtIndex: index];
-
-    if (self.status == kAddressBookLoading)
+    if ([self.presentationDelegate respondsToSelector:@selector(addressBook:didRemoveRecordID:)])
     {
-      if ([self.presentationDelegate respondsToSelector:@selector(addressBook:didRemoveRecordID:)])
-      {
-        [self.presentationDelegate addressBook: self didRemoveRecordID: recordID];
-      }
+      [self.presentationDelegate addressBook: self didRemoveRecordID: recordID];
     }
   }
 }
@@ -422,6 +405,36 @@
         ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonOrganizationProperty));
     }
     return ret;
+}
+
++ (NSUInteger)removeRecordID: (ABRecordID)recordID withSectionKey: (NSString *)sectionKey fromContactIdentifierDictionary: (NSMutableDictionary *)contactIDs
+{
+    NSMutableArray *sectionArray;
+    NSUInteger index = NSNotFound;
+    if (sectionKey)
+    {
+        sectionArray = [contactIDs objectForKey: sectionKey];
+        index = [sectionArray indexOfObject: @(recordID)];
+    }
+    
+    if (index == NSNotFound)
+    { // Moved to another section
+        for (NSString *key in contactIDs)
+        { // This is slow but should run seldom
+            sectionArray = [contactIDs objectForKey: key];
+            index = [sectionArray indexOfObject: @(recordID)];
+            if (index != NSNotFound)
+            {
+                NSLog(@"Moved from section: %@", key);
+                break;
+            }
+        }
+    }
+    if (index != NSNotFound)
+    {
+        [sectionArray removeObjectAtIndex: index];
+    }
+    return index;
 }
 
 #pragma mark - Comparators
