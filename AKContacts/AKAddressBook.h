@@ -95,10 +95,14 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
  **/
 @property (strong, nonatomic) NSMutableArray *sources;
 /**
- * Arrays of AKContact objects with their alphabetic lookup letters as keys
+ * Arrays of Contact IDs with alphabetic lookup letters as keys
  **/
 @property (strong, nonatomic) NSMutableDictionary *contactIDsSortedByFirst;
 @property (strong, nonatomic) NSMutableDictionary *contactIDsSortedByLast;
+/**
+ * Arrays of Contact IDs with phone number first numbers as keys
+ **/
+@property (strong, nonatomic) NSMutableDictionary *contactIDsSortedByPhone;
 
 /**
  * ID of displayed source and group
