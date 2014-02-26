@@ -24,7 +24,7 @@
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
         CFErrorRef error = NULL;
         ABAddressBookRef addressBookRef = ABAddressBookCreateWithOptions(NULL, &error);
-        if (error) NSLog(@"%ld", CFErrorGetCode(error));
+        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
 #else
         ABAddressBookRef addressBook = ABAddressBookCreate();
 #endif

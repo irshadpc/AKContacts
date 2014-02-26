@@ -101,10 +101,7 @@ NSString *const DefaultsKeyGroups = @"Groups";
 
       CFErrorRef error = NULL;
       ABGroupAddMember(self.recordRef, contact.recordRef, &error);
-      if (error != NULL)
-      {
-        NSLog(@"%ld", CFErrorGetCode(error));
-      }
+      if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
 
       [self.memberIDs addObject: identifier];
     }
@@ -126,10 +123,7 @@ NSString *const DefaultsKeyGroups = @"Groups";
       
       CFErrorRef error = NULL;
       ABGroupRemoveMember(self.recordRef, contact.recordRef, &error);
-      if (error != NULL)
-      {
-        NSLog(@"%ld", CFErrorGetCode(error));
-      }
+      if (error != NULL) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
 
       if (self.deleteMemberIDs == nil)
       {

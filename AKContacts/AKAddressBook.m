@@ -131,7 +131,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
     CFErrorRef error = NULL;
     _addressBookRef = ABAddressBookCreateWithOptions(NULL, &error);
-    if (error) NSLog(@"%ld", CFErrorGetCode(error));
+    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
 #else
     _addressBookRef = ABAddressBookCreate();
 #endif
