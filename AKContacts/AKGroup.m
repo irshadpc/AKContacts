@@ -139,7 +139,7 @@ NSString *const DefaultsKeyGroups = @"Groups";
   else dispatch_async(dispatch_get_main_queue(), block);
 }
 
-- (void)commit
+- (void)commitMembers
 {
   if (self.deleteMemberIDs != nil)
   {
@@ -158,7 +158,7 @@ NSString *const DefaultsKeyGroups = @"Groups";
   }
 }
 
-- (void)revert
+- (void)revertMembers
 {
   if (self.deleteMemberIDs != nil)
   {

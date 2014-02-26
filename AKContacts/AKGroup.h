@@ -71,7 +71,7 @@ typedef NS_ENUM(NSInteger, GroupTypes)
 
 - (void)insertMemberWithID: (ABRecordID)recordID;
 - (void)removeMemberWithID: (NSInteger)recordID;
-- (void)commit;
-- (void)revert;
+- (void)commitMembers;
+- (void)revertMembers;
 
 @end
