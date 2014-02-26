@@ -663,7 +663,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 {
   dispatch_block_t block = ^{
     AKContact *contact = [addressBook contactForContactId: recordID];
-    NSString *sectionKey = [AKContact sectionKeyForName: contact.sortName];
+    NSString *sectionKey = [AKContact sectionKeyForName: [AKContact nameToDetermineSectionForRecordRef: contact.recordRef withSortOrdering: addressBook.sortOrdering]];
 
     NSMutableArray *sectionArray = [self.dataSource.contactIdentifiers objectForKey: sectionKey];
 
