@@ -58,7 +58,7 @@
   if ([self.controller.dataSource.keys count] > indexPath.section)
     key = [self.controller.dataSource.keys objectAtIndex: indexPath.section];
 
-  NSArray *identifiersArray = [self.controller.dataSource.contactIdentifiers objectForKey: key];
+  NSArray *identifiersArray = [self.controller.dataSource.contactIDs objectForKey: key];
   if ([identifiersArray count] == 0) return;
   NSNumber *recordId = [identifiersArray objectAtIndex: indexPath.row];
   AKContact *contact = [akAddressBook contactForContactId: [recordId integerValue]];
