@@ -57,13 +57,6 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
     return ret;
 }
 
-@protocol AKAddressBookProgressDelegate <NSObject>
-
-- (void)setProgressTotal: (NSUInteger)progressTotal;
-- (void)setProgressCurrent: (NSUInteger)progressCurrent;
-
-@end
-
 @protocol AKAddressBookPresentationDelegate <NSObject>
 
 - (void)addressBookWillBeginUpdates: (AKAddressBook *)addressBook;
@@ -75,8 +68,6 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 
 @interface AKAddressBook : NSObject
 
-@property (assign, nonatomic) id<AKAddressBookProgressDelegate> progressDelegate;
-
 @property (assign, nonatomic) id<AKAddressBookPresentationDelegate> presentationDelegate;
 
 @property (assign, nonatomic) ABAddressBookRef addressBookRef;
@@ -86,6 +77,8 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 @property (strong, nonatomic, readonly) dispatch_semaphore_t ab_semaphore;
 
 @property (assign, nonatomic) NSInteger status;
+
+@property (strong, nonatomic) NSProgress *loadProgress;
 /**
  * AKContact objects with their recordIDs as keys
  **/
@@ -103,7 +96,6 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
  * Arrays of Contact IDs with phone number first numbers as keys
  **/
 @property (strong, nonatomic) NSMutableDictionary *contactIDsSortedByPhone;
-
 /**
  * ID of displayed source and group
  **/

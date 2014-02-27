@@ -199,8 +199,8 @@
     NSMutableSet *changedRecords = [[NSMutableSet alloc] init];
 
     NSLog(@"Number of contacts: %d", self.contactsCount);
-    [self.progressDelegate setProgressTotal: self.contactsCount];
-    NSInteger i = 0, total = self.contactsCount;
+    self.loadProgress.totalUnitCount = self.contactsCount;
+    self.loadProgress.completedUnitCount = 0;
     // Get array of records in Address Book
     for (AKSource *source in self.sources)
     {
@@ -215,7 +215,7 @@
         NSArray *people = (NSArray *)CFBridgingRelease(ABAddressBookCopyArrayOfAllPeopleInSourceWithSortOrdering(addressBook, source.recordRef, self.sortOrdering));
         for (id obj in people)
         {
-            [self.progressDelegate setProgressCurrent: ++i];
+            self.loadProgress.completedUnitCount += 1;
 
             ABRecordRef recordRef = (__bridge ABRecordRef)obj;
 
@@ -237,17 +237,17 @@
                 }
             }
 
-            [self processPhoneNumbersOfRecordRef: recordRef withRecordID: recordID andABAddressBookRef: addressBook];
+            //[self processPhoneNumbersOfRecordRef: recordRef withRecordID: recordID andABAddressBookRef: addressBook];
             
             if (!self.dateAddressBookLoaded || [self.dateAddressBookLoaded compare: created] != NSOrderedDescending)
             { // Created should be compared first
                 [createdRecords addObject: contactID];
-                [self.progressDelegate setProgressTotal: ++total];
+                self.loadProgress.totalUnitCount += 1;
             }
             else if ([self.dateAddressBookLoaded compare: modified] != NSOrderedDescending)
             { // Contact changed
                 [changedRecords addObject: contactID];
-                [self.progressDelegate setProgressTotal: ++total];
+                self.loadProgress.totalUnitCount += 1;
             }
 
             // Aggregate groups are repopulated on each load
@@ -280,7 +280,7 @@
 
     for (NSNumber *recordID in createdRecords)
     {
-        [self.progressDelegate setProgressCurrent: ++i];
+        self.loadProgress.completedUnitCount += 1;
         if (self.status == kAddressBookLoading)
         {
             NSLog(@"% 3d : %@ is new", recordID.integerValue, CFBridgingRelease(ABRecordCopyCompositeName(ABAddressBookGetPersonWithRecordID(addressBook, recordID.integerValue))));
@@ -289,7 +289,7 @@
     }
     for (NSNumber *recordID in changedRecords)
     {
-        [self.progressDelegate setProgressCurrent: ++i];
+        self.loadProgress.completedUnitCount += 1;
         if (self.status == kAddressBookLoading)
         {
             NSLog(@"% 3d : %@ did change", recordID.integerValue, CFBridgingRelease(ABRecordCopyCompositeName(ABAddressBookGetPersonWithRecordID(addressBook, recordID.integerValue))));

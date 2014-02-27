@@ -105,6 +105,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     _needReload = YES;
 
+    _loadProgress = [[NSProgress alloc] initWithParent: nil userInfo: nil];
+
     dispatch_source_set_event_handler(_ab_timer, ^{
       [self releaseUnusedContacts];
       [self suspend_ab_timer];
