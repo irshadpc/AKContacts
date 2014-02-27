@@ -57,12 +57,9 @@ static const CGFloat kRadius = 11.f;
         _spinLayer.fillColor = [UIColor clearColor].CGColor;
         _spinLayer.strokeEnd = 0.f;
         [[self layer] addSublayer: _spinLayer];
-        [AKAddressBook sharedInstance].progressDelegate = self;
 
-        NSString *keyPath = NSStringFromSelector(@selector(progressCurrent));
-        [self addObserver: self forKeyPath: keyPath options: NSKeyValueObservingOptionNew context: NULL];
-        _progressTotal = 0;
-        _progressCurrent = 0;
+        NSString *keyPath = NSStringFromSelector(@selector(completedUnitCount));
+        [[AKAddressBook sharedInstance].loadProgress addObserver: self forKeyPath: keyPath options: NSKeyValueObservingOptionNew context: NULL];
     }
     return self;
 }
@@ -70,8 +67,7 @@ static const CGFloat kRadius = 11.f;
 - (void)dealloc
 {
   NSString *keyPath = NSStringFromSelector(@selector(progressCurrent));
-  [self removeObserver: self forKeyPath: keyPath];
-  [AKAddressBook sharedInstance].progressDelegate = nil;
+  [[AKAddressBook sharedInstance].loadProgress removeObserver: self forKeyPath: keyPath];
 }
 
 - (void)layoutSubviews
@@ -88,17 +84,21 @@ static const CGFloat kRadius = 11.f;
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 { // This is not dispatched on main queue
-  NSUInteger denom = (self.progressTotal > 100) ? self.progressTotal / 100 : self.progressTotal;
-  if (self.progressCurrent % denom == 0)
+  NSUInteger completedUnitCount = [AKAddressBook sharedInstance].loadProgress.completedUnitCount;
+  NSUInteger totalUnitCount = [AKAddressBook sharedInstance].loadProgress.totalUnitCount;
+
+  NSUInteger denom = (totalUnitCount > 100) ? (totalUnitCount / 100) : totalUnitCount;
+  if (completedUnitCount % denom == 0)
   {
     dispatch_async(dispatch_get_main_queue(), ^{
+      CGFloat progress = (CGFloat)completedUnitCount / totalUnitCount;
       [CATransaction begin];
       [CATransaction setDisableActions: YES];
-      [[self spinLayer] setStrokeEnd: (CGFloat)self.progressCurrent / self.progressTotal];
+      [[self spinLayer] setStrokeEnd: progress];
       [CATransaction commit];
     });
   }
-  if (self.progressCurrent == self.progressTotal)
+  if (completedUnitCount == totalUnitCount)
   {
     [self removeFromSuperview];
   }

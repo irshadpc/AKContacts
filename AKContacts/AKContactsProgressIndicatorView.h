@@ -30,9 +30,6 @@
 
 #import "AKAddressBook.h"
 
-@interface AKContactsProgressIndicatorView : UIView <AKAddressBookProgressDelegate>
-
-@property (assign, nonatomic) NSUInteger progressTotal;
-@property (assign, nonatomic) NSUInteger progressCurrent;
+@interface AKContactsProgressIndicatorView : UIView
 
 @end
