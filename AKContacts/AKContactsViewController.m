@@ -104,11 +104,11 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   self.dataSource.delegate = self;
   self.tableView.dataSource = self;
   self.tableView.delegate = self;
-
+    
   self.searchBar = [[UISearchBar alloc] initWithFrame: CGRectMake(0.f, 0.f, 320.f, defaultCellHeight)];
-  self.tableView.tableHeaderView = self.searchBar;
   self.searchBar.delegate = self;
   self.searchBar.barStyle = UIBarStyleDefault;
+  self.tableView.tableHeaderView = self.searchBar;
 
   self.view = self.tableView;
 }
@@ -131,7 +131,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
   [AKAddressBook sharedInstance].presentationDelegate = self;
 
-  [self.dataSource resetSearch];
+  [self.dataSource loadData];
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -182,7 +182,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
 - (void)modalViewDidDismissWithContactID: (NSInteger)contactID
 {
-  [self.dataSource resetSearch];
+  [self.dataSource loadData];
   [self reloadTableViewData];
   AKContactViewController *contactView = [[AKContactViewController alloc] initWithContactID: contactID];
   [contactView setDelegate: self];
@@ -191,7 +191,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
 - (void)recordDidRemoveWithContactID: (NSInteger)contactID
 {
-  [self.dataSource resetSearch];
+  [self.dataSource loadData];
   [self reloadTableViewData];
   
   id rootViewController = [self.navigationController.viewControllers objectAtIndex: 0];
@@ -305,7 +305,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 {
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
   
-  if ([akAddressBook sourceForSourceId: akAddressBook.sourceID].canCreateRecord == YES)
+  if ([akAddressBook sourceForSourceId: akAddressBook.sourceID].canCreateRecord)
   { // Display 'Add' button only if source supports create records
     UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemAdd
                                                                                target: self
@@ -317,17 +317,19 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 - (void)reloadTableViewData
 {
   dispatch_block_t block = ^{
+
+    [self.dataSource loadData];
+
+    [self setRightBarButtonItem];
+      
     if ([self.searchBar isFirstResponder] == NO)
     {
       [self.tableView setTableHeaderView: (self.dataSource.displayedContactsCount > manyContacts) ? self.searchBar : nil];
 
-      if (self.tableView.tableHeaderView && self.tableView.contentOffset.y <= self.searchBar.frame.size.height)
+      if (self.tableView.tableHeaderView && self.tableView.contentOffset.y <= self.searchBar.frame.size.height) {
         self.tableView.contentOffset = CGPointMake(0.f, self.searchBar.frame.size.height);
+      }
     }
-
-    [self setRightBarButtonItem];
-
-    [self.dataSource resetSearch];
 
     CGPoint offset = self.tableView.contentOffset;
     [self.tableView reloadData];
@@ -366,7 +368,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
       if ([self.dataSource.keys count] > section)
       {
         NSString *key = [self.dataSource.keys objectAtIndex: section];
-        NSArray *nameSection = [self.dataSource.contactIdentifiers objectForKey: key];
+        NSArray *nameSection = [self.dataSource.contactIDs objectForKey: key];
         ret = [nameSection count];
       }
     }
@@ -413,7 +415,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   if ([self.dataSource.keys count] > section)
   {
     key = [self.dataSource.keys objectAtIndex: section];
-    NSArray *nameSection = [self.dataSource.contactIdentifiers objectForKey: key];
+    NSArray *nameSection = [self.dataSource.contactIDs objectForKey: key];
     if ([nameSection count] > 0) ret = key;
   }
   return ret;
@@ -587,8 +589,8 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
 - (void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar
 {
-	[searchBar becomeFirstResponder];
-	[searchBar setShowsCancelButton: YES animated: YES];
+  [searchBar becomeFirstResponder];
+  [searchBar setShowsCancelButton: YES animated: YES];
   [self.tableView reloadSectionIndexTitles]; // To hide index
   
   if (self.tableView.contentOffset.y >= self.searchBar.frame.size.height)
@@ -605,18 +607,19 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
 - (void)searchBarTextDidEndEditing:(UISearchBar *)searchBar
 {
-	[searchBar resignFirstResponder];
-	[searchBar setShowsCancelButton: NO animated: YES];
+  [searchBar resignFirstResponder];
+  [searchBar setShowsCancelButton: NO animated: YES];
   [self.tableView reloadSectionIndexTitles]; // To show index
 }
 
 - (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar
 {
-  [self.dataSource handleSearchForTerm: searchBar.text];
+//  [self.dataSource handleSearchForTerm: searchBar.text];
 }
 
 - (void)searchBar: (UISearchBar *)searchBar textDidChange: (NSString *)searchTerm
 {
+/*
   if ([searchTerm length] == 0)
   {
     [self.dataSource resetSearch];
@@ -626,13 +629,14 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
   {
     [self.dataSource handleSearchForTerm: searchTerm];
   }
+*/
 }
 
 - (void)searchBarCancelButtonClicked:(UISearchBar *)searchBar
 {
   [searchBar setText: nil];
   [searchBar resignFirstResponder];
-  [self.dataSource resetSearch];
+  [self.dataSource loadData];
   [self reloadTableViewData];
 }
 
@@ -665,7 +669,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
     AKContact *contact = [addressBook contactForContactId: recordID];
     NSString *sectionKey = [AKContact sectionKeyForName: [AKContact nameToDetermineSectionForRecordRef: contact.recordRef withSortOrdering: addressBook.sortOrdering]];
 
-    NSMutableArray *sectionArray = [self.dataSource.contactIdentifiers objectForKey: sectionKey];
+    NSMutableArray *sectionArray = [self.dataSource.contactIDs objectForKey: sectionKey];
 
     NSUInteger row = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray
                                    withSortOrdering: addressBook.sortOrdering
@@ -683,9 +687,9 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 - (void)addressBook: (AKAddressBook *)addressBook didRemoveRecordID: (ABRecordID)recordID
 {
   dispatch_block_t block = ^{
-    for (NSString *key in self.dataSource.contactIdentifiers)
+    for (NSString *key in self.dataSource.contactIDs)
     {
-      NSMutableArray *sectionArray = [self.dataSource.contactIdentifiers objectForKey: key];
+      NSMutableArray *sectionArray = [self.dataSource.contactIDs objectForKey: key];
       NSUInteger row = [sectionArray indexOfObject: @(recordID)];
       if (row != NSNotFound)
       {
