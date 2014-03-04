@@ -24,15 +24,15 @@
  **/
 @property (strong, nonatomic) NSMutableArray *keys;
 /**
- * Subset of allContactIdentifiers that are displayed
+ * Subset of all contactIDs that are displayed
  **/
-@property (strong, nonatomic) NSMutableDictionary *contactIdentifiers;
+@property (strong, nonatomic) NSMutableDictionary *contactIDs;
 
 @property (assign, nonatomic) id<AKContactsTableViewDataSourceDelegate> delegate;
 
 - (NSInteger)displayedContactsCount;
 
-- (void)resetSearch;
-- (void)handleSearchForTerm:(NSString *)searchTerm;
+- (void)loadData;
+//- (void)handleSearchForTerm:(NSString *)searchTerm;
 
 @end

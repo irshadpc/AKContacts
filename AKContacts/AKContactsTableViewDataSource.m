@@ -17,14 +17,14 @@
 - (NSInteger)displayedContactsCount
 {
     NSInteger ret = 0;
-    for (NSMutableArray *section in [self.contactIdentifiers allValues])
+    for (NSMutableArray *section in [self.contactIDs allValues])
     {
         ret += [section count];
     }
     return ret;
 }
 
-- (void)resetSearch
+- (void)loadData
 {
     AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
     
@@ -38,16 +38,15 @@
     
     NSArray *keyArray = [akAddressBook.contactIDs.allKeys sortedArrayUsingSelector: @selector(compare:)];
 
-    if ([groupMembers count] == akAddressBook.contactsCount)
-    { // Shortcut for aggregate group if there's only a single source
-        NSMutableDictionary *contactIdentifiers = [NSKeyedUnarchiver unarchiveObjectWithData: [NSKeyedArchiver archivedDataWithRootObject: akAddressBook.contactIDs]]; // Mutable deep copy
-        self.contactIdentifiers = contactIdentifiers;
+    if (groupMembers.count == akAddressBook.contactsCount)
+    {   // Shortcut for aggregate group if there's only a single source
+        self.contactIDs = [NSKeyedUnarchiver unarchiveObjectWithData: [NSKeyedArchiver archivedDataWithRootObject: akAddressBook.contactIDs]]; // Mutable deep copy
         [self.keys addObjectsFromArray: keyArray];
     }
     else
     {
-        [self setContactIdentifiers: [[NSMutableDictionary alloc] initWithCapacity: [akAddressBook.contactIDs count]]];
-        
+        [self setContactIDs: [[NSMutableDictionary alloc] initWithCapacity: [akAddressBook.contactIDs count]]];
+
         for (NSString *key in keyArray)
         {
             NSArray *arrayForKey = [akAddressBook.contactIDs objectForKey: key];
@@ -61,21 +60,21 @@
               }
             }
             [sectionArray removeObjectsInArray: recordsToRemove];
-            if ([sectionArray count] > 0)
+            if (sectionArray.count > 0)
             {
-                [self.contactIdentifiers setObject: sectionArray forKey: key];
+                [self.contactIDs setObject: sectionArray forKey: key];
                 [self.keys addObject: key];
             }
         }
     }
     
-    if ([self.keys count] > 1 && [[self.keys objectAtIndex: 1] isEqualToString: @"#"])
+    if (self.keys.count > 1 && [[self.keys objectAtIndex: 1] isEqualToString: @"#"])
     { // Little hack to move # to the end of the list
         [self.keys addObject: [self.keys objectAtIndex: 1]];
         [self.keys removeObjectAtIndex: 1];
     }
 }
-
+/*
 - (void)handleSearchForTerm: (NSString *)searchTerm
 {
     static NSInteger previousTermLength = 1;
@@ -129,5 +128,5 @@
     
     dispatch_async(akAddressBook.ab_queue, block);
 }
-
+*/
 @end
