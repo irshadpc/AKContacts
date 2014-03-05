@@ -12,6 +12,12 @@
 #import "AKGroup.h"
 #import "AKSource.h"
 
+@interface AKContactsTableViewDataSource ()
+
+- (void)handleSearchForTerm: (NSString *)term atIndex: (NSUInteger)index withCompletionHandler: (void (^)(void))completionHandler;
+
+@end
+
 @implementation AKContactsTableViewDataSource
 
 - (NSInteger)displayedContactsCount
@@ -74,59 +80,159 @@
         [self.keys removeObjectAtIndex: 1];
     }
 }
-/*
+
 - (void)handleSearchForTerm: (NSString *)searchTerm
 {
-    static NSInteger previousTermLength = 1;
-    
-    AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
-    
-    dispatch_block_t block = ^{
-        
-        dispatch_semaphore_wait(akAddressBook.ab_semaphore, DISPATCH_TIME_FOREVER);
-        
-        NSMutableArray *sectionsToRemove = [[NSMutableArray alloc ]init];
-        
-        if (previousTermLength >= [searchTerm length])
-        {
-            [self resetSearch];
-        }
-        previousTermLength = [searchTerm length];
-        
-        for (NSString *key in self.keys)
-        {
-            if ([key isEqualToString: UITableViewIndexSearch])
-                continue;
-            
-            NSMutableArray *array = [self.contactIdentifiers valueForKey: key];
-            NSMutableArray *toRemove = [[NSMutableArray alloc] init];
-            for (NSNumber *identifier in array)
-            {
-                AKContact *contact = [akAddressBook contactForContactId: [identifier integerValue]];
-                NSString *firstName = [contact valueForProperty: kABPersonFirstNameProperty];
-                NSString *lastName = [contact valueForProperty: kABPersonLastNameProperty];
-                
-                BOOL firstNameMatches = (firstName && [firstName rangeOfString: searchTerm options: NSCaseInsensitiveSearch|NSDiacriticInsensitiveSearch|NSAnchoredSearch].location != NSNotFound);
-                BOOL lastNameMatches = (lastName && [lastName rangeOfString: searchTerm options: NSCaseInsensitiveSearch|NSDiacriticInsensitiveSearch|NSAnchoredSearch].location != NSNotFound);
-                
-                if (firstNameMatches == NO && lastNameMatches == NO)
-                    [toRemove addObject: identifier];
+    if (searchTerm.length > self.searchStack.count)
+    {
+        [self.searchStack addObject: [searchTerm substringWithRange: NSMakeRange(searchTerm.length - 1, 1)]];
+
+        [self handleSearchForTerm: searchTerm atIndex: (self.searchStack.count - 1) withCompletionHandler:^{
+            if ([self.delegate respondsToSelector: @selector(dataSourceDidEndSearch:)]) {
+                [self.delegate dataSourceDidEndSearch: self];
             }
-            
-            if ([array count] == [toRemove count])
-                [sectionsToRemove addObject: key];
-            [array removeObjectsInArray: toRemove];
+        }];
+    }
+    else if (self.searchStack.count)
+    {
+        [self.searchStack removeLastObject];
+        [self.searchCache removeLastObject];
+        if (self.searchCache.count)
+        {
+            self.contactIDs = [[NSMutableDictionary alloc] initWithObjectsAndKeys: self.searchCache.lastObject, self.searchStack.firstObject, nil];
         }
-        [self.keys removeObjectsInArray: sectionsToRemove];
-        
+        else
+        {
+            [self loadData];
+        }
+        if ([self.delegate respondsToSelector: @selector(dataSourceDidEndSearch:)]) {
+            [self.delegate dataSourceDidEndSearch: self];
+        }
+    }
+}
+
+- (void)handleSearchForTerm: (NSString *)term atIndex: (NSUInteger)index withCompletionHandler: (void (^)(void))completionHandler
+{
+    if (!term.length) return;
+
+    NSString *character = [term substringWithRange: NSMakeRange(index, 1)];
+    NSLog(@"%d %@", index, character);
+
+    AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+
+    dispatch_block_t block = ^{
+
+        dispatch_semaphore_wait(akAddressBook.ab_semaphore, DISPATCH_TIME_FOREVER);
+
+        if (index == 0)
+        {
+            if ([[NSCharacterSet letterCharacterSet] characterIsMember: [character characterAtIndex: 0]])
+            {
+                NSArray *sectionArray = [[self.contactIDs objectForKey: character.uppercaseString] copy];
+                NSMutableSet *sectionSet = [NSMutableSet setWithArray: sectionArray];
+
+                NSArray *otherSectionArray = (akAddressBook.sortOrdering == kABPersonSortByFirstName) ? [akAddressBook.contactIDsSortedByLast objectForKey: character.uppercaseString] : [akAddressBook.contactIDsSortedByFirst objectForKey: character.uppercaseString];
+                NSSet *otherSectionSet = [NSSet setWithArray: otherSectionArray];
+
+                [sectionSet unionSet: otherSectionSet];
+                [self.searchCache addObject: [sectionSet allObjects]];
+            }
+        }
+        else
+        {
+            NSMutableArray *sectionArray = [[self.searchCache objectAtIndex: (index - 1)] mutableCopy];
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+            CFErrorRef error = NULL;
+            ABAddressBookRef addressBookRef = ABAddressBookCreateWithOptions(NULL, &error);
+            if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+#else
+            ABAddressBookRef addressBook = ABAddressBookCreate();
+#endif
+
+            NSMutableSet *recordIDsToRemove = [[NSMutableSet alloc] init];
+            for (NSNumber *recordID in sectionArray)
+            {
+                ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBookRef, recordID.integerValue);
+                if (recordRef)
+                {
+                    NSInteger kind = [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonKindProperty)) integerValue];
+                    if (kind == [(NSNumber *)kABPersonKindPerson integerValue])
+                    {
+                        NSString *name = CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonFirstNameProperty));
+                        if ([name hasPrefix: @"Adam"])
+                        {
+                            NSLog(@"");
+                        }
+                        name = [name stringByFoldingWithOptions: NSDiacriticInsensitiveSearch locale: [NSLocale currentLocale]];
+                        if ([name.lowercaseString hasPrefix: term.lowercaseString])
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            name = CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonLastNameProperty));
+                            name = [name stringByFoldingWithOptions: NSDiacriticInsensitiveSearch locale: [NSLocale currentLocale]];
+                            if ([name.lowercaseString hasPrefix: term.lowercaseString])
+                            {
+                                continue;
+                            }
+                            [recordIDsToRemove addObject: recordID];
+                        }
+                    }
+                    else if (kind == [(NSNumber *)kABPersonKindOrganization integerValue])
+                    {
+                        NSString *name = CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonOrganizationProperty));
+                        name = [name stringByFoldingWithOptions: NSDiacriticInsensitiveSearch locale: [NSLocale currentLocale]];
+                        if (![name.lowercaseString hasPrefix: term.lowercaseString])
+                        {
+                            [recordIDsToRemove addObject: recordID];
+                        }
+                    }
+                }
+            }
+            CFRelease(addressBookRef);
+
+            for (NSNumber *recordID in recordIDsToRemove)
+            {
+                [sectionArray removeObject: recordID];
+            }
+            [self.searchCache addObject: sectionArray];
+        }
+        self.contactIDs = [[NSMutableDictionary alloc] initWithObjectsAndKeys: self.searchCache.lastObject, self.searchStack.firstObject, nil];
+
         dispatch_semaphore_signal(akAddressBook.ab_semaphore);
-        
-      if ([self.delegate respondsToSelector: @selector(dataSourceDidEndSearch:)]) {
-        [self.delegate dataSourceDidEndSearch: self];
-      }
+
+        if (completionHandler) {
+            completionHandler();
+        }
     };
-    
+
     dispatch_async(akAddressBook.ab_queue, block);
 }
-*/
+
+- (void)finishSearch
+{
+    [self.searchStack removeAllObjects];
+    [self.searchCache removeAllObjects];
+}
+
+- (NSMutableArray *)searchStack
+{
+    if (!_searchStack)
+    {
+        _searchStack = [[NSMutableArray alloc] init];
+    }
+    return _searchStack;
+}
+
+- (NSMutableArray *)searchCache
+{
+    if (!_searchCache)
+    {
+        _searchCache = [[NSMutableArray alloc] init];
+    }
+    return _searchCache;
+}
+
 @end

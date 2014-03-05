@@ -28,11 +28,16 @@
  **/
 @property (strong, nonatomic) NSMutableDictionary *contactIDs;
 
+@property (strong, nonatomic) NSMutableArray *searchCache;
+
+@property (strong, nonatomic) NSMutableArray *searchStack;
+
 @property (assign, nonatomic) id<AKContactsTableViewDataSourceDelegate> delegate;
 
 - (NSInteger)displayedContactsCount;
 
 - (void)loadData;
-//- (void)handleSearchForTerm:(NSString *)searchTerm;
+- (void)handleSearchForTerm: (NSString *)searchTerm;
+- (void)finishSearch;
 
 @end
