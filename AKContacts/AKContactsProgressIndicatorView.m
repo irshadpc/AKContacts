@@ -66,7 +66,7 @@ static const CGFloat kRadius = 11.f;
 
 - (void)dealloc
 {
-  NSString *keyPath = NSStringFromSelector(@selector(progressCurrent));
+  NSString *keyPath = NSStringFromSelector(@selector(completedUnitCount));
   [[AKAddressBook sharedInstance].loadProgress removeObserver: self forKeyPath: keyPath];
 }
 
