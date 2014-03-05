@@ -614,22 +614,12 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
 - (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar
 {
-//  [self.dataSource handleSearchForTerm: searchBar.text];
+  [self.dataSource handleSearchForTerm: searchBar.text];
 }
 
 - (void)searchBar: (UISearchBar *)searchBar textDidChange: (NSString *)searchTerm
 {
-/*
-  if ([searchTerm length] == 0)
-  {
-    [self.dataSource resetSearch];
-    [self.tableView reloadData];
-  }
-  else
-  {
-    [self.dataSource handleSearchForTerm: searchTerm];
-  }
-*/
+  [self.dataSource handleSearchForTerm: searchBar.text];
 }
 
 - (void)searchBarCancelButtonClicked:(UISearchBar *)searchBar
