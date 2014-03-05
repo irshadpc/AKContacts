@@ -301,7 +301,7 @@ static const float defaultCellHeight = 44.f;
   [self.tableView setScrollIndicatorInsets: contentInsets];
 
   id cell = self.firstResponder.superview;
-  while ([cell isKindOfClass: [UITableViewCell class]] == NO)
+  while (cell && ![cell isKindOfClass: [UITableViewCell class]])
   {
     cell = [cell superview];
   }
