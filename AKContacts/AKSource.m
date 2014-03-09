@@ -58,7 +58,7 @@ NSString *const defaultsSourceKey = @"Source_%d";
 
 - (ABRecordRef)recordRef
 {
-  __block ABRecordRef ret;
+  __block ABRecordRef ret = NULL;
 
   dispatch_block_t block = ^{
     if (super.recordID >= 0)
