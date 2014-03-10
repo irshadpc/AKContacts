@@ -626,6 +626,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 {
   [searchBar setText: nil];
   [searchBar resignFirstResponder];
+  [self.dataSource finishSearch];
   [self.dataSource loadData];
   [self reloadTableViewData];
 }
