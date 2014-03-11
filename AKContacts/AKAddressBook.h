@@ -114,6 +114,7 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 + (NSArray *)sectionKeys;
 - (void)requestAddressBookAccess;
 - (NSDictionary *)contactIDs;
+- (NSDictionary *)invertedContactIDs;
 - (AKSource *)defaultSource;
 - (AKSource *)sourceForSourceId: (ABRecordID)recordId;
 - (AKContact *)contactForContactId: (ABRecordID)recordId;
