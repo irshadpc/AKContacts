@@ -54,6 +54,7 @@
 		C6C2066916E436BE0033C58A /* AKAddressBook.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C2066816E436BE0033C58A /* AKAddressBook.m */; };
 		C6C89337172B1CD100FA4A4F /* AKContactButtonsViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C6C89336172B1CD100FA4A4F /* AKContactButtonsViewCell.m */; };
 		C6E35CE41898224200E0FD5C /* AKAddressBook+Loader.m in Sources */ = {isa = PBXBuildFile; fileRef = C6E35CE31898224200E0FD5C /* AKAddressBook+Loader.m */; };
+		C6FE3E8718CE7EEA00195A7C /* NSString+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = C6FE3E8618CE7EEA00195A7C /* NSString+Additions.m */; };
 		F35CCDD8172EE10700466697 /* AKMessenger.m in Sources */ = {isa = PBXBuildFile; fileRef = F35CCDD7172EE10700466697 /* AKMessenger.m */; };
 		F35CCE61172F13BF00466697 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F35CCE60172F13BF00466697 /* MessageUI.framework */; };
 		F3826A2B1886DD640096A043 /* AKContactsTableViewDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = F3826A2A1886DD640096A043 /* AKContactsTableViewDataSource.m */; };
@@ -150,6 +151,8 @@
 		C6C89336172B1CD100FA4A4F /* AKContactButtonsViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKContactButtonsViewCell.m; sourceTree = "<group>"; };
 		C6E35CE21898224200E0FD5C /* AKAddressBook+Loader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "AKAddressBook+Loader.h"; sourceTree = "<group>"; };
 		C6E35CE31898224200E0FD5C /* AKAddressBook+Loader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "AKAddressBook+Loader.m"; sourceTree = "<group>"; };
+		C6FE3E8518CE7EEA00195A7C /* NSString+Additions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+Additions.h"; sourceTree = "<group>"; };
+		C6FE3E8618CE7EEA00195A7C /* NSString+Additions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+Additions.m"; sourceTree = "<group>"; };
 		F35CCDD6172EE10700466697 /* AKMessenger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AKMessenger.h; sourceTree = "<group>"; };
 		F35CCDD7172EE10700466697 /* AKMessenger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKMessenger.m; sourceTree = "<group>"; };
 		F35CCE60172F13BF00466697 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
@@ -303,6 +306,7 @@
 		C669519116B6FD7100D030A2 /* AKContacts */ = {
 			isa = PBXGroup;
 			children = (
+				C6FE3E8418CE7ECB00195A7C /* Categories */,
 				C682DEDD1714E38D00CC4A70 /* DataSources */,
 				C682DEDB1714B52F00CC4A70 /* Groups */,
 				C682DEDC1714B54000CC4A70 /* Contacts */,
@@ -417,6 +421,15 @@
 				C6AD931B1751998E00474CCB /* AKContactPickerViewController.m */,
 			);
 			name = "Group Picker";
+			sourceTree = "<group>";
+		};
+		C6FE3E8418CE7ECB00195A7C /* Categories */ = {
+			isa = PBXGroup;
+			children = (
+				C6FE3E8518CE7EEA00195A7C /* NSString+Additions.h */,
+				C6FE3E8618CE7EEA00195A7C /* NSString+Additions.m */,
+			);
+			name = Categories;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -556,6 +569,7 @@
 				C6C2066916E436BE0033C58A /* AKAddressBook.m in Sources */,
 				C6E35CE41898224200E0FD5C /* AKAddressBook+Loader.m in Sources */,
 				C620EA7D16F932640035CA1F /* AKGroupsViewCell.m in Sources */,
+				C6FE3E8718CE7EEA00195A7C /* NSString+Additions.m in Sources */,
 				C682DEFB171DF9A300CC4A70 /* AKContactDeleteButtonViewCell.m in Sources */,
 				C6C89337172B1CD100FA4A4F /* AKContactButtonsViewCell.m in Sources */,
 				F35CCDD8172EE10700466697 /* AKMessenger.m in Sources */,
