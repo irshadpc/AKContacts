@@ -12,37 +12,6 @@
 #import "AKGroup.h"
 #import "AKSource.h"
 
-@interface NSString (Additions)
-
-- (BOOL)isMemberOfCharacterSet:(NSCharacterSet *)characterset;
-- (NSString *)stringByTrimmingLeadingCharactersInSet:(NSCharacterSet *)characterSet;
-
-@end
-
-@implementation NSString (Additions)
-
-- (BOOL)isMemberOfCharacterSet:(NSCharacterSet *)characterset
-{
-  BOOL ret = YES;
-  for (NSUInteger index = 0; index < self.length; ++index)
-  {
-    if (![characterset characterIsMember: [self characterAtIndex: index]])
-    {
-      ret = NO;
-      break;
-    }
-  }
-  return ret;
-}
-
-- (NSString *)stringByTrimmingLeadingCharactersInSet:(NSCharacterSet *)characterSet
-{
-  NSUInteger location = [self rangeOfCharacterFromSet: [characterSet invertedSet]].location;
-  return (location != NSNotFound) ? [self substringFromIndex: location] : @"";
-}
-
-@end
-
 @interface AKSearchStackElement : NSObject
 
 @property (nonatomic, copy) NSString *character;
@@ -57,7 +26,7 @@
 @interface AKContactsTableViewDataSource ()
 
 - (void)handleSearchForCharacterAtIndex: (NSUInteger)index inTerm: (NSString *)term isFirstTerm: (BOOL)firstTerm;
-- (NSArray *)contactIDsHavingNamePrefix: (NSString *)prefix;
+- (NSArray *)contactIDsHavingNamePrefix: (NSString *)prefix inFirstTerm: (BOOL)firstTerm;
 - (NSArray *)array: (NSArray *)array filteredWithTerm: (NSString *)term;
 - (BOOL)recordID: (ABRecordID)recordID matchesTerm: (NSString *)term withAddressBookRef: (ABAddressBookRef)addressBookRef;
 
@@ -87,18 +56,18 @@
     AKGroup *group = [source groupForGroupId: akAddressBook.groupID];
     NSMutableSet *groupMembers = [group memberIDs];
     
-    NSArray *keyArray = [akAddressBook.contactIDs.allKeys sortedArrayUsingSelector: @selector(compare:)];
+    NSArray *sectionKeys = [AKAddressBook sectionKeys];
 
     if (groupMembers.count == akAddressBook.contactsCount)
     {   // Shortcut for aggregate group if there's only a single source
         self.contactIDs = [NSKeyedUnarchiver unarchiveObjectWithData: [NSKeyedArchiver archivedDataWithRootObject: akAddressBook.contactIDs]]; // Mutable deep copy
-        [self.keys addObjectsFromArray: keyArray];
+        [self.keys addObjectsFromArray: sectionKeys];
     }
     else
     {
         [self setContactIDs: [[NSMutableDictionary alloc] initWithCapacity: [akAddressBook.contactIDs count]]];
 
-        for (NSString *key in keyArray)
+        for (NSString *key in sectionKeys)
         {
             NSArray *arrayForKey = [akAddressBook.contactIDs objectForKey: key];
             NSMutableArray *sectionArray = [arrayForKey mutableCopy];
@@ -117,12 +86,6 @@
                 [self.keys addObject: key];
             }
         }
-    }
-    
-    if (self.keys.count > 1 && [[self.keys objectAtIndex: 1] isEqualToString: @"#"])
-    { // Little hack to move # to the end of the list
-        [self.keys addObject: [self.keys objectAtIndex: 1]];
-        [self.keys removeObjectAtIndex: 1];
     }
 }
 
@@ -177,7 +140,7 @@
           [self handleSearchForCharacterAtIndex: characterIndex inTerm: term isFirstTerm: (index == 0)];
         }
         else if (self.searchStack.count)
-        {
+        { // Ignore whitespace
           AKSearchStackElement *previousStackElement = [self.searchStack objectAtIndex: (self.searchStack.count - 1)];
           
           AKSearchStackElement *element = [[AKSearchStackElement alloc] init];
@@ -221,44 +184,94 @@
 
   if (firstTerm && !index)
   {
+    AKSearchStackElement *element = [[AKSearchStackElement alloc] init];
+    element.character = (![character isMemberOfCharacterSet: [NSCharacterSet decimalDigitCharacterSet]]) ? character : @"#";
     if ([character isMemberOfCharacterSet: [NSCharacterSet letterCharacterSet]])
     {
-      AKSearchStackElement *element = [[AKSearchStackElement alloc] init];
-      element.character = character;
-      element.matches = [[self contactIDsHavingNamePrefix: character] mutableCopy];
-      [self.searchStack addObject: element];
+      element.matches = [[self contactIDsHavingNamePrefix: character inFirstTerm: firstTerm] mutableCopy];
     }
+    else
+    {
+      element.matches = [[self contactIDsHavingNumberPrefix: character] mutableCopy];
+    }
+    [self.searchStack addObject: element];
   }
   else
   {
-    NSArray *filteredMatches = [self array: [self.searchStack.lastObject matches] filteredWithTerm: term];
+    NSArray *matchingIDs;
+    if (!index)
+    {
+        if ([character isMemberOfCharacterSet: [NSCharacterSet letterCharacterSet]])
+        {
+            matchingIDs = [self contactIDsHavingNamePrefix: character inFirstTerm: firstTerm];
+        }
+        else
+        {
+            matchingIDs = [self contactIDsHavingNumberPrefix: character];
+        }
+        matchingIDs = [self array: matchingIDs filteredWithTerm: term];
+        NSMutableSet *matchingSet = [NSMutableSet setWithArray: matchingIDs];
+        
+        NSArray *previousMatches = [self.searchStack.lastObject matches];
+        NSSet *previousSet = [NSSet setWithArray: previousMatches];
+        
+        [matchingSet intersectSet: previousSet];
+        matchingIDs = [matchingSet allObjects];
+    }
+    else
+    {
+        matchingIDs = [self array: [self.searchStack.lastObject matches] filteredWithTerm: term];
+    }
     
     AKSearchStackElement *element = [[AKSearchStackElement alloc] init];
     element.character = character;
-    element.matches = [filteredMatches mutableCopy];
+    element.matches = [matchingIDs mutableCopy];
     [self.searchStack addObject: element];
   }
 }
 
-- (NSArray *)contactIDsHavingNamePrefix: (NSString *)prefix
+- (NSArray *)contactIDsHavingNamePrefix: (NSString *)prefix inFirstTerm: (BOOL)firstTerm
 {
-  NSArray *sectionArray = [[self.contactIDs objectForKey: prefix.uppercaseString] copy];
+  NSArray *sectionArray = (firstTerm) ? [self.contactIDs objectForKey: prefix.uppercaseString] : [[self.searchStack lastObject] matches];
   NSMutableSet *sectionSet = [NSMutableSet setWithArray: sectionArray];
-  
+
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
-  NSArray *otherSectionArray = (akAddressBook.sortOrdering == kABPersonSortByFirstName) ? [akAddressBook.contactIDsSortedByLast objectForKey: prefix.uppercaseString] : [akAddressBook.contactIDsSortedByFirst objectForKey: prefix.uppercaseString];
-  NSMutableSet *otherSectionSet = [NSMutableSet setWithArray: otherSectionArray];
+  NSDictionary *invertedContactIDs = [akAddressBook invertedContactIDs];
+  NSArray *invertedSectionArray = [invertedContactIDs objectForKey: prefix.uppercaseString];
+  NSMutableSet *invertedSectionSet = [NSMutableSet setWithArray: invertedSectionArray];
   
   NSMutableSet *displayedContactIDs = [[NSMutableSet alloc] init];
   for (NSArray *section in self.contactIDs.allValues)
   {
     [displayedContactIDs addObjectsFromArray: section];
   }
-  [otherSectionSet intersectSet: displayedContactIDs];
+  [invertedSectionSet intersectSet: displayedContactIDs];
   
-  [sectionSet unionSet: otherSectionSet];
+  [sectionSet unionSet: invertedSectionSet];
 
   return [sectionSet allObjects];
+}
+
+- (NSArray *)contactIDsHavingNumberPrefix: (NSString *)prefix
+{
+    AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+
+    NSArray *sectionArray = [akAddressBook.contactIDsSortedByFirst objectForKey: prefix];
+    NSMutableSet *sectionSet = [NSMutableSet setWithArray: sectionArray];
+
+    NSArray *invertedSectionArray = [akAddressBook.contactIDsSortedByLast objectForKey: prefix.uppercaseString];
+    NSMutableSet *invertedSectionSet = [NSMutableSet setWithArray: invertedSectionArray];
+
+    [sectionSet unionSet: invertedSectionSet];
+
+    NSMutableSet *displayedContactIDs = [[NSMutableSet alloc] init];
+    for (NSArray *section in self.contactIDs.allValues)
+    {
+        [displayedContactIDs addObjectsFromArray: section];
+    }
+    [sectionSet intersectSet: displayedContactIDs];
+
+    return [sectionSet allObjects];
 }
 
 - (NSArray *)array: (NSArray *)array filteredWithTerm: (NSString *)term
