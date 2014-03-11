@@ -166,17 +166,16 @@
         self.contactIDsSortedByLast = [[NSMutableDictionary alloc] init];
         self.contactIDsSortedByPhone = [[NSMutableDictionary alloc] init];
 
-        NSString *sectionKeys = @"ABCDEFGHIJKLMNOPQRSTUVWXYZ#";
-        for (int i = 0; i < [sectionKeys length]; i++)
+        for (NSString *sectionKey in [AKAddressBook sectionKeys])
         {
-            NSString *sectionKey = [sectionKeys substringWithRange: NSMakeRange(i, 1)];
             [self.contactIDsSortedByFirst setObject: [[NSMutableArray alloc] init] forKey: sectionKey];
             [self.contactIDsSortedByLast setObject: [[NSMutableArray alloc] init] forKey: sectionKey];
         }
-        sectionKeys = @"0123456789";
-        for (int i = 0; i < [sectionKeys length]; i++)
+        NSArray *sectionKeys = @[@"0",@"1",@"2",@"3",@"4",@"5",@"6",@"7",@"8",@"9"];
+        for (NSString *sectionKey in sectionKeys)
         {
-            NSString *sectionKey = [sectionKeys substringWithRange: NSMakeRange(i, 1)];
+            [self.contactIDsSortedByFirst setObject: [[NSMutableArray alloc] init] forKey: sectionKey];
+            [self.contactIDsSortedByLast setObject: [[NSMutableArray alloc] init] forKey: sectionKey];
             [self.contactIDsSortedByPhone setObject: [[NSMutableArray alloc] init] forKey: sectionKey];
         }
     }
@@ -239,7 +238,7 @@
                 [allLinkedRecordIDs addObject: linkedRecordIDs.anyObject];
             }
 
-            //[self processPhoneNumbersOfRecordRef: recordRef withRecordID: recordID andABAddressBookRef: addressBook];
+            [self processPhoneNumbersOfRecordRef: recordRef withRecordID: recordID andABAddressBookRef: addressBook];
             
             if (!self.dateAddressBookLoaded || [self.dateAddressBookLoaded compare: created] != NSOrderedDescending)
             { // Created should be compared first
@@ -317,12 +316,12 @@
     ABMultiValueRef multiValueRecord =(ABMultiValueRef)ABRecordCopyValue(recordRef, kABPersonPhoneProperty);
     if (multiValueRecord)
     {
-        NSCharacterSet *nonDecimalDigits = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
+        NSCharacterSet *nonDigits = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
         
         NSInteger count = ABMultiValueGetCount(multiValueRecord);
         for (NSInteger i = 0; i < count; ++i) {
             NSString *value = (NSString *)CFBridgingRelease(ABMultiValueCopyValueAtIndex(multiValueRecord, i));
-            NSString *digits = [[value componentsSeparatedByCharactersInSet: nonDecimalDigits] componentsJoinedByString: @""];
+            NSString *digits = [[value componentsSeparatedByCharactersInSet: nonDigits] componentsJoinedByString: @""];
             if (digits.length)
             {
                 NSString *key = [digits substringToIndex: 1];
@@ -342,18 +341,34 @@
 {
   ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBook, recordID);
   // First name
-  NSString *name = [AKContact nameToDetermineSectionForRecordRef: recordRef withSortOrdering: kABPersonSortByFirstName];
-  NSString *sectionKey = [AKContact sectionKeyForName: name];
+  NSString *firstName = [AKContact nameToDetermineSectionForRecordRef: recordRef withSortOrdering: kABPersonSortByFirstName];
+  NSString *sectionKey = [AKContact sectionKeyForName: firstName];
   NSMutableArray *sectionArray = (NSMutableArray *)[self.contactIDsSortedByFirst objectForKey: sectionKey];
   NSUInteger index = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray withSortOrdering: kABPersonSortByFirstName andAddressBookRef: addressBook];
   [sectionArray insertObject: @(recordID) atIndex: index];
 
+  if ([sectionKey isEqualToString: @"#"] && [firstName isMemberOfCharacterSet: [NSCharacterSet decimalDigitCharacterSet]])
+  {
+      sectionKey = [firstName substringToIndex: 1];
+      sectionArray = (NSMutableArray *)[self.contactIDsSortedByFirst objectForKey: sectionKey];
+      index = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray withSortOrdering: kABPersonSortByFirstName andAddressBookRef: addressBook];
+      [sectionArray insertObject: @(recordID) atIndex: index];
+  }
+
   // Last name
-  name = [AKContact nameToDetermineSectionForRecordRef: recordRef withSortOrdering: kABPersonSortByLastName];
-  sectionKey = [AKContact sectionKeyForName: name];
+  NSString *lastName = [AKContact nameToDetermineSectionForRecordRef: recordRef withSortOrdering: kABPersonSortByLastName];
+  sectionKey = [AKContact sectionKeyForName: lastName];
   sectionArray = (NSMutableArray *)[self.contactIDsSortedByLast objectForKey: sectionKey];
   index = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray withSortOrdering: kABPersonSortByLastName andAddressBookRef: addressBook];
   [sectionArray insertObject: @(recordID) atIndex: index];
+
+  if ([sectionKey isEqualToString: @"#"] && [lastName isMemberOfCharacterSet: [NSCharacterSet decimalDigitCharacterSet]])
+  {
+    sectionKey = [lastName substringToIndex: 1];
+    sectionArray = (NSMutableArray *)[self.contactIDsSortedByLast objectForKey: sectionKey];
+    index = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray withSortOrdering: kABPersonSortByLastName andAddressBookRef: addressBook];
+    [sectionArray insertObject: @(recordID) atIndex: index];
+  }
 
   if (self.status == kAddressBookLoading)
   {
