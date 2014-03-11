@@ -90,6 +90,13 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   return akAddressBook;
 }
 
++ (NSArray *)sectionKeys;
+{
+    return @[@"A",@"B",@"C",@"D",@"E",@"F",@"F",@"G",@"H",
+             @"I",@"J",@"K",@"L",@"M",@"N",@"O",@"P",@"Q",
+             @"R",@"S",@"T",@"U",@"V",@"W",@"X",@"Y",@"Z",@"#"];
+}
+
 - (id)init
 {
   self = [super init];

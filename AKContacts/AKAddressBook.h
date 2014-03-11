@@ -111,6 +111,7 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 @property (assign, nonatomic, readonly) ABPersonSortOrdering sortOrdering;
 
 + (AKAddressBook *)sharedInstance;
++ (NSArray *)sectionKeys;
 - (void)requestAddressBookAccess;
 - (NSDictionary *)contactIDs;
 - (AKSource *)defaultSource;
