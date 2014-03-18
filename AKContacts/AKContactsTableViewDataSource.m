@@ -103,7 +103,7 @@
     {
       NSString *character = [searchTerm substringWithRange: NSMakeRange(searchTerm.length - 1, 1)];
       
-      int(^nextCharacterIndex)(void) = ^{
+      NSInteger(^nextCharacterIndex)(void) = ^{
         NSInteger index = 0;
         for (AKSearchStackElement *elem in [self.searchStack reverseObjectEnumerator]) {
           if ([elem.character isMemberOfCharacterSet: [NSCharacterSet whitespaceCharacterSet]]) {
@@ -114,7 +114,7 @@
         return index;
       };
       
-      int(^whiteSpaceCountOnStack)(void) = ^{
+      NSInteger(^whiteSpaceCountOnStack)(void) = ^{
         NSInteger count = 0;
         for (AKSearchStackElement *elem in self.searchStack)
         {
@@ -287,7 +287,7 @@
   NSMutableArray *filteredArray = [[NSMutableArray alloc] init];
   for (NSNumber *recordID in array)
   {
-    if ([self recordID: recordID.integerValue matchesTerm: term withAddressBookRef: addressBookRef])
+    if ([self recordID: recordID.intValue matchesTerm: term withAddressBookRef: addressBookRef])
     {
       [filteredArray addObject: recordID];
     }

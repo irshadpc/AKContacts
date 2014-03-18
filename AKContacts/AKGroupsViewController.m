@@ -35,8 +35,6 @@
 #import "AKSource.h"
 #import "AKAddressBook.h"
 
-static const float defaultCellHeight = 44.f;
-
 @interface AKGroupsViewController () <UITableViewDataSource, UITableViewDelegate>
 
 @property (strong, nonatomic) UITableView *tableView;

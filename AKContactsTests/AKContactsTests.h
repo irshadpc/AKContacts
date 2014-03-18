@@ -6,8 +6,8 @@
 //  Copyright (c) 2013 Adam Kornafeld. All rights reserved.
 //
 
-#import <SenTestingKit/SenTestingKit.h>
+#import <XCTest/XCTest.h>
 
-@interface AKContactsTests : SenTestCase
+@interface AKContactsTests : XCTestCase
 
 @end

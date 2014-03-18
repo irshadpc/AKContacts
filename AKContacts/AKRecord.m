@@ -179,7 +179,7 @@
   return ret;
 }
 
-- (id)valueForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier
+- (id)valueForMultiValueProperty: (ABPropertyID)property andIdentifier: (ABMultiValueIdentifier)identifier
 {
   if (self.recordID < 0) return nil;
 
@@ -204,7 +204,7 @@
   return ret;
 }
 
-- (NSString *)labelForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier
+- (NSString *)labelForMultiValueProperty: (ABPropertyID)property andIdentifier: (ABMultiValueIdentifier)identifier
 {
   if (self.recordID < 0) return nil;
   
@@ -234,7 +234,7 @@
   return ret;
 }
 
-- (NSString *)localizedLabelForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier
+- (NSString *)localizedLabelForMultiValueProperty: (ABPropertyID)property andIdentifier: (ABMultiValueIdentifier)identifier
 {
   NSString *ret = [self labelForMultiValueProperty: property andIdentifier: identifier];
   if (ret == nil)
@@ -248,7 +248,7 @@
   return ret;
 }
 
-- (void)setValue: (id)value andLabel: (NSString *)label forMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger *)identifier
+- (void)setValue: (id)value andLabel: (NSString *)label forMultiValueProperty: (ABPropertyID)property andIdentifier: (ABRecordID *)identifier
 {
   if (self.recordID < 0) return;
   

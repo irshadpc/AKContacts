@@ -138,7 +138,7 @@ static const float defaultCellHeight = 44.f;
 
 #pragma mark - Custom methods
 
-- (id)initWithContactID: (NSInteger)contactID
+- (id)initWithContactID: (ABRecordID)contactID
 {
   self = [self init];
   if (self)
@@ -529,7 +529,7 @@ static const float defaultCellHeight = 44.f;
       case kSectionInstantMessage:
       {
         NSArray *identifiers = [self.contact identifiersForProperty: property];
-        NSInteger identifier = [[identifiers objectAtIndex: indexPath.row] integerValue];
+        ABPropertyID identifier = [[identifiers objectAtIndex: indexPath.row] intValue];
         [self.contact setValue: nil  andLabel: nil forMultiValueProperty: property andIdentifier: &identifier];
         break;
       }
@@ -574,7 +574,7 @@ static const float defaultCellHeight = 44.f;
     {
       NSArray *identifiers = [self.contact identifiersForProperty: kABPersonPhoneProperty];
       NSInteger identifier = [[identifiers objectAtIndex: indexPath.row] integerValue];
-      NSString *value = [self.contact valueForMultiValueProperty: kABPersonPhoneProperty andIdentifier: identifier];
+      NSString *value = [self.contact valueForMultiValueProperty: kABPersonPhoneProperty andIdentifier: (ABMultiValueIdentifier)identifier];
       value = [[value componentsSeparatedByCharactersInSet:
                                 [[NSCharacterSet decimalDigitCharacterSet] invertedSet]]
                                componentsJoinedByString: @""];
@@ -584,20 +584,20 @@ static const float defaultCellHeight = 44.f;
     else if (section == kSectionEmail)
     {
       NSArray *identifiers = [self.contact identifiersForProperty: kABPersonEmailProperty];
-      NSInteger identifier = [[identifiers objectAtIndex: indexPath.row] integerValue];
+      ABMultiValueIdentifier identifier = [[identifiers objectAtIndex: indexPath.row] intValue];
       NSString *value = [self.contact valueForMultiValueProperty: kABPersonEmailProperty andIdentifier: identifier];
       [[AKMessenger sharedInstance] sendEmailWithRecipients: [[NSArray alloc] initWithObjects: value, nil]];
     }
     else if (section == kSectionURL) {
       NSArray *identifiers = [self.contact identifiersForProperty: kABPersonURLProperty];
-      NSInteger identifier = [[identifiers objectAtIndex: indexPath.row] integerValue];
+      ABMultiValueIdentifier identifier = [[identifiers objectAtIndex: indexPath.row] intValue];
       NSString *url = [self.contact valueForMultiValueProperty: kABPersonURLProperty andIdentifier: identifier];
       [[UIApplication sharedApplication] openURL: [NSURL URLWithString: url]];
     }
     else if (section == kSectionAddress)
     {
       NSArray *identifiers = [self.contact identifiersForProperty: kABPersonAddressProperty];
-      NSInteger identifier = [[identifiers objectAtIndex: indexPath.row] integerValue];
+      ABMultiValueIdentifier identifier = [[identifiers objectAtIndex: indexPath.row] intValue];
       NSString *address = [self.contact addressForIdentifier: identifier andNumRows: NULL];
       address = [address stringByReplacingOccurrencesOfString: @"\n" withString: @" "];
       address = [address stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
@@ -607,7 +607,7 @@ static const float defaultCellHeight = 44.f;
     else if (section == kSectionSocialProfile)
     {
       NSArray *identifiers = [self.contact identifiersForProperty: kABPersonSocialProfileProperty];
-      NSInteger identifier = [[identifiers objectAtIndex: indexPath.row] integerValue];
+      ABMultiValueIdentifier identifier = [[identifiers objectAtIndex: indexPath.row] intValue];
       NSDictionary *dict = [self.contact valueForMultiValueProperty: kABPersonSocialProfileProperty andIdentifier: identifier];
       if ([dict objectForKey: (NSString *)kABPersonSocialProfileURLKey])
       {
@@ -616,7 +616,7 @@ static const float defaultCellHeight = 44.f;
     }
     else if (section == kSectionLinkedRecords)
     {
-      NSInteger recordId = [[[self.contact linkedContactIDs] objectAtIndex: indexPath.row] integerValue];
+      ABRecordID recordId = [[[self.contact linkedContactIDs] objectAtIndex: indexPath.row] intValue];
       
       if (self.parentLinkedContactID != recordId)
       {
@@ -640,9 +640,9 @@ static const float defaultCellHeight = 44.f;
   
   ABPropertyID property = [AKContactViewController abPropertyIDforSection: section];
   NSArray *identifiers = [self.contact identifiersForProperty: property];
-  NSInteger identifier = (indexPath.row < [identifiers count]) ? [[identifiers objectAtIndex: indexPath.row] integerValue] : NSNotFound;
+  ABMultiValueIdentifier identifier = (indexPath.row < identifiers.count) ? [[identifiers objectAtIndex: indexPath.row] intValue] : AKNotFound;
   
-  AKLabelViewCompletionHandler handler = ^(ABPropertyID property, NSInteger identifier, NSString *label){
+  AKLabelViewCompletionHandler handler = ^(ABPropertyID property, ABMultiValueIdentifier identifier, NSString *label){
     
     id value = [self.contact valueForMultiValueProperty: property andIdentifier: identifier];
     if (value == nil)
@@ -661,7 +661,7 @@ static const float defaultCellHeight = 44.f;
     [cell.textLabel setText: [self.contact localizedLabelForMultiValueProperty: property andIdentifier: identifier]];
   };
 
-  NSString *label = (identifier != NSNotFound) ? [self.contact labelForMultiValueProperty: property andIdentifier: identifier] : [AKLabel defaultLabelForABPropertyID: property];
+  NSString *label = (identifier != AKNotFound) ? [self.contact labelForMultiValueProperty: property andIdentifier: identifier] : [AKLabel defaultLabelForABPropertyID: property];
   
   AKLabelViewController *labelView = [[AKLabelViewController alloc] initWithPropertyID: property andIdentifier: identifier andSelectedLabel: label andCompletionHandler: handler];
   UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: labelView];

@@ -62,13 +62,13 @@
  * Return a value of an idenfifier for an ABMultiValue type
  * Return type can be NSString, NSDate, NSDictionary
  **/
-- (id)valueForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier;
+- (id)valueForMultiValueProperty: (ABPropertyID)property andIdentifier: (ABMultiValueIdentifier)identifier;
 /**
  * Return a label of an identifier for an ABMultiValue type
  **/
-- (NSString *)labelForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier;
-- (NSString *)localizedLabelForMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger)identifier;
+- (NSString *)labelForMultiValueProperty: (ABPropertyID)property andIdentifier: (ABMultiValueIdentifier)identifier;
+- (NSString *)localizedLabelForMultiValueProperty: (ABPropertyID)property andIdentifier: (ABMultiValueIdentifier)identifier;
 
-- (void)setValue: (id)value andLabel: (NSString *)label forMultiValueProperty: (ABPropertyID)property andIdentifier: (NSInteger *)identifier;
+- (void)setValue: (id)value andLabel: (NSString *)label forMultiValueProperty: (ABPropertyID)property andIdentifier: (ABRecordID *)identifier;
 
 @end

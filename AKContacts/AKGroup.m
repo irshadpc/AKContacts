@@ -111,7 +111,7 @@ NSString *const DefaultsKeyGroups = @"Groups";
   else dispatch_async(dispatch_get_main_queue(), block);
 }
 
-- (void)removeMemberWithID: (NSInteger)recordID
+- (void)removeMemberWithID: (ABRecordID)recordID
 {
   dispatch_block_t block = ^{
     

@@ -61,7 +61,7 @@
   NSArray *identifiersArray = [self.controller.dataSource.contactIDs objectForKey: key];
   if ([identifiersArray count] == 0) return;
   NSNumber *recordId = [identifiersArray objectAtIndex: indexPath.row];
-  AKContact *contact = [akAddressBook contactForContactId: [recordId integerValue]];
+  AKContact *contact = [akAddressBook contactForContactId: recordId.intValue];
   if (!contact) return;
   [self setTag: [contact recordID]];
   [self setSelectionStyle: UITableViewCellSelectionStyleBlue];

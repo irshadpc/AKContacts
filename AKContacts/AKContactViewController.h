@@ -63,6 +63,6 @@
 /**
  * Create a person view with a contactID
  */
--(id)initWithContactID: (NSInteger)contactID;
+-(id)initWithContactID: (ABRecordID)contactID;
 
 @end

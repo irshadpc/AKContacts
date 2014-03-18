@@ -43,6 +43,6 @@
 
 - (void)sendTextWithRecipient: (NSString *)recipient;
 - (void)sendEmailWithRecipients: (NSArray *)recipients;
-- (void)showTextActionSheetWithContactID: (NSInteger)contactID;
+- (void)showTextActionSheetWithContactID: (ABRecordID)contactID;
 
 @end

@@ -314,7 +314,7 @@ const int newContactID = -1<<9;
   return ret;
 }
 
-- (NSString *)addressForIdentifier: (NSInteger)identifier andNumRows: (NSInteger *)numRows
+- (NSString *)addressForIdentifier: (ABMultiValueIdentifier)identifier andNumRows: (NSInteger *)numRows
 {
   NSDictionary *address = [self valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: identifier];
 
@@ -341,7 +341,7 @@ const int newContactID = -1<<9;
   return [rows componentsJoinedByString: @"\n"];
 }
 
-- (NSString *)instantMessageDescriptionForIdentifier: (NSInteger)identifier
+- (NSString *)instantMessageDescriptionForIdentifier: (ABMultiValueIdentifier)identifier
 {
   NSDictionary *instantMessage = [self valueForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: identifier];
   

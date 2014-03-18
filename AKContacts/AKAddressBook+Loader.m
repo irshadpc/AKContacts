@@ -75,7 +75,7 @@
         ABRecordRef recordRef = (__bridge ABRecordRef)obj;
         ABRecordID recordID = ABRecordGetRecordID(recordRef);
         
-        ABSourceType type =  [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABSourceTypeProperty)) integerValue];
+        ABSourceType type =  [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABSourceTypeProperty)) intValue];
         if (type == kABSourceTypeExchangeGAL) continue; // No support for Exchange Global Address List, yet
         
         AKSource *source = [self sourceForSourceId: recordID];
@@ -197,7 +197,7 @@
     NSMutableSet *createdRecordIDs = [[NSMutableSet alloc] init];
     NSMutableSet *changedRecordIDs = [[NSMutableSet alloc] init];
 
-    NSLog(@"Number of contacts: %d", self.contactsCount);
+    NSLog(@"Number of contacts: %ld", (long)self.contactsCount);
     self.loadProgress.totalUnitCount = self.contactsCount;
     self.loadProgress.completedUnitCount = 0;
     // Get array of records in Address Book
@@ -275,7 +275,7 @@
         NSLog(@"Deleted contactIDs: %@", appContactIdentifiers);
         for (NSNumber *contactID in appContactIdentifiers)
         {
-          [self contactIdentifiersDeleteRecordID: contactID.integerValue withAddressBookRef: addressBook];
+          [self contactIdentifiersDeleteRecordID: contactID.intValue withAddressBookRef: addressBook];
         }
     }
 
@@ -284,11 +284,11 @@
         self.loadProgress.completedUnitCount += 1;
         if (self.status == kAddressBookLoading)
         {
-            NSLog(@"% 3d : %@ is new", recordID.integerValue, CFBridgingRelease(ABRecordCopyCompositeName(ABAddressBookGetPersonWithRecordID(addressBook, recordID.integerValue))));
+            NSLog(@"% 3d : %@ is new", recordID.intValue, CFBridgingRelease(ABRecordCopyCompositeName(ABAddressBookGetPersonWithRecordID(addressBook, recordID.intValue))));
         }
         if (![allLinkedRecordIDs member: recordID])
         {
-            [self contactIdentifiersInsertRecordID: recordID.integerValue withAddressBookRef: addressBook];
+            [self contactIdentifiersInsertRecordID: recordID.intValue withAddressBookRef: addressBook];
         }
     }
     for (NSNumber *recordID in changedRecordIDs)
@@ -296,10 +296,10 @@
         self.loadProgress.completedUnitCount += 1;
         if (self.status == kAddressBookLoading)
         {
-            NSLog(@"% 3d : %@ did change", recordID.integerValue, CFBridgingRelease(ABRecordCopyCompositeName(ABAddressBookGetPersonWithRecordID(addressBook, recordID.integerValue))));
+            NSLog(@"% 3d : %@ did change", recordID.intValue, CFBridgingRelease(ABRecordCopyCompositeName(ABAddressBookGetPersonWithRecordID(addressBook, recordID.intValue))));
         }
-        [self contactIdentifiersDeleteRecordID: recordID.integerValue withAddressBookRef: addressBook];
-        [self contactIdentifiersInsertRecordID: recordID.integerValue withAddressBookRef: addressBook];
+        [self contactIdentifiersDeleteRecordID: recordID.intValue withAddressBookRef: addressBook];
+        [self contactIdentifiersInsertRecordID: recordID.intValue withAddressBookRef: addressBook];
     }
     
     if (self.status == kAddressBookLoading)
@@ -452,8 +452,8 @@
     NSInteger person = [(NSNumber *)kABPersonKindPerson integerValue];
     
     NSComparator comparator = ^NSComparisonResult(id obj1, id obj2) {
-        ABRecordRef recordRef2 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj2 integerValue]);
-        ABRecordRef recordRef1 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj1 integerValue]);
+        ABRecordRef recordRef2 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj2 intValue]);
+        ABRecordRef recordRef1 = ABAddressBookGetPersonWithRecordID(addressBook, [(NSNumber *)obj1 intValue]);
         
         NSInteger kind1 = [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef1, kABPersonKindProperty)) integerValue];
         NSInteger kind2 = [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef2, kABPersonKindProperty)) integerValue];

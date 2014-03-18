@@ -75,13 +75,13 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     NSArray *imIdentifiers = [contact identifiersForProperty: kABPersonInstantMessageProperty];
     [self setTag: [[imIdentifiers objectAtIndex: row] integerValue]];
 
-    NSString *instantMessage = [contact instantMessageDescriptionForIdentifier: self.tag];
+    NSString *instantMessage = [contact instantMessageDescriptionForIdentifier: (ABMultiValueIdentifier)self.tag];
 
     [self.detailTextLabel setText: instantMessage];
 
     [self.detailTextLabel setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
 
-    [self.textLabel setText: [contact localizedLabelForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: self.tag]];
+    [self.textLabel setText: [contact localizedLabelForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: (ABMultiValueIdentifier)self.tag]];
   }
   else
   {
@@ -138,7 +138,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 - (UITextField *)getTextFieldWithTag: (NSInteger)tag
 {
   AKContact *contact = self.controller.contact;
-  NSDictionary *service = [contact valueForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: self.tag];
+  NSDictionary *service = [contact valueForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: (ABMultiValueIdentifier)self.tag];
 
   NSString *key = [AKContactInstantMessageViewCell descriptionForInstantMessageTag: tag];
   NSString *text = [service objectForKey: key];
@@ -168,7 +168,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
 - (void)showServicePickerModalViewForTextField: (UITextField *)textField
 {
-  AKLabelViewCompletionHandler handler = ^(ABPropertyID property, NSInteger identifier, NSString *service){
+  AKLabelViewCompletionHandler handler = ^(ABPropertyID property, ABMultiValueIdentifier identifier, NSString *service){
     
     NSDictionary *serviceDict = [self.controller.contact valueForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: identifier];
     if (serviceDict == nil)
@@ -184,7 +184,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     [textField setText: service];
   };
   
-  NSDictionary *serviceDict = [self.controller.contact valueForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: self.tag];
+  NSDictionary *serviceDict = [self.controller.contact valueForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: (ABMultiValueIdentifier)self.tag];
 
   NSString *service = (self.tag != NSNotFound) ? [serviceDict objectForKey: (NSString *)kABPersonInstantMessageServiceKey] : (NSString *)kABPersonInstantMessageServiceSkype;
 
@@ -266,11 +266,11 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
   NSString *key = [AKContactInstantMessageViewCell descriptionForInstantMessageTag: textField.tag];
 
-  NSDictionary *service = [contact valueForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: self.tag];
+  NSDictionary *service = [contact valueForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: (ABMultiValueIdentifier)self.tag];
   if (service == nil)
   {
     NSDictionary *newService = [[NSDictionary alloc] initWithObjectsAndKeys: textField.text, key, nil];
-    NSInteger identifier = self.tag;
+    ABMultiValueIdentifier identifier = (ABMultiValueIdentifier)self.tag;
     NSString *label = [AKLabel defaultLabelForABPropertyID: kABPersonInstantMessageProperty];
     [contact setValue: newService andLabel: label forMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: &identifier];
     [self setTag: identifier];
@@ -281,7 +281,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     NSMutableDictionary *mutableService = [service mutableCopy];
     [mutableService setObject: textField.text forKey: key];
     service = [mutableService copy];
-    NSInteger identifier = self.tag;
+    ABMultiValueIdentifier identifier = (ABMultiValueIdentifier)self.tag;
     NSString *label = [contact labelForMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: identifier];
     [contact setValue: service andLabel: label forMultiValueProperty: kABPersonInstantMessageProperty andIdentifier: &identifier];
   }

@@ -66,7 +66,7 @@
   [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
   [self setAccessoryType: UITableViewCellAccessoryNone];
   
-  NSInteger recordID = [[[self.controller.contact linkedContactIDs] objectAtIndex: row] integerValue];
+  ABRecordID recordID = [[[self.controller.contact linkedContactIDs] objectAtIndex: row] intValue];
 
   if (recordID != self.controller.parentLinkedContactID)
   {

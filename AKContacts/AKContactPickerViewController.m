@@ -185,7 +185,7 @@ NSString *const AKContactPickerViewDidDismissNotification = @"AKContactPickerVie
   NSArray *identifiersArray = [self.contactIdentifiers objectForKey: key];
 
   NSNumber *recordId = [identifiersArray objectAtIndex: indexPath.row];
-  AKContact *contact = [akAddressBook contactForContactId: [recordId integerValue]];
+  AKContact *contact = [akAddressBook contactForContactId: [recordId intValue]];
 
   [cell setTag: [contact recordID]];
   [cell setSelectionStyle: UITableViewCellSelectionStyleBlue];
@@ -222,7 +222,7 @@ NSString *const AKContactPickerViewDidDismissNotification = @"AKContactPickerVie
   AKSource *source = [akAddressBook sourceForSourceId: akAddressBook.sourceID];
   AKGroup *group = [source groupForGroupId: akAddressBook.groupID];
 
-  NSInteger contactID = cell.tag;
+  ABRecordID contactID = (ABRecordID)cell.tag;
 
   [self.changedContactIDs addObject: [NSNumber numberWithInteger: contactID]];
 

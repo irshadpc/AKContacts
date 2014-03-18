@@ -15,6 +15,6 @@ FOUNDATION_EXPORT NSString *const AKGroupPickerViewDidDismissNotification;
 /**
  * Create a group picker view with a contactID
  */
-- (id)initWithContactID: (NSInteger)contactID;
+- (id)initWithContactID: (ABRecordID)contactID;
 
 @end

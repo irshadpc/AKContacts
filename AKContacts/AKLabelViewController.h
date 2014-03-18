@@ -38,7 +38,7 @@ typedef NS_ENUM(NSInteger, Sections)
 
 @interface AKLabelViewController : UIViewController
 
-typedef void (^AKLabelViewCompletionHandler)(ABPropertyID property, NSInteger identifier, NSString *label);
+typedef void (^AKLabelViewCompletionHandler)(ABPropertyID property, ABMultiValueIdentifier identifier, NSString *label);
 
 @property (assign, nonatomic) ABPropertyID property;
 @property (strong, nonatomic) NSMutableArray *labels;
@@ -50,7 +50,7 @@ typedef void (^AKLabelViewCompletionHandler)(ABPropertyID property, NSInteger id
 /**
  *
  */
-- (id)initWithPropertyID: (ABPropertyID)property andIdentifier: (NSInteger)identifier andSelectedLabel: (NSString *)selectedLabel andCompletionHandler: (AKLabelViewCompletionHandler)handler;
+- (id)initWithPropertyID: (ABPropertyID)property andIdentifier: (ABMultiValueIdentifier)identifier andSelectedLabel: (NSString *)selectedLabel andCompletionHandler: (AKLabelViewCompletionHandler)handler;
 /**
  *
  */

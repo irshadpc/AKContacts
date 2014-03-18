@@ -34,7 +34,7 @@
 
 @property (strong, nonatomic) UITableView *tableView;
 @property (strong, nonatomic) UITapGestureRecognizer *tapGestureRecognizer;
-@property (assign, nonatomic) NSInteger identifier;
+@property (assign, nonatomic) ABMultiValueIdentifier identifier;
 @property (copy, nonatomic) AKLabelViewCompletionHandler handler;
 
 /**
@@ -53,7 +53,7 @@
 
 @implementation AKLabelViewController
 
-- (id)initWithPropertyID: (ABPropertyID)property andIdentifier: (NSInteger)identifier andSelectedLabel: (NSString *)selectedLabel andCompletionHandler: (AKLabelViewCompletionHandler)handler
+- (id)initWithPropertyID: (ABPropertyID)property andIdentifier: (ABMultiValueIdentifier)identifier andSelectedLabel: (NSString *)selectedLabel andCompletionHandler: (AKLabelViewCompletionHandler)handler
 {
   self = [self init];
   if (self)
@@ -462,7 +462,7 @@
     
     NSMutableArray *reloadIndexes = [[NSMutableArray alloc] init];
     
-    for (AKLabel *akLabel in [self.labels objectAtIndex: kCustomSection])
+    for (AKLabel __unused *akLabel in [self.labels objectAtIndex: kCustomSection])
     {
       [insertIndexes addObjectsFromArray: [self indexPathsOfDeletedLabels]];
       [reloadIndexes addObjectsFromArray: [self indexPathsOfLabelsOutOfPosition]];

@@ -108,7 +108,7 @@
     
     if ([group count] > 0)
     {
-      self.akBadge = [AKBadge badgeWithText: [NSString stringWithFormat: @"%d", [group count]]];
+      self.akBadge = [AKBadge badgeWithText: [NSString stringWithFormat: @"%ld", (long)group.count]];
       [self.akBadge setFrame: CGRectMake(250.f - (self.akBadge.frame.size.width / 2), 9.f, self.akBadge.frame.size.width, self.akBadge.frame.size.height)];
       [self.contentView addSubview: self.akBadge];
     }

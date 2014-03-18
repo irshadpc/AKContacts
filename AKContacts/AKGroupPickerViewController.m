@@ -17,13 +17,13 @@ NSString *const AKGroupPickerViewDidDismissNotification = @"AKGroupPickerViewDid
 @interface AKGroupPickerViewController () <UITableViewDataSource, UITableViewDelegate>
 
 @property (strong, nonatomic) UITableView *tableView;
-@property (assign, nonatomic) NSInteger contactID;
+@property (assign, nonatomic) ABRecordID contactID;
 
 @end
 
 @implementation AKGroupPickerViewController
 
-- (id)initWithContactID: (NSInteger)contactID
+- (id)initWithContactID: (ABRecordID)contactID
 {
   self = [super init];
   if (self)

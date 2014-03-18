@@ -69,8 +69,8 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 /**
  * AKContactViewControllerDelegate
  */
-- (void)modalViewDidDismissWithContactID: (NSInteger)contactID;
-- (void)recordDidRemoveWithContactID: (NSInteger)contactID;
+- (void)modalViewDidDismissWithContactID: (ABRecordID)contactID;
+- (void)recordDidRemoveWithContactID: (ABRecordID)contactID;
 /**
  * Keyboard notification handlers
  */
@@ -180,16 +180,16 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
 #pragma mark - AKContactViewController delegate
 
-- (void)modalViewDidDismissWithContactID: (NSInteger)contactID
+- (void)modalViewDidDismissWithContactID: (ABRecordID)contactID
 {
   [self.dataSource loadData];
   [self reloadTableViewData];
-  AKContactViewController *contactView = [[AKContactViewController alloc] initWithContactID: contactID];
+  AKContactViewController *contactView = [[AKContactViewController alloc] initWithContactID: (ABRecordID)contactID];
   [contactView setDelegate: self];
   [self.navigationController pushViewController: contactView animated: NO];
 }
 
-- (void)recordDidRemoveWithContactID: (NSInteger)contactID
+- (void)recordDidRemoveWithContactID: (ABRecordID)contactID
 {
   [self.dataSource loadData];
   [self reloadTableViewData];
@@ -467,7 +467,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
   if (cell.tag != NSNotFound)
   {
-    AKContactViewController *contactView = [[AKContactViewController alloc ] initWithContactID: cell.tag];
+    AKContactViewController *contactView = [[AKContactViewController alloc ] initWithContactID: (ABRecordID)cell.tag];
     [contactView setDelegate: self];
     [self.navigationController pushViewController: contactView animated: YES];
   }

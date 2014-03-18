@@ -27,8 +27,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <AddressBook/AddressBook.h>
-#import <AddressBookUI/AddressBookUI.h>
 
 FOUNDATION_EXPORT const void *const IsOnMainQueueKey;
 FOUNDATION_EXPORT const BOOL ShowGroups;
@@ -99,8 +97,8 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 /**
  * ID of displayed source and group
  **/
-@property (assign, nonatomic) NSInteger sourceID;
-@property (assign, nonatomic) NSInteger groupID;
+@property (assign, nonatomic) ABRecordID sourceID;
+@property (assign, nonatomic) ABRecordID groupID;
 
 @property (assign, nonatomic) BOOL needReload;
 

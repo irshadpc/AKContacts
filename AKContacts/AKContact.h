@@ -52,8 +52,8 @@ FOUNDATION_EXPORT const int newContactID;
 - (void)setImageData: (NSData *)data;
 - (UIImage *)image;
 
-- (NSString *)addressForIdentifier: (NSInteger)identifier andNumRows: (NSInteger *)numRows;
-- (NSString *)instantMessageDescriptionForIdentifier: (NSInteger)identifier;
+- (NSString *)addressForIdentifier: (ABMultiValueIdentifier)identifier andNumRows: (NSInteger *)numRows;
+- (NSString *)instantMessageDescriptionForIdentifier: (ABMultiValueIdentifier)identifier;
 
 - (NSComparisonResult)compareByName:(AKContact *)otherContact;
 

@@ -135,13 +135,13 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
       
       if (phoneCount == 1 && emailCount == 0)
       {
-          NSInteger identifier = [[[contact identifiersForProperty: kABPersonPhoneProperty] objectAtIndex: 0] integerValue];
+          ABMultiValueIdentifier identifier = [[[contact identifiersForProperty: kABPersonPhoneProperty] objectAtIndex: 0] intValue];
           NSString *phoneNumber = [contact valueForMultiValueProperty: kABPersonPhoneProperty andIdentifier: identifier];
           [messanger sendTextWithRecipient: phoneNumber];
       }
       else if (phoneCount == 0 && emailCount == 1)
       {
-          NSInteger identifier = [[[contact identifiersForProperty: kABPersonEmailProperty] objectAtIndex: 0] integerValue];
+          ABMultiValueIdentifier identifier = [[[contact identifiersForProperty: kABPersonEmailProperty] objectAtIndex: 0] intValue];
           NSString *email = [contact valueForMultiValueProperty: kABPersonEmailProperty andIdentifier: identifier];
           [messanger sendEmailWithRecipients: [[NSArray alloc] initWithObjects: email, nil]];
       }

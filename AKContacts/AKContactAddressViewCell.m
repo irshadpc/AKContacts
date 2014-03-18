@@ -80,7 +80,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     [self setTag: [[addressIdentifiers objectAtIndex: row] integerValue]];
 
     NSInteger numRows = 0;
-    NSString *address = [contact addressForIdentifier: self.tag andNumRows: &numRows];
+    NSString *address = [contact addressForIdentifier: (ABMultiValueIdentifier)self.tag andNumRows: &numRows];
 
     [self.detailTextLabel setText: address];
     [self.detailTextLabel setLineBreakMode: NSLineBreakByWordWrapping];
@@ -95,7 +95,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
       [self.detailTextLabel setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
     }
 
-    [self.textLabel setText: [contact localizedLabelForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.tag]];
+    [self.textLabel setText: [contact localizedLabelForMultiValueProperty: kABPersonAddressProperty andIdentifier: (ABMultiValueIdentifier)self.tag]];
   }
   else
   {
@@ -182,7 +182,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 - (UITextField *)getTextFieldWithTag: (NSInteger)tag
 {
   AKContact *contact = self.controller.contact;
-  NSDictionary *address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.tag];
+  NSDictionary *address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: (ABMultiValueIdentifier)self.tag];
 
   NSString *key = [AKContactAddressViewCell descriptionForAddressTag: tag];
   NSString *text = [address objectForKey: key];
@@ -267,11 +267,11 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
 
   NSString *key = [AKContactAddressViewCell descriptionForAddressTag: textField.tag];
 
-  NSDictionary *address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: self.tag];
+  NSDictionary *address = [contact valueForMultiValueProperty: kABPersonAddressProperty andIdentifier: (ABMultiValueIdentifier)self.tag];
   if (!address)
   {
     NSDictionary *newAddress = [[NSDictionary alloc] initWithObjectsAndKeys: textField.text, key, nil];
-    NSInteger identifier = self.tag;
+    ABRecordID identifier = (ABRecordID)self.tag;
     NSString *label = [AKLabel defaultLabelForABPropertyID: kABPersonAddressProperty];
     [contact setValue: newAddress andLabel: label forMultiValueProperty: kABPersonAddressProperty andIdentifier: &identifier];
     [self setTag: identifier];
@@ -282,7 +282,7 @@ typedef NS_ENUM(NSInteger, SeparatorTag) {
     NSMutableDictionary *mutableAddress = [address mutableCopy];
     [mutableAddress setObject: textField.text forKey: key];
     address = [mutableAddress copy];
-    NSInteger identifier = self.tag;
+    ABRecordID identifier = (ABRecordID)self.tag;
     NSString *label = [contact labelForMultiValueProperty: kABPersonAddressProperty andIdentifier: identifier];
     [contact setValue: address andLabel: label forMultiValueProperty: kABPersonAddressProperty andIdentifier: &identifier];
   }

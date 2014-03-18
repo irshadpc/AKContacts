@@ -35,7 +35,7 @@
 
 @interface AKMessenger () <MFMessageComposeViewControllerDelegate, MFMailComposeViewControllerDelegate, UIActionSheetDelegate>
 
-@property (assign, nonatomic) NSInteger contactID;
+@property (assign, nonatomic) ABRecordID contactID;
 
 @end
 
@@ -109,7 +109,7 @@
   }
 }
 
-- (void)showTextActionSheetWithContactID: (NSInteger)contactID
+- (void)showTextActionSheetWithContactID: (ABRecordID)contactID
 {
   [self setContactID: contactID];
 
@@ -122,14 +122,14 @@
   NSArray *identifiers = [contact identifiersForProperty: kABPersonPhoneProperty];
   for (NSNumber *identifier in identifiers)
   {
-    NSString *value = [contact valueForMultiValueProperty: kABPersonPhoneProperty andIdentifier: [identifier integerValue]];
+    NSString *value = [contact valueForMultiValueProperty: kABPersonPhoneProperty andIdentifier: [identifier intValue]];
     [actionSheet addButtonWithTitle: value];
   }
 
   identifiers = [contact identifiersForProperty: kABPersonEmailProperty];
   for (NSNumber *identifier in identifiers)
   {
-    NSString *value = [contact valueForMultiValueProperty: kABPersonEmailProperty andIdentifier: [identifier integerValue]];
+    NSString *value = [contact valueForMultiValueProperty: kABPersonEmailProperty andIdentifier: [identifier intValue]];
     [actionSheet addButtonWithTitle: value];
   }
     
@@ -221,13 +221,13 @@
     
   if (phoneCount > 0 && buttonIndex < phoneCount)
   {
-    NSInteger identifier = [[phoneIdentifiers objectAtIndex: buttonIndex] integerValue];
+    ABMultiValueIdentifier identifier = [[phoneIdentifiers objectAtIndex: buttonIndex] intValue];
     NSString *value = [contact valueForMultiValueProperty: kABPersonPhoneProperty andIdentifier: identifier];
     [self sendTextWithRecipient: value];
   }
   else if (emailCount > 0)
   {
-    NSInteger identifier = [[emailIdentifiers objectAtIndex: (buttonIndex - phoneCount)] integerValue];
+    ABMultiValueIdentifier identifier = [[emailIdentifiers objectAtIndex: (buttonIndex - phoneCount)] intValue];
     NSString *value = [contact valueForMultiValueProperty: kABPersonEmailProperty andIdentifier: identifier];
     [self sendEmailWithRecipients: [[NSArray alloc] initWithObjects: value, nil]];
   }
