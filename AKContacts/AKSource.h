@@ -49,7 +49,7 @@ typedef NS_ENUM(NSInteger, SourceTypes)
  */
 @property (assign, nonatomic) BOOL canCreateRecord;
 
-- (instancetype)initWithABRecordID: (ABRecordID) recordID;
+- (instancetype)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef;
 /**
  * Return type of source
  */

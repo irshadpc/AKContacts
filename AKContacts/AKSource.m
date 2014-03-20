@@ -45,33 +45,15 @@ NSString *const defaultsSourceKey = @"Source_%d";
 
 @implementation AKSource
 
-- (instancetype)initWithABRecordID: (ABRecordID) recordID
+- (instancetype)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef
 {
-  self = [super initWithABRecordID: recordID andRecordType: kABSourceType];
+  self = [super initWithABRecordID: recordID recordType: kABSourceType andAddressBookRef: addressBookRef];
   if (self)
   {
     _isDefault = NO;
     _groups = [[NSMutableArray alloc] init];
   }
   return  self;
-}
-
-- (ABRecordRef)recordRef
-{
-  __block ABRecordRef ret = NULL;
-
-  dispatch_block_t block = ^{
-    if (super.recordID >= 0)
-    {
-      ABAddressBookRef addressBookRef = [[AKAddressBook sharedInstance] addressBookRef];
-      ret = ABAddressBookGetSourceWithRecordID(addressBookRef, super.recordID);
-    }
-  };
-
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
-  else dispatch_sync(dispatch_get_main_queue(), block);
-
-  return ret;
 }
 
 - (NSString *)typeName
