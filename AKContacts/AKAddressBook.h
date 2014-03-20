@@ -68,8 +68,6 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 
 @property (assign, nonatomic) id<AKAddressBookPresentationDelegate> presentationDelegate;
 
-@property (assign, nonatomic) ABAddressBookRef addressBookRef;
-
 @property (strong, nonatomic, readonly) dispatch_queue_t ab_queue;
 
 @property (strong, nonatomic, readonly) dispatch_semaphore_t ab_semaphore;

@@ -49,6 +49,8 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 
 @interface AKAddressBook ()
 
+@property (assign, nonatomic) ABAddressBookRef addressBookRef;
+
 @property (strong, nonatomic) dispatch_source_t ab_timer;
 @property (assign, nonatomic) BOOL ab_timer_suspended;
 
