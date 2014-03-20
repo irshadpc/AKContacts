@@ -664,7 +664,7 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 
     NSUInteger row = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray
                                    withSortOrdering: addressBook.sortOrdering
-                                  andAddressBookRef: addressBook.addressBookRef];
+                                  andAddressBookRef: contact.addressBookRef];
 
     [sectionArray insertObject: @(recordID) atIndex: row];
 
