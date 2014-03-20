@@ -136,7 +136,6 @@ NSString *const defaultsSourceKey = @"Source_%d";
 
 - (void)commitGroups
 {
-  AKAddressBook *addressBook = [AKAddressBook sharedInstance];
   NSMutableArray *groupsToRemove = [[NSMutableArray alloc] init];
   
   for (AKGroup *group in self.groups)
@@ -150,10 +149,10 @@ NSString *const defaultsSourceKey = @"Source_%d";
       ABRecordSetValue(record, kABGroupNameProperty, (__bridge CFTypeRef)(group.provisoryName), &error);
       if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
       
-      ABAddressBookAddRecord(addressBook.addressBookRef, record, &error);
+      ABAddressBookAddRecord(self.addressBookRef, record, &error);
       if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
 
-      ABAddressBookSave(addressBook.addressBookRef, &error);
+      ABAddressBookSave(self.addressBookRef, &error);
       if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
 
       ABRecordID recordID = ABRecordGetRecordID(record);
@@ -170,7 +169,7 @@ NSString *const defaultsSourceKey = @"Source_%d";
       ABRecordSetValue(group.recordRef, kABGroupNameProperty, (__bridge CFTypeRef)(group.provisoryName), &error);
       if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
       
-      ABAddressBookSave(addressBook.addressBookRef, &error);
+      ABAddressBookSave(self.addressBookRef, &error);
       if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
     }
     else if (group.recordID == kGroupWillDelete)
@@ -179,10 +178,10 @@ NSString *const defaultsSourceKey = @"Source_%d";
 
       [groupsToRemove addObject: group];
       CFErrorRef error = NULL;
-      ABAddressBookRemoveRecord(addressBook.addressBookRef, group.recordRef, &error);
+      ABAddressBookRemoveRecord(self.addressBookRef, group.recordRef, &error);
       if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
       
-      ABAddressBookSave(addressBook.addressBookRef, &error);
+      ABAddressBookSave(self.addressBookRef, &error);
       if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
     }
   }
@@ -316,6 +315,17 @@ NSString *const defaultsSourceKey = @"Source_%d";
     }
   }
   return [[NSArray alloc] initWithArray: indexPaths];
+}
+
+- (void)setName: (NSString *)name forGroupWithID: (ABRecordID)groupID
+{
+    AKGroup *group = [self groupForGroupId: groupID];
+    if (!group && groupID == kGroupWillCreate)
+    {
+        group = [[AKGroup alloc] initWithABRecordID: kGroupWillCreate andAddressBookRef: self.addressBookRef];
+        [self.groups addObject: group];
+    }
+    [group setProvisoryName: name];
 }
 
 @end

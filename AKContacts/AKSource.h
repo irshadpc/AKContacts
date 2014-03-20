@@ -89,5 +89,11 @@ typedef NS_ENUM(NSInteger, SourceTypes)
  * Return the indexPaths of deleted groups
  */
 - (NSArray *)indexPathsOfDeletedGroups;
+/**
+ * Update a group's name
+ * The groupID can be kGroupWillCreate in which case 
+ * the group is created and added to the list of groups first
+ */
+- (void)setName: (NSString *)name forGroupWithID: (ABRecordID)groupID;
 
 @end

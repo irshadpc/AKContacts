@@ -156,7 +156,9 @@
   [self.controller setFirstResponder: nil];
 
   if ([textField isFirstResponder])
+  {
     [textField resignFirstResponder];
+  }
 
   if (textField.tag != kGroupWillCreate && textField.text.length == 0)
   {
@@ -166,22 +168,7 @@
   {
     AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
     AKSource *source = [akAddressBook.sources objectAtIndex: self.indexPath.section];
-
-    if (textField.tag == kGroupWillCreate)
-    {
-      AKGroup *group = [source groupForGroupId: kGroupWillCreate];
-      if (group == nil)
-      {
-        group = [[AKGroup alloc] initWithABRecordID: kGroupWillCreate];
-        [source.groups addObject: group];
-      }
-      [group setProvisoryName: textField.text];
-    }
-    else
-    {
-      AKGroup *group = [source.groups objectAtIndex: self.indexPath.row];
-      [group setProvisoryName: textField.text];
-    }
+    [source setName: textField.text forGroupWithID: textField.tag];
   }
 }
 
