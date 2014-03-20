@@ -35,8 +35,7 @@ FOUNDATION_EXPORT const int newContactID;
 
 @interface AKContact : AKRecord
 
-- (instancetype)initWithABRecordID: (ABRecordID) recordID;
-- (ABRecordRef)recordRef;
+- (instancetype)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef;
 /**
  * Return displayName sans diacritics and whitespace
  **/
@@ -60,7 +59,6 @@ FOUNDATION_EXPORT const int newContactID;
 - (void)commit;
 - (void)revert;
 
-+ (NSString *)localizedNameForProperty: (ABPropertyID)property;
 + (NSString *)sectionKeyForName: (NSString *)name;
 /**
  * Return the name of a record from which the section can be determined

@@ -40,9 +40,9 @@ const int newContactID = -1<<9;
 
 @implementation AKContact
 
-- (instancetype)initWithABRecordID: (ABRecordID) recordID
+- (instancetype)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef
 {
-    self = [super initWithABRecordID: recordID andRecordType: kABPersonType];
+    self = [super initWithABRecordID: recordID recordType: kABPersonType andAddressBookRef: addressBookRef];
     if (self)
     {
 
@@ -52,36 +52,31 @@ const int newContactID = -1<<9;
 
 - (ABRecordRef)recordRef
 {
-  __block ABRecordRef ret;
+  ABRecordRef ret;
 
-  dispatch_block_t block = ^{
-      AKAddressBook *addressBook = [AKAddressBook sharedInstance];
-      ABRecordID recordID = super.recordID;
-      if (recordID == newContactID)
-      {
-        AKSource *source = [addressBook sourceForSourceId: addressBook.sourceID];
+  AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+  ABRecordID recordID = super.recordID;
+  if (recordID == newContactID)
+  {
+    AKSource *source = [addressBook sourceForSourceId: addressBook.sourceID];
 
-        [[AKAddressBook sharedInstance] setNeedReload: NO];
+    [[AKAddressBook sharedInstance] setNeedReload: NO];
 
-        ABRecordRef recordRef = ABPersonCreateInSource((source.recordID >= 0) ? source.recordRef : NULL);
+    ABRecordRef recordRef = ABPersonCreateInSource((source.recordID >= 0) ? source.recordRef : NULL);
 
-        CFErrorRef error = NULL;
-        ABAddressBookAddRecord(addressBook.addressBookRef, recordRef, &error);
-        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+    CFErrorRef error = NULL;
+    ABAddressBookAddRecord(super.addressBookRef, recordRef, &error);
+    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
 
-        ABAddressBookSave(addressBook.addressBookRef, &error);
-        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+    ABAddressBookSave(super.addressBookRef, &error);
+    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
 
-        // Do not set super.recordID here!
-        recordID = ABRecordGetRecordID(recordRef);
-        CFRelease(recordRef); // Do not leak
-      }
-    ret = ABAddressBookGetPersonWithRecordID(addressBook.addressBookRef, recordID);
-    super.age = [NSDate date];
-  };
-
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
-  else dispatch_sync(dispatch_get_main_queue(), block);
+    // Do not set super.recordID here!
+    recordID = ABRecordGetRecordID(recordRef);
+    CFRelease(recordRef); // Do not leak
+  }
+  ret = ABAddressBookGetPersonWithRecordID(super.addressBookRef, recordID);
+  super.age = [NSDate date];
 
   return ret;
 }
@@ -197,16 +192,7 @@ const int newContactID = -1<<9;
 
 - (NSString *)nameDelimiter
 {
-    __block NSString *ret;
-    
-    dispatch_block_t block = ^{
-        ret = (NSString *)CFBridgingRelease(ABPersonCopyCompositeNameDelimiterForRecord(self.recordRef));
-    };
-    
-    if (dispatch_get_specific(IsOnMainQueueKey)) block();
-    else dispatch_sync(dispatch_get_main_queue(), block);
-    
-    return ret;
+    return (NSString *)CFBridgingRelease(ABPersonCopyCompositeNameDelimiterForRecord(self.recordRef));
 }
 
 - (NSString *)displayDetails
@@ -242,66 +228,50 @@ const int newContactID = -1<<9;
 
 - (NSArray *)linkedContactIDs
 {
-  __block NSMutableArray *ret = [[NSMutableArray alloc] init];
+  NSMutableArray *ret = [[NSMutableArray alloc] init];
 
-  dispatch_block_t block = ^{
+  NSArray *array = (NSArray *)CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople([self recordRef]));
 
-    NSArray *array = (NSArray *)CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople([self recordRef]));
-
-    for (id obj in array)
+  for (id obj in array)
+  {
+    ABRecordRef record = (__bridge ABRecordRef)obj;
+    ABRecordID recordID = ABRecordGetRecordID(record);
+    if (recordID != self.recordID)
     {
-      ABRecordRef record = (__bridge ABRecordRef)obj;
-      ABRecordID recordID = ABRecordGetRecordID(record);
-      if (recordID != self.recordID)
-      {
-        [ret addObject: [NSNumber numberWithInteger: recordID]];
-      }
+      [ret addObject: [NSNumber numberWithInteger: recordID]];
     }
-  };
-
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
-  else dispatch_sync(dispatch_get_main_queue(), block);
-
+  }
   return [ret copy];
 }
 
-- (NSData*)imageData
+- (NSData *)imageData
 {
-  __block NSData *ret = nil;
-  
-  dispatch_block_t block = ^{
-    if (ABPersonHasImageData([self recordRef]))
-    {
-      ret = (NSData *)CFBridgingRelease(ABPersonCopyImageDataWithFormat([self recordRef], kABPersonImageFormatThumbnail));
-    }
-  };
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
-  else dispatch_sync(dispatch_get_main_queue(), block);
+  NSData *ret = nil;
 
+  if (ABPersonHasImageData([self recordRef]))
+  {
+    ret = (NSData *)CFBridgingRelease(ABPersonCopyImageDataWithFormat(self.recordRef, kABPersonImageFormatThumbnail));
+  }
   return ret;
 }
 
 - (void)setImageData: (NSData *)pictureData
 {
-  dispatch_block_t block = ^{
-    CFErrorRef error = NULL; // Remove first to update full and thumbnail image
-    ABPersonRemoveImageData([self recordRef], &error);
+  CFErrorRef error = NULL; // Remove first to update full and thumbnail image
+  ABPersonRemoveImageData([self recordRef], &error);
+  if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+  if (pictureData)
+  {
+    ABPersonSetImageData([self recordRef], (__bridge CFDataRef)pictureData, &error);
     if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-    if (pictureData != nil)
-    {
-      ABPersonSetImageData([self recordRef], (__bridge CFDataRef)pictureData, &error);
-      if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-    }
-  };
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
-  else dispatch_sync(dispatch_get_main_queue(), block);
+  }
 }
 
 - (UIImage *)image
 {
   UIImage *ret = nil;
   NSData *data = [self imageData];
-  if (data != nil)
+  if (data)
   {
     ret = [UIImage imageWithData: data];
   }
@@ -361,14 +331,12 @@ const int newContactID = -1<<9;
 
 - (void)commit
 {
-  ABAddressBookRef addressBookRef = [AKAddressBook sharedInstance].addressBookRef;
-
-  if (ABAddressBookHasUnsavedChanges(addressBookRef))
+  if (ABAddressBookHasUnsavedChanges(super.addressBookRef))
   {
     [[AKAddressBook sharedInstance] setNeedReload: NO];
 
     CFErrorRef error = NULL;
-    ABAddressBookSave(addressBookRef, &error);
+    ABAddressBookSave(super.addressBookRef, &error);
     if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
   }
 
@@ -381,7 +349,7 @@ const int newContactID = -1<<9;
     [addressBook.contacts setObject: self forKey: [NSNumber numberWithInteger: self.recordID]];
     [addressBook.contacts removeObjectForKey: [NSNumber numberWithInteger: newContactID]];
 
-    [addressBook contactIdentifiersInsertRecordID: self.recordID withAddressBookRef: addressBookRef];
+    [addressBook contactIdentifiersInsertRecordID: self.recordID withAddressBookRef: super.addressBookRef];
 
     if (addressBook.groupID >= 0)
     { // Add to group
@@ -394,38 +362,22 @@ const int newContactID = -1<<9;
 
 - (void)revert
 {
-  ABAddressBookRef addressBookRef = [AKAddressBook sharedInstance].addressBookRef;
-
   if (self.recordID == newContactID)
   {
     [[AKAddressBook sharedInstance] setNeedReload: NO];
 
     CFErrorRef error = NULL;
-    ABAddressBookRemoveRecord(addressBookRef, self.recordRef, &error);
+    ABAddressBookRemoveRecord(super.addressBookRef, self.recordRef, &error);
     if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
 
-    ABAddressBookSave(addressBookRef, &error);
+    ABAddressBookSave(super.addressBookRef, &error);
     if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
   }
 
-  if (ABAddressBookHasUnsavedChanges(addressBookRef))
+  if (ABAddressBookHasUnsavedChanges(super.addressBookRef))
   {
-    ABAddressBookRevert(addressBookRef);
+    ABAddressBookRevert(super.addressBookRef);
   }
-}
-
-+ (NSString *)localizedNameForProperty: (ABPropertyID)property
-{
-  __block NSString *ret;
-
-  dispatch_block_t block = ^{
-    ret = (NSString *)CFBridgingRelease(ABPersonCopyLocalizedPropertyName(property));
-  };
-
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
-  else dispatch_sync(dispatch_get_main_queue(), block);
-
-  return ret;
 }
 
 + (NSString *)sectionKeyForName: (NSString *)name
