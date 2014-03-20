@@ -39,42 +39,36 @@
 
 #pragma mark - Instance methods
 
-- (instancetype)initWithABRecordID: (ABRecordID) recordID andRecordType: (ABRecordType)recordType
+- (instancetype)initWithABRecordID: (ABRecordID) recordID recordType: (ABRecordType)recordType andAddressBookRef: (ABAddressBookRef)addressBookRef
 {
   self = [super init];
   if (self)
   {
     _recordID = recordID;
     _recordType = recordType;
+    _addressBookRef = addressBookRef;
   }
   return  self;
 }
 
 - (ABRecordRef)recordRef
 {
-  __block ABRecordRef ret = NULL;
+  ABRecordRef ret = NULL;
 
-  dispatch_block_t block = ^{
-    if (self.recordID >= 0)
-    {
-      ABAddressBookRef addressBookRef = [[AKAddressBook sharedInstance] addressBookRef];
-      switch (self.recordType) {
-        case kABPersonType:
-          ret = ABAddressBookGetPersonWithRecordID(addressBookRef, self.recordID);
-          break;
-        case kABGroupType:
-          ret = ABAddressBookGetGroupWithRecordID(addressBookRef, self.recordID);
-          break;
-        case kABSourceType:
-          ret = ABAddressBookGetSourceWithRecordID(addressBookRef, self.recordID);
-          break;
-      }
+  if (self.recordID >= 0)
+  {
+    switch (self.recordType) {
+      case kABPersonType:
+        ret = ABAddressBookGetPersonWithRecordID(self.addressBookRef, self.recordID);
+        break;
+      case kABGroupType:
+        ret = ABAddressBookGetGroupWithRecordID(self.addressBookRef, self.recordID);
+        break;
+      case kABSourceType:
+        ret = ABAddressBookGetSourceWithRecordID(self.addressBookRef, self.recordID);
+        break;
     }
-  };
-
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
-  else dispatch_sync(dispatch_get_main_queue(), block);
-
+  }
   return ret;
 }
 
@@ -100,56 +94,36 @@
 {
   if (self.recordID < 0) return nil;
 
-  __block id ret;
-
-  dispatch_block_t block = ^{
-    ret = (id)CFBridgingRelease(ABRecordCopyValue(self.recordRef, property));
-  };
-
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
-  else dispatch_sync(dispatch_get_main_queue(), block);
-
-  return ret;
+  return (id)CFBridgingRelease(ABRecordCopyValue(self.recordRef, property));
 }
 
 - (void)setValue: (id)value forProperty: (ABPropertyID)property
 {
   if (self.recordID < 0) return;
 
-  dispatch_block_t block = ^{
-    CFErrorRef error = NULL;
-    if (value == nil)
-    {
-      ABRecordRemoveValue(self.recordRef, property, &error);
-    }
-    else
-    {
-      ABRecordSetValue(self.recordRef, property, (__bridge CFTypeRef)(value), &error);
-    }
-    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-	};
-
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
-  else dispatch_sync(dispatch_get_main_queue(), block);
+  CFErrorRef error = NULL;
+  if (value == nil)
+  {
+    ABRecordRemoveValue(self.recordRef, property, &error);
+  }
+  else
+  {
+    ABRecordSetValue(self.recordRef, property, (__bridge CFTypeRef)(value), &error);
+  }
+  if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
 }
 
 - (NSInteger)countForProperty: (ABPropertyID) property
 {  
   if (self.recordID < 0) return 0;
 
-  __block NSInteger ret = 0;
+  NSInteger ret = 0;
   
-  dispatch_block_t block = ^{
-    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.recordRef, property);
-    if (multiValueRecord) {
-      ret = ABMultiValueGetCount(multiValueRecord);
-      CFRelease(multiValueRecord);
-    }
-  };
-
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
-  else dispatch_sync(dispatch_get_main_queue(), block);
-
+  ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.recordRef, property);
+  if (multiValueRecord) {
+    ret = ABMultiValueGetCount(multiValueRecord);
+    CFRelease(multiValueRecord);
+  }
   return ret;
 }
 
@@ -157,25 +131,19 @@
 {
   if (self.recordID < 0) return nil;
   
-  __block NSArray *ret = nil;
+  NSArray *ret = nil;
   
-  dispatch_block_t block = ^{
-    ABMultiValueRef multiValueRecord =(ABMultiValueRef)ABRecordCopyValue(self.recordRef, property);
-    if (multiValueRecord) {
-      NSInteger count = ABMultiValueGetCount(multiValueRecord);
-      NSMutableArray *identifiers = [[NSMutableArray alloc] initWithCapacity: count];
-      for (NSInteger i = 0; i < count; ++i) {
-        NSInteger identifier = (NSInteger)ABMultiValueGetIdentifierAtIndex(multiValueRecord, i);
-        [identifiers addObject: [NSNumber numberWithInteger: identifier]];
-      }
-      ret = [identifiers copy];
-      CFRelease(multiValueRecord);
+  ABMultiValueRef multiValueRecord =(ABMultiValueRef)ABRecordCopyValue(self.recordRef, property);
+  if (multiValueRecord) {
+    NSInteger count = ABMultiValueGetCount(multiValueRecord);
+    NSMutableArray *identifiers = [[NSMutableArray alloc] initWithCapacity: count];
+    for (NSInteger i = 0; i < count; ++i) {
+      NSInteger identifier = (NSInteger)ABMultiValueGetIdentifierAtIndex(multiValueRecord, i);
+      [identifiers addObject: [NSNumber numberWithInteger: identifier]];
     }
-  };
-  
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
-  else dispatch_sync(dispatch_get_main_queue(), block);
-
+    ret = [identifiers copy];
+    CFRelease(multiValueRecord);
+  }
   return ret;
 }
 
@@ -183,24 +151,18 @@
 {
   if (self.recordID < 0) return nil;
 
-  __block id ret = nil;
+  id ret = nil;
   
-  dispatch_block_t block = ^{
-    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.recordRef, property);
-    if (multiValueRecord)
+  ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.recordRef, property);
+  if (multiValueRecord)
+  {
+    CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
+    if (index != -1)
     {
-      CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
-      if (index != -1)
-      {
-        ret = (id)CFBridgingRelease(ABMultiValueCopyValueAtIndex(multiValueRecord, index));
-      }
-      CFRelease(multiValueRecord);
+      ret = (id)CFBridgingRelease(ABMultiValueCopyValueAtIndex(multiValueRecord, index));
     }
-  };
-
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
-  else dispatch_sync(dispatch_get_main_queue(), block);
-
+    CFRelease(multiValueRecord);
+  }
   return ret;
 }
 
@@ -208,29 +170,22 @@
 {
   if (self.recordID < 0) return nil;
   
-  __block NSString *ret = nil;
-  
-  dispatch_block_t block = ^{
+  NSString *ret = nil;
 
-    ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.recordRef, property);
-    if (multiValueRecord)
+  ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.recordRef, property);
+  if (multiValueRecord)
+  {
+    CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
+    if (index != -1)
     {
-      CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, (ABMultiValueIdentifier)identifier);
-      if (index != -1)
-      {
-        ret = (NSString *)CFBridgingRelease(ABMultiValueCopyLabelAtIndex(multiValueRecord, index));
-      }
-      else
-      {
-        ret = [AKLabel defaultLabelForABPropertyID: property];
-      }
-      CFRelease(multiValueRecord);
+      ret = (NSString *)CFBridgingRelease(ABMultiValueCopyLabelAtIndex(multiValueRecord, index));
     }
-  };
-  
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
-  else dispatch_sync(dispatch_get_main_queue(), block);
-  
+    else
+    {
+      ret = [AKLabel defaultLabelForABPropertyID: property];
+    }
+    CFRelease(multiValueRecord);
+  }
   return ret;
 }
 
@@ -252,51 +207,53 @@
 {
   if (self.recordID < 0) return;
   
-  dispatch_block_t block = ^{
-    ABMultiValueRef record = (ABMultiValueRef)ABRecordCopyValue(self.recordRef, property);
-    ABMutableMultiValueRef mutableRecord = NULL;
-    if (record != NULL)
-    {
-      mutableRecord = ABMultiValueCreateMutableCopy(record);
-      CFRelease(record);
-    }
-    else
-    {
-      mutableRecord = ABMultiValueCreateMutable(ABPersonGetTypeOfProperty(property));
-    }
+  ABMultiValueRef record = (ABMultiValueRef)ABRecordCopyValue(self.recordRef, property);
+  ABMutableMultiValueRef mutableRecord = NULL;
+  if (record)
+  {
+    mutableRecord = ABMultiValueCreateMutableCopy(record);
+    CFRelease(record);
+  }
+  else
+  {
+    mutableRecord = ABMultiValueCreateMutable(ABPersonGetTypeOfProperty(property));
+  }
 
-    if (mutableRecord != NULL)
+  if (mutableRecord != NULL)
+  {
+    BOOL didChange = NO;
+    CFIndex index = ABMultiValueGetIndexForIdentifier(mutableRecord, *identifier);
+    if (index != -1)
     {
-      BOOL didChange = NO;
-      CFIndex index = ABMultiValueGetIndexForIdentifier(mutableRecord, *identifier);
-      if (index != -1)
+      if (value == nil)
       {
-        if (value == nil)
-        {
-          didChange = ABMultiValueRemoveValueAndLabelAtIndex(mutableRecord, index);
-        }
-        else
-        {
-          didChange = ABMultiValueReplaceValueAtIndex(mutableRecord, (__bridge CFTypeRef)(value), index);
-          ABMultiValueReplaceLabelAtIndex(mutableRecord, (__bridge CFStringRef)(label), index);
-        }
+        didChange = ABMultiValueRemoveValueAndLabelAtIndex(mutableRecord, index);
       }
       else
       {
-        didChange = ABMultiValueAddValueAndLabel(mutableRecord, (__bridge CFTypeRef)(value), (__bridge CFStringRef)(label), identifier);
+        didChange = ABMultiValueReplaceValueAtIndex(mutableRecord, (__bridge CFTypeRef)(value), index);
+        ABMultiValueReplaceLabelAtIndex(mutableRecord, (__bridge CFStringRef)(label), index);
       }
-      if (didChange == YES)
-      {
-        CFErrorRef error = NULL;
-        ABRecordSetValue(self.recordRef, property, mutableRecord, &error);
-        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-      }
-      CFRelease(mutableRecord);
     }
-  };
+    else
+    {
+      didChange = ABMultiValueAddValueAndLabel(mutableRecord, (__bridge CFTypeRef)(value), (__bridge CFStringRef)(label), identifier);
+    }
+    if (didChange == YES)
+    {
+      CFErrorRef error = NULL;
+      ABRecordSetValue(self.recordRef, property, mutableRecord, &error);
+      if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+    }
+    CFRelease(mutableRecord);
+  }
+}
 
-  if (dispatch_get_specific(IsOnMainQueueKey)) block();
-  else dispatch_sync(dispatch_get_main_queue(), block);
+#pragma mark - Class methods
+
++ (NSString *)localizedNameForProperty: (ABPropertyID)property
+{
+    return (NSString *)CFBridgingRelease(ABPersonCopyLocalizedPropertyName(property));
 }
 
 @end

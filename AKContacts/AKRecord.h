@@ -33,9 +33,10 @@
 
 @property (assign, nonatomic) ABRecordType recordType;
 @property (assign, nonatomic) ABRecordID recordID;
+@property (assign, nonatomic) ABAddressBookRef addressBookRef;
 @property (strong, nonatomic) NSDate *age;
 
-- (instancetype)initWithABRecordID: (ABRecordID) recordID andRecordType: (ABRecordType)recordType;
+- (instancetype)initWithABRecordID: (ABRecordID) recordID recordType: (ABRecordType)recordType andAddressBookRef: (ABAddressBookRef)addressBookRef;
 - (ABRecordRef)recordRef;
 - (NSString *)description;
 /**
@@ -70,5 +71,7 @@
 - (NSString *)localizedLabelForMultiValueProperty: (ABPropertyID)property andIdentifier: (ABMultiValueIdentifier)identifier;
 
 - (void)setValue: (id)value andLabel: (NSString *)label forMultiValueProperty: (ABPropertyID)property andIdentifier: (ABRecordID *)identifier;
+
++ (NSString *)localizedNameForProperty: (ABPropertyID)property;
 
 @end
