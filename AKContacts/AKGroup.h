@@ -63,7 +63,7 @@ typedef NS_ENUM(NSInteger, GroupTypes)
  */
 @property (assign, nonatomic) BOOL isMainAggregate;
 
-- (instancetype)initWithABRecordID: (ABRecordID) recordID;
+- (instancetype)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef;
 /**
  * Return the member count of the group
  **/
