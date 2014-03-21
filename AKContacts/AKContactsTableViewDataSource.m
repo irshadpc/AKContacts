@@ -60,7 +60,7 @@
 
     if (groupMembers.count == akAddressBook.contactsCount)
     {   // Shortcut for aggregate group if there's only a single source
-        self.contactIDs = [NSKeyedUnarchiver unarchiveObjectWithData: [NSKeyedArchiver archivedDataWithRootObject: akAddressBook.contactIDs]]; // Mutable deep copy
+        self.contactIDs = [akAddressBook.contactIDs mutableCopy];
         [self.keys addObjectsFromArray: sectionKeys];
     }
     else

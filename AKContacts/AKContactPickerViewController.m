@@ -91,8 +91,8 @@ NSString *const AKContactPickerViewDidDismissNotification = @"AKContactPickerVie
 
   for (NSString *key in keyArray)
   {
-    NSArray *arrayForKey = [akAddressBook.contactIDs objectForKey: key];
-    NSMutableArray *sectionArray = [NSKeyedUnarchiver unarchiveObjectWithData: [NSKeyedArchiver archivedDataWithRootObject: arrayForKey]]; // Mutable deep copy
+    NSMutableArray *arrayForKey = [akAddressBook.contactIDs objectForKey: key];
+    NSMutableArray *sectionArray = [arrayForKey mutableCopy];
 
     NSMutableArray *recordsToRemove = [[NSMutableArray alloc] init];
     for (NSNumber *contactID in sectionArray)
