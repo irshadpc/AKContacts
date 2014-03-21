@@ -168,7 +168,7 @@
   {
     AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
     AKSource *source = [akAddressBook.sources objectAtIndex: self.indexPath.section];
-    [source setName: textField.text forGroupWithID: textField.tag];
+    [source setName: textField.text forGroupWithID: (ABRecordID)textField.tag];
   }
 }
 
