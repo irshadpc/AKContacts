@@ -14,5 +14,6 @@
 - (NSString *)stringByTrimmingLeadingCharactersInSet:(NSCharacterSet *)characterSet;
 
 @property (readonly) NSString *stringWithNonDigitsRemoved;
+@property (readonly) NSString *stringWithDiacriticsRemoved;
 
 @end

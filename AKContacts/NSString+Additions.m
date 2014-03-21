@@ -36,4 +36,9 @@
     return [[self componentsSeparatedByCharactersInSet: nonDigits] componentsJoinedByString: @""];
 }
 
+- (NSString *)stringWithDiacriticsRemoved
+{
+    return [self stringByFoldingWithOptions: NSDiacriticInsensitiveSearch locale: [NSLocale currentLocale]];
+}
+
 @end
