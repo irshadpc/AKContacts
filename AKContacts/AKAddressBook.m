@@ -271,7 +271,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     return (self.sortOrdering == kABPersonSortByFirstName) ? self.contactIDsSortedByFirst : self.contactIDsSortedByLast;
 }
 
-- (NSDictionary *)invertedContactIDs
+- (NSDictionary *)inverseSortedContactIDs
 {
     return (self.sortOrdering != kABPersonSortByFirstName) ? self.contactIDsSortedByFirst : self.contactIDsSortedByLast;
 }
