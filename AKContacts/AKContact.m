@@ -83,7 +83,7 @@ const int newContactID = -1<<9;
 
 - (NSString *)searchName
 {
-  return [self.sortName stringByFoldingWithOptions: NSDiacriticInsensitiveSearch locale: [NSLocale currentLocale]];
+  return self.sortName.stringWithDiacriticsRemoved;
 }
 
 - (NSString *)sortName

@@ -236,7 +236,7 @@
   NSMutableSet *sectionSet = [NSMutableSet setWithArray: sectionArray];
 
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
-  NSDictionary *invertedContactIDs = [akAddressBook invertedContactIDs];
+  NSDictionary *invertedContactIDs = [akAddressBook inverseSortedContactIDs];
   NSArray *invertedSectionArray = [invertedContactIDs objectForKey: prefix.uppercaseString];
   NSMutableSet *invertedSectionSet = [NSMutableSet setWithArray: invertedSectionArray];
   
@@ -281,7 +281,7 @@
   ABAddressBookRef addressBookRef = ABAddressBookCreateWithOptions(NULL, &error);
   if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
 #else
-  ABAddressBookRef addressBook = ABAddressBookCreate();
+  ABAddressBookRef addressBookRef = ABAddressBookCreate();
 #endif
  
   NSMutableArray *filteredArray = [[NSMutableArray alloc] init];
@@ -307,7 +307,7 @@
     if (kind == [(NSNumber *)kABPersonKindPerson integerValue])
     {
       NSString *name = CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonFirstNameProperty));
-      name = [name stringByFoldingWithOptions: NSDiacriticInsensitiveSearch locale: [NSLocale currentLocale]];
+      name = name.stringWithDiacriticsRemoved;
       if ([name.lowercaseString hasPrefix: term.lowercaseString])
       {
         ret = YES;
@@ -315,8 +315,7 @@
       else
       {
         name = CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonLastNameProperty));
-        name = [name stringByFoldingWithOptions: NSDiacriticInsensitiveSearch locale: [NSLocale currentLocale]];
-        if ([name.lowercaseString hasPrefix: term.lowercaseString])
+        if ([name.stringWithDiacriticsRemoved.lowercaseString hasPrefix: term.lowercaseString])
         {
           ret = YES;
         }
@@ -325,8 +324,7 @@
     else if (kind == [(NSNumber *)kABPersonKindOrganization integerValue])
     {
       NSString *name = CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonOrganizationProperty));
-      name = [name stringByFoldingWithOptions: NSDiacriticInsensitiveSearch locale: [NSLocale currentLocale]];
-      if ([name.lowercaseString hasPrefix: term.lowercaseString])
+      if ([name.stringWithDiacriticsRemoved.lowercaseString hasPrefix: term.lowercaseString])
       {
         ret = YES;
       }
