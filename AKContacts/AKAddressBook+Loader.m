@@ -60,7 +60,7 @@
     {
         AKSource *aggregatorSource = [self sourceForSourceId: kSourceAggregate];
         if (!aggregatorSource) {
-            aggregatorSource = [[AKSource alloc] initWithABRecordID: kSourceAggregate andAddressBookRef: addressBookRef];
+            aggregatorSource = [[AKSource alloc] initWithABRecordID: kSourceAggregate andAddressBookRef: self.addressBookRef];
             aggregatorSource.canCreateRecord = YES;
             [self.sources addObject: aggregatorSource];
         }
@@ -80,7 +80,7 @@
         
         AKSource *source = [self sourceForSourceId: recordID];
         if (!source) {
-            source = [[AKSource alloc] initWithABRecordID: recordID andAddressBookRef: addressBookRef];
+            source = [[AKSource alloc] initWithABRecordID: recordID andAddressBookRef: self.addressBookRef];
             source.isDefault = (defaultSourceID == recordID) ? YES : NO;
             
             ABRecordRef tryRecordRef = ABPersonCreateInSource(recordRef);
@@ -109,7 +109,7 @@
     {
         AKGroup *aggregateGroup = [source groupForGroupId: kGroupAggregate];
         if (!aggregateGroup) {
-            aggregateGroup = [[AKGroup alloc] initWithABRecordID: kGroupAggregate andAddressBookRef: addressBookRef];
+            aggregateGroup = [[AKGroup alloc] initWithABRecordID: kGroupAggregate andAddressBookRef: self.addressBookRef];
             [source.groups addObject: aggregateGroup];
         }   // Group members are recompiled on all reload
         [aggregateGroup.memberIDs removeAllObjects];
@@ -131,11 +131,9 @@
             ABRecordRef recordRef = (__bridge ABRecordRef)obj;
             ABRecordID recordID = ABRecordGetRecordID(recordRef);
 
-            NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABGroupNameProperty));
-
             AKGroup *group = [source groupForGroupId: recordID];
             if (!group) {
-                group = [[AKGroup alloc] initWithABRecordID: recordID andAddressBookRef: addressBookRef];
+                group = [[AKGroup alloc] initWithABRecordID: recordID andAddressBookRef: self.addressBookRef];
                 [source.groups addObject: group];
             }
             
@@ -150,6 +148,7 @@
                     [group.memberIDs addObject: @(ABRecordGetRecordID(record))];
                 }
             }
+            NSString *name = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABGroupNameProperty));
             NSLog(@"% 3d : %@ member count: %lu", recordID, name, (unsigned long)group.memberIDs.count);
         }
         [source revertGroupsOrder];
@@ -316,19 +315,31 @@
     ABMultiValueRef multiValueRecord =(ABMultiValueRef)ABRecordCopyValue(recordRef, kABPersonPhoneProperty);
     if (multiValueRecord)
     {
-        NSCharacterSet *nonDigits = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
-        
         NSInteger count = ABMultiValueGetCount(multiValueRecord);
         for (NSInteger i = 0; i < count; ++i) {
             NSString *value = (NSString *)CFBridgingRelease(ABMultiValueCopyValueAtIndex(multiValueRecord, i));
-            NSString *digits = [[value componentsSeparatedByCharactersInSet: nonDigits] componentsJoinedByString: @""];
-            if (digits.length)
+            NSString *digits = value.stringWithNonDigitsRemoved;
+            if (digits.length > 0)
             {
                 NSString *key = [digits substringToIndex: 1];
                 NSMutableArray *sectionArray = [self.contactIDsSortedByPhone objectForKey: key];
 
                 NSUInteger index = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray withSortOrdering: self.sortOrdering andAddressBookRef: addressBookRef];
                 [sectionArray insertObject: @(recordID) atIndex: index];
+            }
+            for (NSString *prefix in [AKAddressBook prefixesToDiscardOnSearch])
+            {
+                if ([digits hasPrefix: prefix])
+                {
+                    digits = [digits substringFromIndex: prefix.length];
+                    if (digits.length > 0)
+                    {
+                        NSString *key = [digits substringToIndex: prefix.length];
+                        NSMutableArray *sectionArray = [self.contactIDsSortedByPhone objectForKey: key];
+                        NSUInteger index = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray withSortOrdering: self.sortOrdering andAddressBookRef: addressBookRef];
+                        [sectionArray insertObject: @(recordID) atIndex: index];
+                    }
+                }
             }
         }
         CFRelease(multiValueRecord);
