@@ -69,7 +69,7 @@ NSString *const defaultsSourceKey = @"Source_%d";
     }
   }
 
-  NSInteger type = [(NSNumber *)[self valueForProperty: kABSourceTypeProperty] integerValue];
+  ABSourceType type = [(NSNumber *)[self valueForProperty: kABSourceTypeProperty] intValue];
   type = type & ~kABSourceTypeSearchableMask;
 
   switch (type)
