@@ -49,8 +49,6 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 
 @interface AKAddressBook ()
 
-@property (assign, nonatomic) ABAddressBookRef addressBookRef;
-
 @property (strong, nonatomic) dispatch_source_t ab_timer;
 @property (assign, nonatomic) BOOL ab_timer_suspended;
 
@@ -90,6 +88,11 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   static AKAddressBook *akAddressBook;
   dispatch_once(&once, ^{ akAddressBook = [[self alloc] init]; });
   return akAddressBook;
+}
+
++ (NSArray *)prefixesToDiscardOnSearch
+{
+    return @[@"1"];
 }
 
 + (NSArray *)sectionKeys;
