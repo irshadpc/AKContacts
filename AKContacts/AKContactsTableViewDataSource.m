@@ -25,10 +25,10 @@
 
 @interface AKContactsTableViewDataSource ()
 
-- (void)handleSearchForCharacterAtIndex: (NSUInteger)index inTerm: (NSString *)term isFirstTerm: (BOOL)firstTerm;
-- (NSArray *)contactIDsHavingNamePrefix: (NSString *)prefix inFirstTerm: (BOOL)firstTerm;
-- (NSArray *)array: (NSArray *)array filteredWithTerm: (NSString *)term;
-- (BOOL)recordID: (ABRecordID)recordID matchesTerm: (NSString *)term withAddressBookRef: (ABAddressBookRef)addressBookRef;
+- (AKSearchStackElement *)searchStackElementForTerms: (NSArray *)terms andCharacterIndex: (NSUInteger)index;
+- (NSArray *)contactIDsHavingNamePrefix: (NSString *)prefix;
+- (NSArray *)array: (NSArray *)array filteredWithTerms: (NSArray *)terms;
+- (BOOL)recordID: (ABRecordID)recordID matchesTerms: (NSArray *)terms withAddressBookRef: (ABAddressBookRef)addressBookRef;
 
 @end
 
@@ -137,12 +137,14 @@
         if (![character isMemberOfCharacterSet: [NSCharacterSet whitespaceCharacterSet]])
         {
           NSInteger characterIndex = nextCharacterIndex();
-          [self handleSearchForCharacterAtIndex: characterIndex inTerm: term isFirstTerm: (index == 0)];
+
+          AKSearchStackElement *element = [self searchStackElementForTerms: terms andCharacterIndex: characterIndex];
+          [self.searchStack addObject: element];
         }
         else if (self.searchStack.count)
         { // Ignore whitespace
-          AKSearchStackElement *previousStackElement = [self.searchStack objectAtIndex: (self.searchStack.count - 1)];
-          
+          AKSearchStackElement *previousStackElement = [self.searchStack lastObject];
+
           AKSearchStackElement *element = [[AKSearchStackElement alloc] init];
           element.character = character;
           element.matches = [previousStackElement.matches mutableCopy];
@@ -176,63 +178,45 @@
   dispatch_async(akAddressBook.ab_queue, block);
 }
 
-- (void)handleSearchForCharacterAtIndex: (NSUInteger)index inTerm: (NSString *)term isFirstTerm: (BOOL)firstTerm
+- (AKSearchStackElement *)searchStackElementForTerms: (NSArray *)terms andCharacterIndex: (NSUInteger)index
 {
-  if (!term.length) return;
-
+  NSString *term = [terms lastObject];
   NSString *character = [term substringWithRange: NSMakeRange(index, 1)];
+  AKSearchStackElement *element = [[AKSearchStackElement alloc] init];
+  element.character = character;
 
-  if (firstTerm && !index)
+  if (terms.count == 1 && !index)
   {
-    AKSearchStackElement *element = [[AKSearchStackElement alloc] init];
     element.character = (![character isMemberOfCharacterSet: [NSCharacterSet decimalDigitCharacterSet]]) ? character : @"#";
     if ([character isMemberOfCharacterSet: [NSCharacterSet letterCharacterSet]])
     {
-      element.matches = [[self contactIDsHavingNamePrefix: character inFirstTerm: firstTerm] mutableCopy];
+      element.matches = [[self contactIDsHavingNamePrefix: character] mutableCopy];
     }
     else
     {
       element.matches = [[self contactIDsHavingNumberPrefix: character] mutableCopy];
     }
-    [self.searchStack addObject: element];
   }
   else
   {
     NSArray *matchingIDs;
     if (!index)
     {
-        if ([character isMemberOfCharacterSet: [NSCharacterSet letterCharacterSet]])
-        {
-            matchingIDs = [self contactIDsHavingNamePrefix: character inFirstTerm: firstTerm];
-        }
-        else
-        {
-            matchingIDs = [self contactIDsHavingNumberPrefix: character];
-        }
-        matchingIDs = [self array: matchingIDs filteredWithTerm: term];
-        NSMutableSet *matchingSet = [NSMutableSet setWithArray: matchingIDs];
-        
-        NSArray *previousMatches = [self.searchStack.lastObject matches];
-        NSSet *previousSet = [NSSet setWithArray: previousMatches];
-        
-        [matchingSet intersectSet: previousSet];
-        matchingIDs = [matchingSet allObjects];
+        matchingIDs = [self.searchStack.lastObject matches];
+        matchingIDs = [self array: matchingIDs filteredWithTerms: terms];
     }
     else
     {
-        matchingIDs = [self array: [self.searchStack.lastObject matches] filteredWithTerm: term];
+        matchingIDs = [self array: [self.searchStack.lastObject matches] filteredWithTerms: terms];
     }
-    
-    AKSearchStackElement *element = [[AKSearchStackElement alloc] init];
-    element.character = character;
     element.matches = [matchingIDs mutableCopy];
-    [self.searchStack addObject: element];
   }
+  return element;
 }
 
-- (NSArray *)contactIDsHavingNamePrefix: (NSString *)prefix inFirstTerm: (BOOL)firstTerm
+- (NSArray *)contactIDsHavingNamePrefix: (NSString *)prefix
 {
-  NSArray *sectionArray = (firstTerm) ? [self.contactIDs objectForKey: prefix.uppercaseString] : [[self.searchStack lastObject] matches];
+  NSArray *sectionArray = [self.contactIDs objectForKey: prefix.uppercaseString];
   NSMutableSet *sectionSet = [NSMutableSet setWithArray: sectionArray];
 
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
@@ -274,7 +258,7 @@
     return [sectionSet allObjects];
 }
 
-- (NSArray *)array: (NSArray *)array filteredWithTerm: (NSString *)term
+- (NSArray *)array: (NSArray *)array filteredWithTerms:(NSArray *)terms;
 {
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
   CFErrorRef error = NULL;
@@ -287,7 +271,7 @@
   NSMutableArray *filteredArray = [[NSMutableArray alloc] init];
   for (NSNumber *recordID in array)
   {
-    if ([self recordID: recordID.intValue matchesTerm: term withAddressBookRef: addressBookRef])
+    if ([self recordID: recordID.intValue matchesTerms: terms withAddressBookRef: addressBookRef])
     {
       [filteredArray addObject: recordID];
     }
@@ -297,34 +281,67 @@
   return [filteredArray copy];
 }
 
-- (BOOL)recordID: (ABRecordID)recordID matchesTerm: (NSString *)term withAddressBookRef: (ABAddressBookRef)addressBookRef
+- (BOOL)recordID: (ABRecordID)recordID matchesTerms: (NSArray *)terms withAddressBookRef: (ABAddressBookRef)addressBookRef
 {
   BOOL ret = NO;
   ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBookRef, recordID);
   if (recordRef)
   {
+    void(^setBit)(NSInteger *, NSInteger) = ^(NSInteger *byte, NSInteger bit) {
+      *byte |= 1 << bit;
+    };
+    void(^clearBit)(NSInteger *, NSInteger) = ^(NSInteger *byte, NSInteger bit) {
+      *byte &= ~(1 << bit);
+    };
+    BOOL(^isBitSet)(NSInteger *, NSInteger) = ^(NSInteger *byte, NSInteger bit) {
+      return (BOOL)(*byte & (1 << bit));
+    };
+
     NSInteger kind = [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonKindProperty)) integerValue];
     if (kind == [(NSNumber *)kABPersonKindPerson integerValue])
     {
-      NSString *name = CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonFirstNameProperty));
-      name = name.stringWithDiacriticsRemoved;
-      if ([name.lowercaseString hasPrefix: term.lowercaseString])
+      NSInteger matches = 0;
+      for (NSString *term in terms)
       {
-        ret = YES;
-      }
-      else
-      {
-        name = CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonLastNameProperty));
-        if ([name.stringWithDiacriticsRemoved.lowercaseString hasPrefix: term.lowercaseString])
+        NSInteger bit = 0;
+        NSString *name = CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonFirstNameProperty));
+        name = name.stringWithDiacriticsRemoved;
+        if ([name.lowercaseString hasPrefix: term.lowercaseString] && !isBitSet(&matches, bit))
         {
-          ret = YES;
+          setBit(&matches, bit);
+        }
+        else
+        {
+          clearBit(&matches, bit);
+        }
+        bit += 1;
+        name = CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonLastNameProperty));
+        if ([name.stringWithDiacriticsRemoved.lowercaseString hasPrefix: term.lowercaseString] && !isBitSet(&matches, bit))
+        {
+          setBit(&matches, bit);
+        }
+        else
+        {
+          clearBit(&matches, bit);
+        }
+        bit += 1;
+        name = CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonMiddleNameProperty));
+        name = name.stringWithDiacriticsRemoved;
+        if ([name.lowercaseString hasPrefix: term.lowercaseString] && !isBitSet(&matches, bit))
+        {
+          setBit(&matches, bit);
+        }
+        else
+        {
+          clearBit(&matches, bit);
         }
       }
+      if (matches) ret = YES;
     }
     else if (kind == [(NSNumber *)kABPersonKindOrganization integerValue])
     {
       NSString *name = CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonOrganizationProperty));
-      if ([name.stringWithDiacriticsRemoved.lowercaseString hasPrefix: term.lowercaseString])
+      if ([name.stringWithDiacriticsRemoved.lowercaseString hasPrefix: [terms.lastObject lowercaseString]])
       {
         ret = YES;
       }
