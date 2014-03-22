@@ -24,11 +24,14 @@
 @end
 
 @interface AKContactsTableViewDataSource ()
-
+/**
+ * index is the character index of the last term
+ */
 - (AKSearchStackElement *)searchStackElementForTerms: (NSArray *)terms andCharacterIndex: (NSUInteger)index;
 - (NSArray *)contactIDsHavingNamePrefix: (NSString *)prefix;
 - (NSArray *)array: (NSArray *)array filteredWithTerms: (NSArray *)terms;
-- (BOOL)recordID: (ABRecordID)recordID matchesTerms: (NSArray *)terms withAddressBookRef: (ABAddressBookRef)addressBookRef;
+- (NSInteger)countOfTerms: (NSArray *)terms matchingRecordID: (ABRecordID)recordID withAddressBookRef: (ABAddressBookRef)addressBookRef;
+- (NSInteger)countOfNumberTerms: (NSArray *)terms matchingRecordID:(ABRecordID)recordID withAddressBookRef:(ABAddressBookRef)addressBookRef;
 
 @end
 
@@ -202,12 +205,12 @@
     NSArray *matchingIDs;
     if (!index)
     {
-        matchingIDs = [self.searchStack.lastObject matches];
-        matchingIDs = [self array: matchingIDs filteredWithTerms: terms];
+      matchingIDs = [self.searchStack.lastObject matches];
+      matchingIDs = [self array: matchingIDs filteredWithTerms: terms];
     }
     else
     {
-        matchingIDs = [self array: [self.searchStack.lastObject matches] filteredWithTerms: terms];
+      matchingIDs = [self array: [self.searchStack.lastObject matches] filteredWithTerms: terms];
     }
     element.matches = [matchingIDs mutableCopy];
   }
@@ -238,24 +241,29 @@
 
 - (NSArray *)contactIDsHavingNumberPrefix: (NSString *)prefix
 {
-    AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+  AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
 
-    NSArray *sectionArray = [akAddressBook.contactIDsSortedByFirst objectForKey: prefix];
-    NSMutableSet *sectionSet = [NSMutableSet setWithArray: sectionArray];
+  NSArray *sectionArray = [akAddressBook.contactIDsSortedByFirst objectForKey: prefix];
+  NSMutableSet *sectionSet = [NSMutableSet setWithArray: sectionArray];
 
-    NSArray *invertedSectionArray = [akAddressBook.contactIDsSortedByLast objectForKey: prefix.uppercaseString];
-    NSMutableSet *invertedSectionSet = [NSMutableSet setWithArray: invertedSectionArray];
+  NSArray *invertedSectionArray = [akAddressBook.contactIDsSortedByLast objectForKey: prefix.uppercaseString];
+  NSMutableSet *invertedSectionSet = [NSMutableSet setWithArray: invertedSectionArray];
 
-    [sectionSet unionSet: invertedSectionSet];
+  [sectionSet unionSet: invertedSectionSet];
 
-    NSMutableSet *displayedContactIDs = [[NSMutableSet alloc] init];
-    for (NSArray *section in self.contactIDs.allValues)
-    {
-        [displayedContactIDs addObjectsFromArray: section];
-    }
-    [sectionSet intersectSet: displayedContactIDs];
+  invertedSectionArray = [akAddressBook.contactIDsSortedByPhone objectForKey: prefix.uppercaseString];
+  invertedSectionSet = [NSMutableSet setWithArray: invertedSectionArray];
 
-    return [sectionSet allObjects];
+  [sectionSet unionSet: invertedSectionSet];
+
+  NSMutableSet *displayedContactIDs = [[NSMutableSet alloc] init];
+  for (NSArray *section in self.contactIDs.allValues)
+  {
+    [displayedContactIDs addObjectsFromArray: section];
+  }
+  [sectionSet intersectSet: displayedContactIDs];
+
+  return [sectionSet allObjects];
 }
 
 - (NSArray *)array: (NSArray *)array filteredWithTerms:(NSArray *)terms;
@@ -267,87 +275,124 @@
 #else
   ABAddressBookRef addressBookRef = ABAddressBookCreate();
 #endif
- 
-  NSMutableArray *filteredArray = [[NSMutableArray alloc] init];
+
+  NSMutableSet *filteredSet = [[NSMutableSet alloc] init];
   for (NSNumber *recordID in array)
   {
-    if ([self recordID: recordID.intValue matchesTerms: terms withAddressBookRef: addressBookRef])
+    NSInteger termsMatched = [self countOfTerms: terms matchingRecordID: recordID.intValue withAddressBookRef: addressBookRef];
+
+    termsMatched += [self countOfNumberTerms: terms matchingRecordID: recordID.intValue withAddressBookRef: addressBookRef];
+    if (termsMatched == terms.count)
     {
-      [filteredArray addObject: recordID];
+      [filteredSet addObject: recordID];
     }
   }
   CFRelease(addressBookRef);
 
-  return [filteredArray copy];
+  return filteredSet.allObjects;
 }
 
-- (BOOL)recordID: (ABRecordID)recordID matchesTerms: (NSArray *)terms withAddressBookRef: (ABAddressBookRef)addressBookRef
+- (NSInteger)countOfTerms: (NSArray *)terms matchingRecordID: (ABRecordID)recordID withAddressBookRef: (ABAddressBookRef)addressBookRef
 {
-  BOOL ret = NO;
+  NSInteger termsMatched = 0;
   ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBookRef, recordID);
   if (recordRef)
   {
-    void(^setBit)(NSInteger *, NSInteger) = ^(NSInteger *byte, NSInteger bit) {
-      *byte |= 1 << bit;
-    };
-    void(^clearBit)(NSInteger *, NSInteger) = ^(NSInteger *byte, NSInteger bit) {
-      *byte &= ~(1 << bit);
-    };
-    BOOL(^isBitSet)(NSInteger *, NSInteger) = ^(NSInteger *byte, NSInteger bit) {
-      return (BOOL)(*byte & (1 << bit));
-    };
-
     NSInteger kind = [(NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonKindProperty)) integerValue];
     if (kind == [(NSNumber *)kABPersonKindPerson integerValue])
     {
-      NSInteger matches = 0;
+      void(^setBit)(NSInteger *, NSInteger) = ^(NSInteger *byte, NSInteger bit) { *byte |= 1 << bit; };
+      BOOL(^isBitSet)(NSInteger *, NSInteger) = ^(NSInteger *byte, NSInteger bit) { return (BOOL)(*byte & (1 << bit)); };
+
+      NSArray *properties = @[@(kABPersonFirstNameProperty), @(kABPersonLastNameProperty), @(kABPersonMiddleNameProperty)];
+
+      NSInteger bitmask = 0;
       for (NSString *term in terms)
       {
-        NSInteger bit = 0;
-        NSString *name = CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonFirstNameProperty));
-        name = name.stringWithDiacriticsRemoved;
-        if ([name.lowercaseString hasPrefix: term.lowercaseString] && !isBitSet(&matches, bit))
+        for (NSInteger index = 0; index < properties.count; ++index)
         {
-          setBit(&matches, bit);
-        }
-        else
-        {
-          clearBit(&matches, bit);
-        }
-        bit += 1;
-        name = CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonLastNameProperty));
-        if ([name.stringWithDiacriticsRemoved.lowercaseString hasPrefix: term.lowercaseString] && !isBitSet(&matches, bit))
-        {
-          setBit(&matches, bit);
-        }
-        else
-        {
-          clearBit(&matches, bit);
-        }
-        bit += 1;
-        name = CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonMiddleNameProperty));
-        name = name.stringWithDiacriticsRemoved;
-        if ([name.lowercaseString hasPrefix: term.lowercaseString] && !isBitSet(&matches, bit))
-        {
-          setBit(&matches, bit);
-        }
-        else
-        {
-          clearBit(&matches, bit);
+          ABPropertyID property = [properties[index] intValue];
+          NSString *value = CFBridgingRelease(ABRecordCopyValue(recordRef, property));
+          value = value.stringWithDiacriticsRemoved;
+          if ([value.lowercaseString hasPrefix: term.lowercaseString] && !isBitSet(&bitmask, index))
+          {
+            termsMatched += 1;
+            setBit(&bitmask, index);
+          }
         }
       }
-      if (matches) ret = YES;
     }
     else if (kind == [(NSNumber *)kABPersonKindOrganization integerValue])
     {
       NSString *name = CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonOrganizationProperty));
       if ([name.stringWithDiacriticsRemoved.lowercaseString hasPrefix: [terms.lastObject lowercaseString]])
       {
-        ret = YES;
+        termsMatched += 1;
       }
     }
   }
-  return ret;
+  return termsMatched;
+}
+
+- (NSInteger)countOfNumberTerms: (NSArray *)terms matchingRecordID:(ABRecordID)recordID withAddressBookRef:(ABAddressBookRef)addressBookRef
+{
+  BOOL(^hasDigits)(NSArray *) = ^(NSArray *terms) {
+    BOOL ret = NO;
+    for (NSString *term in terms)
+    {
+      if (term.stringWithNonDigitsRemoved.length > 0)
+      {
+        ret = YES;
+        break;
+      }
+    }
+    return ret;
+  };
+
+  NSInteger termsMatched = 0;
+  ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBookRef, recordID);
+  if (recordRef && hasDigits(terms))
+  {
+    ABMultiValueRef multiValueRecord =(ABMultiValueRef)ABRecordCopyValue(recordRef, kABPersonPhoneProperty);
+    if (multiValueRecord)
+    {
+      NSInteger count = ABMultiValueGetCount(multiValueRecord);
+      for (NSInteger i = 0; i < count; ++i)
+      {
+        NSString *value = (NSString *)CFBridgingRelease(ABMultiValueCopyValueAtIndex(multiValueRecord, i));
+        NSString *digits = value.stringWithNonDigitsRemoved;
+        if (digits.length > 0)
+        {
+          for (NSString *term in terms)
+          {
+            if (term.stringWithNonDigitsRemoved.length == 0)
+            {
+              continue;
+            }
+            if ([digits hasPrefix: term] || [value hasPrefix: term])
+            {
+              termsMatched += 1;
+              break;
+            }
+            for (NSString *prefix in [AKAddressBook prefixesToDiscardOnSearch])
+            {
+              if ([digits hasPrefix: prefix])
+              {
+                digits = [digits substringFromIndex: prefix.length];
+                if (digits.length > 0 && [digits hasPrefix: term])
+                {
+                  termsMatched += 1;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+      CFRelease(multiValueRecord);
+    }
+  }
+  return (termsMatched > 0) ? 1 : 0;
 }
 
 - (void)finishSearch
