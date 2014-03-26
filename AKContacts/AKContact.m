@@ -380,6 +380,115 @@ const int newContactID = -1<<9;
   }
 }
 
+#pragma mark - Searching
+
+- (NSInteger)numberOfMatchingTerms: (NSArray *)terms
+{
+    NSInteger termsMatched = 0;
+    if (self.recordRef)
+    {
+        NSNumber *kind = [self valueForProperty: kABPersonKindProperty];
+
+        if ([kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
+        {
+            void(^setBit)(NSInteger *, NSInteger) = ^(NSInteger *byte, NSInteger bit) { *byte |= 1 << bit; };
+            BOOL(^isBitSet)(NSInteger *, NSInteger) = ^(NSInteger *byte, NSInteger bit) { return (BOOL)(*byte & (1 << bit)); };
+
+            NSArray *properties = @[@(kABPersonFirstNameProperty), @(kABPersonLastNameProperty), @(kABPersonMiddleNameProperty)];
+
+            NSInteger termBitmask = 0, nameBitmask = 0;
+            for (NSInteger i = 0; i < terms.count; ++i)
+            {
+                NSString *term = [[terms objectAtIndex: i] lowercaseString];
+                for (NSInteger j = 0; j < properties.count; ++j)
+                {
+                    ABPropertyID property = [properties[j] intValue];
+                    NSString *value = [self valueForProperty: property];
+                    value = value.stringWithDiacriticsRemoved;
+                    if ([value.lowercaseString hasPrefix: term] && !isBitSet(&termBitmask, i) && !isBitSet(&nameBitmask, j))
+                    {
+                        termsMatched += 1;
+                        setBit(&termBitmask, i);
+                        setBit(&nameBitmask, j);
+                    }
+                }
+            }
+        }
+        else if ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
+        {
+            NSString *name = [self valueForProperty: kABPersonOrganizationProperty];
+            if ([name.stringWithDiacriticsRemoved.lowercaseString hasPrefix: [terms.lastObject lowercaseString]])
+            {
+                termsMatched += 1;
+            }
+        }
+    }
+    return termsMatched;
+}
+
+- (NSInteger)numberOfPhoneNumbersMatchingTerms: (NSArray *)terms
+{
+    NSArray *(^digitsTerms)(NSArray *) = ^(NSArray *terms) {
+        NSMutableArray *digitTerms = [[NSMutableArray alloc] init];
+        for (NSString *term in terms)
+        {
+            if (term.stringWithNonDigitsRemoved.length > 0)
+            {
+                [digitTerms addObject: term];
+            }
+        }
+        return [digitTerms copy];
+    };
+    
+    NSInteger termsMatched = 0;
+    terms = digitsTerms(terms);
+    if (terms.count > 0)
+    {
+        if (self.recordRef)
+        {
+            NSArray *identifiers = [self identifiersForProperty: kABPersonPhoneProperty];
+            if (identifiers.count)
+            {
+                for (NSNumber *identifier in identifiers)
+                {
+                    NSString *value = [self valueForMultiValueProperty: kABPersonPhoneProperty andIdentifier: identifier.intValue];
+                    NSString *digits = value.stringWithNonDigitsRemoved;
+                    if (digits.length > 0)
+                    {
+                        for (NSString *term in terms)
+                        {
+                            if (term.stringWithNonDigitsRemoved.length == 0)
+                            {
+                                continue;
+                            }
+                            if ([digits hasPrefix: term] || [value hasPrefix: term])
+                            {
+                                termsMatched += 1;
+                                break;
+                            }
+                            for (NSString *prefix in [AKAddressBook prefixesToDiscardOnSearch])
+                            {
+                                if ([digits hasPrefix: prefix])
+                                {
+                                    digits = [digits substringFromIndex: prefix.length];
+                                    if (digits.length > 0 && [digits hasPrefix: term])
+                                    {
+                                        termsMatched += 1;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return (termsMatched > 0) ? 1 : 0;
+}
+
+#pragma mark - Class methods
+
 + (NSString *)sectionKeyForName: (NSString *)name
 {
   NSString *sectionKey = @"#";

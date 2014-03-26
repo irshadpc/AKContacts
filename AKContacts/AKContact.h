@@ -59,6 +59,9 @@ FOUNDATION_EXPORT const int newContactID;
 - (void)commit;
 - (void)revert;
 
+- (NSInteger)numberOfMatchingTerms: (NSArray *)terms;
+- (NSInteger)numberOfPhoneNumbersMatchingTerms: (NSArray *)terms;
+
 + (NSString *)sectionKeyForName: (NSString *)name;
 /**
  * Return the name of a record from which the section can be determined
