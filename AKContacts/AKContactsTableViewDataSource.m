@@ -24,6 +24,10 @@
 @end
 
 @interface AKContactsTableViewDataSource ()
+
+@property (strong, nonatomic, readonly) dispatch_queue_t search_queue;
+@property (strong, nonatomic, readonly) dispatch_semaphore_t search_semaphore;
+
 /**
  * index is the character index of the last term
  */
@@ -34,6 +38,17 @@
 @end
 
 @implementation AKContactsTableViewDataSource
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self)
+    {
+        _search_queue = dispatch_queue_create([NSStringFromClass([AKContactsTableViewDataSource class]) UTF8String], NULL);
+        _search_semaphore = dispatch_semaphore_create(1);
+    }
+    return self;
+}
 
 - (NSInteger)displayedContactsCount
 {
@@ -48,9 +63,7 @@
 - (void)loadData
 {
     AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
-    
-    if (akAddressBook.status != kAddressBookOnline) return;
-    
+
     self.keys = [[NSMutableArray alloc] initWithObjects: UITableViewIndexSearch, nil];
     
     AKSource *source = [akAddressBook sourceForSourceId: akAddressBook.sourceID];
@@ -94,11 +107,10 @@
 {
   // Don't trim trailing whitespace needed for tokenization
   searchTerm = [searchTerm stringByTrimmingLeadingCharactersInSet: [NSCharacterSet whitespaceCharacterSet]];
-  AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
-  
+
   dispatch_block_t block = ^{
   
-    dispatch_semaphore_wait(akAddressBook.ab_semaphore, DISPATCH_TIME_FOREVER);
+    dispatch_semaphore_wait(self.search_semaphore, DISPATCH_TIME_FOREVER);
     
     if (searchTerm.length > self.searchStack.count)
     {
@@ -169,14 +181,14 @@
       });
     }
 
-    dispatch_semaphore_signal(akAddressBook.ab_semaphore);
+    dispatch_semaphore_signal(self.search_semaphore);
 
     if ([self.delegate respondsToSelector: @selector(dataSourceDidEndSearch:)]) {
       [self.delegate dataSourceDidEndSearch: self];
     }
   };
   
-  dispatch_async(akAddressBook.ab_queue, block);
+  dispatch_async(self.search_queue, block);
 }
 
 - (AKSearchStackElement *)searchStackElementForTerms: (NSArray *)terms andCharacterIndex: (NSUInteger)index
