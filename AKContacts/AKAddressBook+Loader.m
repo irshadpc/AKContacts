@@ -287,7 +287,10 @@
     if (self.status == kAddressBookLoading)
     {
         [appContactIdentifiers minusSet: nativeContactIDs];
-        NSLog(@"Deleted contactIDs: %@", appContactIdentifiers);
+        if (appContactIdentifiers.count > 0)
+        {
+            NSLog(@"Deleted contactIDs: %@", appContactIdentifiers);
+        }
         for (NSNumber *recordID in appContactIdentifiers)
         {
           AKContact *contact = [self contactForContactId: recordID.intValue withAddressBookRef: addressBookRef];
