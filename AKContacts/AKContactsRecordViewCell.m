@@ -80,8 +80,8 @@
     {
       NSMutableAttributedString *text = [[NSMutableAttributedString alloc] initWithString: compositeName];
       [text addAttribute: NSFontAttributeName value: [UIFont systemFontOfSize: 20.f] range: NSMakeRange(0, text.length - 1)];
-      NSNumber *kind = (NSNumber *)[contact valueForProperty: kABPersonKindProperty];
-      if ([kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
+
+      if ([contact.kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
       {
         NSString *lastName = [contact valueForProperty: kABPersonLastNameProperty];
         if (lastName.length > 0)
@@ -90,7 +90,7 @@
           [text addAttribute: NSFontAttributeName value: [UIFont boldSystemFontOfSize: 20.f] range: range];
         }
       }
-      else if ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
+      else if ([contact.kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
       {
           [text addAttribute: NSFontAttributeName value: [UIFont boldSystemFontOfSize: 20.f] range: NSMakeRange(0, text.length)];
       }
