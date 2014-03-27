@@ -30,7 +30,7 @@
 #else
         ABAddressBookRef addressBook = ABAddressBookCreate();
 #endif
-        
+
         if ([self unarchiveCache]) {
             self.status = kAddressBookOnline;
             self.dateAddressBookLoaded = [NSDate date];
@@ -472,6 +472,12 @@
     return index;
 }
 
++ (NSString *)documentsDirectory
+{
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    return (paths.count > 0) ? [paths objectAtIndex: 0] : nil;
+}
+
 #pragma mark - Comparators
 
 + (NSComparator)recordIDBasedComparatorWithSortOrdering: (ABPersonSortOrdering)sortOrdering andAddressBookRef: (ABAddressBookRef)addressBookRef
@@ -575,30 +581,32 @@
     return fileName;
 }
 
-- (BOOL)archiveDictionary: (SEL)selector
+- (BOOL)archiveDictionary: (NSDictionary *)dictionary withFileName: (NSString *)fileName
 {
     BOOL success = NO;
-    
-    NSString *fileName = [self fileNameForSelector: selector];
+
     NSString *path = [[AKAddressBook documentsDirectory] stringByAppendingPathComponent: fileName];
-    
-    NSOutputStream *stream = [NSOutputStream outputStreamToFileAtPath: path append: NO];
-    if (stream)
+
+    if ([[NSFileManager defaultManager] isWritableFileAtPath: path])
     {
-        CFStringRef err;
-        [stream open];
-        
-        CFIndex index = CFPropertyListWriteToStream((__bridge CFPropertyListRef)(self.contactIDsSortedByFirst), (__bridge CFWriteStreamRef)stream, kCFPropertyListBinaryFormat_v1_0, &err);
-        if (index == 0)
+        NSOutputStream *stream = [NSOutputStream outputStreamToFileAtPath: path append: NO];
+        if (stream)
         {
-            NSLog(@"CFPropertyListWriteToStream error: %@", err);
+            CFStringRef err;
+            [stream open];
+            
+            CFIndex index = CFPropertyListWriteToStream((__bridge CFPropertyListRef)(dictionary), (__bridge CFWriteStreamRef)stream, kCFPropertyListBinaryFormat_v1_0, &err);
+            if (index == 0)
+            {
+                NSLog(@"CFPropertyListWriteToStream error: %@", err);
+            }
+            [stream close];
+            success = YES;
         }
-        [stream close];
-        success = YES;
-    }
-    else
-    {
-        NSLog(@"Failed to create output stream");
+        else
+        {
+            NSLog(@"Failed to create output stream");
+        }
     }
     return success;
 }
@@ -657,21 +665,40 @@
 
 - (BOOL)archiveCache
 {
-    BOOL success_1 = [self archiveDictionary: @selector(contactIDsSortedByFirst)];
-    
-    BOOL success_2 = [self archiveDictionary: @selector(contactIDsSortedByLast)];
-    
-    BOOL success_3 = [self archiveDictionary: @selector(contactIDsSortedByPhone)];
-    
+    BOOL success_1 = [self archiveDictionary: self.contactIDsSortedByFirst withFileName: [self fileNameForSelector: @selector(contactIDsSortedByFirst)]];
+
+    BOOL success_2 = [self archiveDictionary: self.contactIDsSortedByLast withFileName: [self fileNameForSelector: @selector(contactIDsSortedByLast)]];
+
+    BOOL success_3 = [self archiveDictionary: self.contactIDsSortedByPhone withFileName: [self fileNameForSelector: @selector(contactIDsSortedByPhone)]];
+
     return (success_1 && success_2 && success_3);
 }
 
-#pragma mark - Class methods
-
-+ (NSString *)documentsDirectory
+- (BOOL)deleteArchiveForSelector: (SEL)selector
 {
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    return (paths.count > 0) ? [paths objectAtIndex: 0] : nil;
+    BOOL success = NO;
+    NSString *fileName = [self fileNameForSelector: selector];
+    NSString *path = [[AKAddressBook documentsDirectory] stringByAppendingPathComponent: fileName];
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath: path])
+    {
+        NSError *error;
+        [[NSFileManager defaultManager] removeItemAtPath: path error: &error];
+        if (!error)
+        {
+            success = YES;
+        }
+    }
+    return success;
+}
+
+- (BOOL)deleteArchive
+{
+    BOOL success_1 = [self deleteArchiveForSelector: @selector(contactIDsSortedByFirst)];
+    BOOL success_2 = [self deleteArchiveForSelector: @selector(contactIDsSortedByLast)];
+    BOOL success_3 = [self deleteArchiveForSelector: @selector(contactIDsSortedByPhone)];
+
+    return (success_1 && success_2 && success_3);
 }
 
 @end
