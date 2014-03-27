@@ -394,7 +394,7 @@ const int newContactID = -1<<9;
             NSInteger termBitmask = 0, nameBitmask = 0;
             for (NSInteger i = 0; i < terms.count; ++i)
             {
-                NSString *term = [[terms objectAtIndex: i] lowercaseString];
+                NSString *term = [[[terms objectAtIndex: i] lowercaseString] stringWithDiacriticsRemoved];
                 for (NSInteger j = 0; j < properties.count; ++j)
                 {
                     ABPropertyID property = [properties[j] intValue];
