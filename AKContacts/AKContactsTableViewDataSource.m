@@ -32,7 +32,9 @@
  * index is the character index of the last term
  */
 - (AKSearchStackElement *)searchStackElementForTerms: (NSArray *)terms andCharacterIndex: (NSUInteger)index;
+- (NSMutableArray *)contactIDsHavingPrefix: (NSString *)prefix;
 - (NSArray *)contactIDsHavingNamePrefix: (NSString *)prefix;
+- (NSArray *)contactIDsHavingNumberPrefix: (NSString *)prefix;
 + (NSArray *)array: (NSArray *)array filteredWithTerms:(NSArray *)terms andSortOrdering: (ABPersonSortOrdering)sortOrdering;
 
 @end
@@ -62,45 +64,50 @@
 
 - (void)loadData
 {
-    AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+    void(^block)(void) = ^{
 
-    self.keys = [[NSMutableArray alloc] initWithObjects: UITableViewIndexSearch, nil];
-    
-    AKSource *source = [akAddressBook sourceForSourceId: akAddressBook.sourceID];
-    AKGroup *group = [source groupForGroupId: akAddressBook.groupID];
-    NSMutableSet *groupMembers = [group memberIDs];
-    
-    NSArray *sectionKeys = [AKAddressBook sectionKeys];
+      AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
 
-    if (groupMembers.count == akAddressBook.contactsCount)
-    {   // Shortcut for aggregate group if there's only a single source
+      self.keys = [[NSMutableArray alloc] initWithObjects: UITableViewIndexSearch, nil];
+
+      AKSource *source = [akAddressBook sourceForSourceId: akAddressBook.sourceID];
+      AKGroup *group = [source groupForGroupId: akAddressBook.groupID];
+      NSMutableSet *groupMembers = [group memberIDs];
+
+      NSArray *sectionKeys = [AKAddressBook sectionKeys];
+
+      if (groupMembers.count == akAddressBook.contactsCount)
+      {   // Shortcut for aggregate group if there's only a single source
         self.contactIDs = [akAddressBook.contactIDs mutableCopy];
         [self.keys addObjectsFromArray: sectionKeys];
-    }
-    else
-    {
+      }
+      else
+      {
         [self setContactIDs: [[NSMutableDictionary alloc] initWithCapacity: [akAddressBook.contactIDs count]]];
 
         for (NSString *key in sectionKeys)
         {
-            NSArray *arrayForKey = [akAddressBook.contactIDs objectForKey: key];
-            NSMutableArray *sectionArray = [arrayForKey mutableCopy];
+          NSArray *arrayForKey = [akAddressBook.contactIDs objectForKey: key];
+          NSMutableArray *sectionArray = [arrayForKey mutableCopy];
 
-            NSMutableArray *recordsToRemove = [[NSMutableArray alloc] init];
-            for (NSNumber *contactID in sectionArray)
-            {
-              if (groupMembers != nil && ![groupMembers member: contactID]) {
-                [recordsToRemove addObject: contactID];
-              }
+          NSMutableArray *recordsToRemove = [[NSMutableArray alloc] init];
+          for (NSNumber *contactID in sectionArray)
+          {
+            if (groupMembers != nil && ![groupMembers member: contactID]) {
+              [recordsToRemove addObject: contactID];
             }
-            [sectionArray removeObjectsInArray: recordsToRemove];
-            if (sectionArray.count > 0)
-            {
-                [self.contactIDs setObject: sectionArray forKey: key];
-                [self.keys addObject: key];
-            }
+          }
+          [sectionArray removeObjectsInArray: recordsToRemove];
+          if (sectionArray.count > 0)
+          {
+            [self.contactIDs setObject: sectionArray forKey: key];
+            [self.keys addObject: key];
+          }
         }
-    }
+      }
+    };
+    if (dispatch_get_specific(IsOnMainQueueKey)) block();
+    else dispatch_async(dispatch_get_main_queue(), block);
 }
 
 - (void)handleSearchForTerm: (NSString *)searchTerm
@@ -176,9 +183,7 @@
     }
     else
     {
-      dispatch_async(dispatch_get_main_queue(), ^{
-        [self loadData];
-      });
+      [self loadData];
     }
 
     dispatch_semaphore_signal(self.search_semaphore);
