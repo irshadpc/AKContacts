@@ -29,7 +29,7 @@
  */
 - (AKSearchStackElement *)searchStackElementForTerms: (NSArray *)terms andCharacterIndex: (NSUInteger)index;
 - (NSArray *)contactIDsHavingNamePrefix: (NSString *)prefix;
-+ (NSArray *)array: (NSArray *)array filteredWithTerms: (NSArray *)terms;
++ (NSArray *)array: (NSArray *)array filteredWithTerms:(NSArray *)terms andSortOrdering: (ABPersonSortOrdering)sortOrdering;
 
 @end
 
@@ -209,7 +209,7 @@
     {
       matchingIDs = [self.searchStack.lastObject matches];
     }
-    matchingIDs = [AKContactsTableViewDataSource array: matchingIDs filteredWithTerms: terms];
+    matchingIDs = [AKContactsTableViewDataSource array: matchingIDs filteredWithTerms: terms andSortOrdering: [AKAddressBook sharedInstance].sortOrdering];
     element.matches = [matchingIDs mutableCopy];
   }
   return element;
@@ -278,7 +278,7 @@
   return [sectionSet allObjects];
 }
 
-+ (NSArray *)array: (NSArray *)array filteredWithTerms:(NSArray *)terms;
++ (NSArray *)array: (NSArray *)array filteredWithTerms:(NSArray *)terms andSortOrdering: (ABPersonSortOrdering)sortOrdering;
 {
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
   CFErrorRef error = NULL;
@@ -291,7 +291,7 @@
   NSMutableSet *filteredSet = [[NSMutableSet alloc] init];
   for (NSNumber *recordID in array)
   {
-    AKContact *contact = [[AKContact alloc] initWithABRecordID: recordID.intValue andAddressBookRef: addressBookRef];
+    AKContact *contact = [[AKContact alloc] initWithABRecordID: recordID.intValue sortOrdering: sortOrdering andAddressBookRef: addressBookRef];
 
     NSInteger termsMatched = [contact numberOfMatchingTerms: terms];
 
