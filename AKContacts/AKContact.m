@@ -346,9 +346,6 @@ const int newContactID = -1<<9;
 
     AKAddressBook *addressBook = [AKAddressBook sharedInstance];
 
-    [addressBook.contacts setObject: self forKey: [NSNumber numberWithInteger: self.recordID]];
-    [addressBook.contacts removeObjectForKey: [NSNumber numberWithInteger: newContactID]];
-
     [addressBook contactIdentifiersInsertRecordID: self.recordID withAddressBookRef: super.addressBookRef];
 
     if (addressBook.groupID >= 0)

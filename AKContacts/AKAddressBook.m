@@ -36,8 +36,6 @@ NSString *const AKAddressBookQueueName = @"AKAddressBookQueue";
 
 const BOOL ShowGroups = YES;
 
-static const NSTimeInterval UnusedContactsReleaseTime = 600;
-
 /**
  * This key is set for the main_queue to tell if we are on the main queue
  * From the docs:  
@@ -49,9 +47,6 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 
 @interface AKAddressBook ()
 
-@property (strong, nonatomic) dispatch_source_t ab_timer;
-@property (assign, nonatomic) BOOL ab_timer_suspended;
-
 @property (strong, nonatomic) NSDate *dateAddressBookLoaded;
 
 @property (assign, nonatomic) ABPersonSortOrdering sortOrdering;
@@ -59,13 +54,6 @@ const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 @property (assign, nonatomic) NSInteger contactsCount;
 
 -(void)reloadAddressBook;
-/**
- * AKContacts are released from the contacts dictionary
- * after being unused for at least UnusedContactsReleaseTime seconds
- */
--(void)releaseUnusedContacts;
--(void)resume_ab_timer;
--(void)suspend_ab_timer;
 
 @end
 
@@ -111,26 +99,14 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
     _ab_semaphore = dispatch_semaphore_create(1);
 
-    _ab_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, _ab_queue);
-
-    _ab_timer_suspended = YES;
-
     _needReload = YES;
 
     _loadProgress = [[NSProgress alloc] initWithParent: nil userInfo: nil];
-
-    dispatch_source_set_event_handler(_ab_timer, ^{
-      [self releaseUnusedContacts];
-      [self suspend_ab_timer];
-      [self resume_ab_timer];
-    });
 
     _status = kAddressBookOffline;
 
     _sourceID = kSourceAggregate;
     _groupID = kGroupAggregate;
-
-    _contacts = [[NSMutableDictionary alloc] init];
 
     /*
      * The ABAddressBook API is not thread safe. ABAddressBook related calls are dispatched on the main queue.
@@ -249,11 +225,9 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
       break;
   }
 
-  [self suspend_ab_timer];
-
   NSDate *start = [NSDate date];
 
-  [self setContactsCount: ABAddressBookGetPersonCount(self.addressBookRef)];
+  self.contactsCount = ABAddressBookGetPersonCount(self.addressBookRef);
 
   [self loadAddressBookWithCompletionHandler:^(BOOL success) {
     if (success) {
@@ -262,8 +236,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
         NSLog(@"Address book loaded in %.2f", fabs([self.dateAddressBookLoaded timeIntervalSinceDate: start]));
 
         self.status = kAddressBookOnline;
-
-        [self resume_ab_timer];
       });
     }
   }];
@@ -314,17 +286,12 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (AKContact *)contactForContactId: (ABRecordID)recordId
 {
-  NSNumber *contactID = [NSNumber numberWithInteger: recordId];
-  AKContact *ret = [self.contacts objectForKey: contactID];
-  if (!ret)
-  {
-    ret = [[AKContact alloc] initWithABRecordID: recordId recordType: kABPersonType andAddressBookRef: self.addressBookRef];
-    if (recordId != newContactID)
-    {
-      [self.contacts setObject: ret forKey: contactID];
-    }
-  }
-  return ret;
+  return [[AKContact alloc] initWithABRecordID: recordId andAddressBookRef: self.addressBookRef];
+}
+
+- (AKContact *)contactForContactId: (ABRecordID)recordId withAddressBookRef: (ABAddressBookRef)addressBookRef
+{
+  return [[AKContact alloc] initWithABRecordID: recordId andAddressBookRef: addressBookRef];
 }
 
 - (AKSource *)sourceForContactId: (ABRecordID)recordId
@@ -368,48 +335,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
   ABAddressBookSave(self.addressBookRef, &error);
   if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-}
-
-- (void)releaseUnusedContacts 
-{
-  NSMutableArray *staleIDs = [[NSMutableArray alloc] init];
-
-  for (NSNumber *contactID in [self.contacts allKeys]) 
-  {
-    AKContact *contact = [self.contacts objectForKey: contactID];
-    NSDate *age = [contact age];
-
-    NSTimeInterval elapsed = fabs([age timeIntervalSinceNow]);
-    if (elapsed > 60) 
-    {
-      [staleIDs addObject: contactID];
-    }
-  }
-
-  dispatch_async(dispatch_get_main_queue(), ^{
-    [self.contacts removeObjectsForKeys: staleIDs];
-    ABAddressBookRevert(self.addressBookRef);
-  });
-}
-
-- (void)resume_ab_timer 
-{
-  if (self.ab_timer_suspended == YES) {
-    dispatch_source_set_timer(self.ab_timer,
-                              dispatch_time(DISPATCH_TIME_NOW, UnusedContactsReleaseTime * NSEC_PER_SEC),
-                              DISPATCH_TIME_FOREVER, 0ull);
-    dispatch_resume(self.ab_timer);
-    self.ab_timer_suspended = NO;
-  }
-}
-
-- (void)suspend_ab_timer 
-{
-  if (self.ab_timer_suspended == NO) 
-  {
-    dispatch_suspend(self.ab_timer);
-    self.ab_timer_suspended = YES;
-  }
 }
 
 @end

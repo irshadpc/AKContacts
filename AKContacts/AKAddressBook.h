@@ -78,10 +78,6 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 
 @property (strong, nonatomic) NSProgress *loadProgress;
 /**
- * AKContact objects with their recordIDs as keys
- **/
-@property (strong, nonatomic) NSMutableDictionary *contacts;
-/**
  * AKSource objects in the order of display
  **/
 @property (strong, nonatomic) NSMutableArray *sources;
@@ -117,6 +113,7 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 - (AKSource *)defaultSource;
 - (AKSource *)sourceForSourceId: (ABRecordID)recordId;
 - (AKContact *)contactForContactId: (ABRecordID)recordId;
+- (AKContact *)contactForContactId: (ABRecordID)recordId withAddressBookRef: (ABAddressBookRef)addressBookRef;
 - (AKSource *)sourceForContactId: (ABRecordID)recordId;
 - (void)deleteRecordID: (ABRecordID)recordID;
 

@@ -802,7 +802,6 @@ static const float defaultCellHeight = 44.f;
 
   if (self.contact.recordID == newContactID)
   {
-    [[AKAddressBook sharedInstance].contacts removeObjectForKey: [NSNumber numberWithInteger: newContactID]];
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
     [self.navigationController dismissViewControllerAnimated: YES completion: nil];
 #else
