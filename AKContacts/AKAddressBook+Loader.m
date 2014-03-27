@@ -16,6 +16,8 @@
 
 - (void)loadAddressBookWithCompletionHandler: (void (^)(BOOL))completionHandler
 {
+    dispatch_queue_t ab_queue = dispatch_queue_create([NSStringFromClass([AKAddressBook class]) UTF8String], NULL);
+    
     /*
      * Loading the addressbook runs in the background and uses a local ABAddressBookRef
      */
@@ -29,21 +31,29 @@
         ABAddressBookRef addressBook = ABAddressBookCreate();
 #endif
         
+        if ([self unarchiveCache]) {
+            self.status = kAddressBookOnline;
+            self.dateAddressBookLoaded = [NSDate date];
+            self.status = kAddressBookLoading;
+        }
+        
         // Do not change order of loading
         [self loadSourcesWithABAddressBookRef: addressBookRef];
         
         [self loadGroupsWithABAddressBookRef: addressBookRef];
         
         [self loadContactsWithABAddressBookRef: addressBookRef];
-        
+
         CFRelease(addressBookRef);
-        
+
+        [self archiveCache];
+
         if (completionHandler) {
             completionHandler(YES);
         }
     };
-    
-    dispatch_async(self.ab_queue, block);
+
+    dispatch_async(ab_queue, block);
 }
 
 - (void)loadSourcesWithABAddressBookRef: (ABAddressBookRef)addressBookRef
@@ -295,7 +305,7 @@
         }
         if (![allLinkedRecordIDs member: recordID])
         {
-            [self deleteRecordIDfromContactIdentifiersForContact: contact];
+            [self insertRecordIDinContactIdentifiersForContact: contact];
         }
         [self processPhoneNumbersOfContact: contact];
     }
@@ -542,6 +552,126 @@
         return result;
     };
     return comparator;
+}
+
+#pragma mark - Cache Archival
+
+- (NSString *)fileNameForSelector: (SEL)selector
+{
+    NSString *fileName;
+    
+    if ([NSStringFromSelector(selector) isEqualToString: NSStringFromSelector(@selector(contactIDsSortedByFirst))])
+    {
+        fileName = @"cacheFirst.plist";
+    }
+    else if ([NSStringFromSelector(selector) isEqualToString: NSStringFromSelector(@selector(contactIDsSortedByLast))])
+    {
+        fileName = @"cacheLast.plist";
+    }
+    else if ([NSStringFromSelector(selector) isEqualToString: NSStringFromSelector(@selector(contactIDsSortedByPhone))])
+    {
+        fileName = @"cacheDigit.plist";
+    }
+    return fileName;
+}
+
+- (BOOL)archiveDictionary: (SEL)selector
+{
+    BOOL success = NO;
+    
+    NSString *fileName = [self fileNameForSelector: selector];
+    NSString *path = [[AKAddressBook documentsDirectory] stringByAppendingPathComponent: fileName];
+    
+    NSOutputStream *stream = [NSOutputStream outputStreamToFileAtPath: path append: NO];
+    if (stream)
+    {
+        CFStringRef err;
+        [stream open];
+        
+        CFIndex index = CFPropertyListWriteToStream((__bridge CFPropertyListRef)(self.contactIDsSortedByFirst), (__bridge CFWriteStreamRef)stream, kCFPropertyListBinaryFormat_v1_0, &err);
+        if (index == 0)
+        {
+            NSLog(@"CFPropertyListWriteToStream error: %@", err);
+        }
+        [stream close];
+        success = YES;
+    }
+    else
+    {
+        NSLog(@"Failed to create output stream");
+    }
+    return success;
+}
+
+- (NSMutableDictionary *)unarchiveDictionary: (SEL)selector
+{
+    NSMutableDictionary *dictionary;
+    
+    NSString *fileName = [self fileNameForSelector: selector];
+    NSString *path = [[AKAddressBook documentsDirectory] stringByAppendingPathComponent: fileName];
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath: path])
+    {
+        NSInputStream *stream = [NSInputStream inputStreamWithFileAtPath: path];
+        if (stream != nil)
+        {
+            CFStringRef error;
+            CFPropertyListFormat format;
+            
+            [stream open];
+            
+            CFMutableDictionaryRef plist = (CFMutableDictionaryRef)CFPropertyListCreateFromStream(CFAllocatorGetDefault(), (__bridge CFReadStreamRef)(stream), 0, kCFPropertyListMutableContainers, &format, &error);
+            
+            [stream close];
+            
+            if (!error && plist)
+            {
+                dictionary = (NSMutableDictionary *)CFBridgingRelease(plist);
+            }
+            else
+            {
+                NSLog(@"CFPropertyListCreateFromStream error: %@", error);
+            }
+        }
+        else
+        {
+            NSLog(@"Failed to create input stream");
+        }
+    }
+    return dictionary;
+}
+
+- (BOOL)unarchiveCache
+{
+    NSMutableDictionary *dictionary = [self unarchiveDictionary: @selector(contactIDsSortedByFirst)];
+    self.contactIDsSortedByFirst = dictionary;
+    
+    dictionary = [self unarchiveDictionary: @selector(contactIDsSortedByLast)];
+    self.contactIDsSortedByLast = dictionary;
+    
+    dictionary = [self unarchiveDictionary: @selector(contactIDsSortedByPhone)];
+    self.contactIDsSortedByPhone = dictionary;
+    
+    return (self.contactIDsSortedByFirst && self.contactIDsSortedByLast && self.contactIDsSortedByPhone) ? YES : NO;
+}
+
+- (BOOL)archiveCache
+{
+    BOOL success_1 = [self archiveDictionary: @selector(contactIDsSortedByFirst)];
+    
+    BOOL success_2 = [self archiveDictionary: @selector(contactIDsSortedByLast)];
+    
+    BOOL success_3 = [self archiveDictionary: @selector(contactIDsSortedByPhone)];
+    
+    return (success_1 && success_2 && success_3);
+}
+
+#pragma mark - Class methods
+
++ (NSString *)documentsDirectory
+{
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    return (paths.count > 0) ? [paths objectAtIndex: 0] : nil;
 }
 
 @end
