@@ -267,18 +267,18 @@
   prefix = prefix.uppercaseString;
   AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
 
-  NSArray *sectionArray = [akAddressBook.contactIDsSortedByFirst objectForKey: prefix];
-  NSMutableSet *sectionSet = [NSMutableSet setWithArray: sectionArray];
+  NSArray *sectionArraySortedByFirst = [akAddressBook.contactIDsSortedByFirst objectForKey: prefix];
+  NSMutableSet *sectionSet = [NSMutableSet setWithArray: sectionArraySortedByFirst];
 
-  NSArray *inverseSortedSectionArray = [akAddressBook.contactIDsSortedByLast objectForKey: prefix];
-  NSMutableSet *invertedSectionSet = [NSMutableSet setWithArray: inverseSortedSectionArray];
+  NSArray *sectionArraySortedByLast = [akAddressBook.contactIDsSortedByLast objectForKey: prefix];
+  NSSet *sectionSetSortedByLast = [NSMutableSet setWithArray: sectionArraySortedByLast];
 
-  [sectionSet unionSet: invertedSectionSet];
+  [sectionSet unionSet: sectionSetSortedByLast];
 
-  inverseSortedSectionArray = [akAddressBook.contactIDsSortedByPhone objectForKey: prefix];
-  invertedSectionSet = [NSMutableSet setWithArray: inverseSortedSectionArray];
+  NSArray *sectionArraySortedByPhone = [akAddressBook.contactIDsSortedByPhone objectForKey: prefix];
+  NSSet *sectionSetSortedByPhone = [NSMutableSet setWithArray: sectionArraySortedByPhone];
 
-  [sectionSet unionSet: invertedSectionSet];
+  [sectionSet unionSet: sectionSetSortedByPhone];
 
   NSMutableSet *displayedContactIDs = [[NSMutableSet alloc] init];
   for (NSArray *section in self.contactIDs.allValues)
