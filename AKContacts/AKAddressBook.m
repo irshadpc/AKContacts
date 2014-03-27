@@ -32,8 +32,6 @@
 #import "AKSource.h"
 #import "AKAddressBook+Loader.h"
 
-NSString *const AKAddressBookQueueName = @"AKAddressBookQueue";
-
 const BOOL ShowGroups = YES;
 
 /**
@@ -46,8 +44,6 @@ const BOOL ShowGroups = YES;
 const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
 
 @interface AKAddressBook ()
-
-@property (strong, nonatomic) NSDate *dateAddressBookLoaded;
 
 @property (assign, nonatomic) ABPersonSortOrdering sortOrdering;
 
@@ -95,10 +91,6 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
   self = [super init];
   if (self)
   {
-    _ab_queue = dispatch_queue_create([AKAddressBookQueueName UTF8String], NULL);
-
-    _ab_semaphore = dispatch_semaphore_create(1);
-
     _needReload = YES;
 
     _loadProgress = [[NSProgress alloc] initWithParent: nil userInfo: nil];

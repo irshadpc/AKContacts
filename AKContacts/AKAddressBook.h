@@ -70,10 +70,6 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 
 @property (assign, nonatomic) ABAddressBookRef addressBookRef;
 
-@property (strong, nonatomic, readonly) dispatch_queue_t ab_queue;
-
-@property (strong, nonatomic, readonly) dispatch_semaphore_t ab_semaphore;
-
 @property (assign, nonatomic) NSInteger status;
 
 @property (strong, nonatomic) NSProgress *loadProgress;
@@ -100,7 +96,7 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 
 @property (assign, nonatomic, readonly) NSInteger contactsCount;
 
-@property (strong, nonatomic, readonly) NSDate *dateAddressBookLoaded;
+@property (strong, nonatomic) NSDate *dateAddressBookLoaded;
 
 @property (assign, nonatomic, readonly) ABPersonSortOrdering sortOrdering;
 
