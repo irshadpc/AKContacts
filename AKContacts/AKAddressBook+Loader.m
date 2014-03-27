@@ -222,19 +222,20 @@
             ABRecordID recordID = ABRecordGetRecordID(recordRef);
             NSNumber *contactID = [NSNumber numberWithInt: recordID];
           
+            AKContact *contact = [self contactForContactId: recordID withAddressBookRef: addressBookRef];
+            
 //            NSLog(@"%d intHash: %d RecordHash: %d", recordID, [contactID hash], [(__bridge id)recordRef hash]);
             
             [nativeContactIDs addObject: contactID];
 
-            NSDate *created = (NSDate *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonCreationDateProperty));
-            NSDate *modified = (NSDate *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonModificationDateProperty));
+            NSDate *created = [contact valueForProperty: kABPersonCreationDateProperty];
+            NSDate *modified = [contact valueForProperty: kABPersonModificationDateProperty];
 
-            NSArray *linked = CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople(recordRef));
+            NSArray *linkedContactIDs = [contact linkedContactIDs];
             NSMutableSet *linkedRecordIDs = [[NSMutableSet alloc] init];
-            for (id obj in linked)
+            for (NSNumber *contactID in linkedContactIDs)
             {
-                ABRecordID linkedID = ABRecordGetRecordID((__bridge ABRecordRef)obj);
-                [linkedRecordIDs addObject: @(linkedID)];
+                [linkedRecordIDs addObject: contactID];
             }
             if (linkedRecordIDs.count > 1 && ![allLinkedRecordIDs intersectsSet: linkedRecordIDs])
             {
@@ -277,34 +278,37 @@
     {
         [appContactIdentifiers minusSet: nativeContactIDs];
         NSLog(@"Deleted contactIDs: %@", appContactIdentifiers);
-        for (NSNumber *contactID in appContactIdentifiers)
+        for (NSNumber *recordID in appContactIdentifiers)
         {
-          [self contactIdentifiersDeleteRecordID: contactID.intValue withAddressBookRef: addressBookRef];
+          AKContact *contact = [self contactForContactId: recordID.intValue withAddressBookRef: addressBookRef];
+          [self deleteRecordIDfromContactIdentifiersForContact: contact];
         }
     }
 
     for (NSNumber *recordID in createdRecordIDs)
     {
         self.loadProgress.completedUnitCount += 1;
+        AKContact *contact =  [self contactForContactId: recordID.intValue withAddressBookRef: addressBookRef];
         if (self.status == kAddressBookLoading)
         {
-            NSLog(@"% 3d : %@ is new", recordID.intValue, CFBridgingRelease(ABRecordCopyCompositeName(ABAddressBookGetPersonWithRecordID(addressBookRef, recordID.intValue))));
+            NSLog(@"% 3d : %@ is new", recordID.intValue, contact.compositeName);
         }
         if (![allLinkedRecordIDs member: recordID])
         {
-            [self contactIdentifiersInsertRecordID: recordID.intValue withAddressBookRef: addressBookRef];
+            [self deleteRecordIDfromContactIdentifiersForContact: contact];
         }
-        [self processPhoneNumbersOfRecordID: recordID.intValue andABAddressBookRef: addressBookRef];
+        [self processPhoneNumbersOfContact: contact];
     }
     for (NSNumber *recordID in changedRecordIDs)
     {
         self.loadProgress.completedUnitCount += 1;
+        AKContact *contact = [self contactForContactId: recordID.intValue withAddressBookRef: addressBookRef];
         if (self.status == kAddressBookLoading)
         {
-            NSLog(@"% 3d : %@ did change", recordID.intValue, CFBridgingRelease(ABRecordCopyCompositeName(ABAddressBookGetPersonWithRecordID(addressBookRef, recordID.intValue))));
+            NSLog(@"% 3d : %@ did change", recordID.intValue, contact.compositeName);
         }
-        [self contactIdentifiersDeleteRecordID: recordID.intValue withAddressBookRef: addressBookRef];
-        [self contactIdentifiersInsertRecordID: recordID.intValue withAddressBookRef: addressBookRef];
+        [self deleteRecordIDfromContactIdentifiersForContact: contact];
+        [self insertRecordIDinContactIdentifiersForContact: contact];
     }
     NSLog(@"Lookup table contstructed %.2f", fabs([[NSDate date] timeIntervalSinceDate: start]));
     
@@ -317,23 +321,21 @@
     }
 }
 
-- (void)processPhoneNumbersOfRecordID: (ABRecordID)recordID andABAddressBookRef: (ABAddressBookRef)addressBookRef
+- (void)processPhoneNumbersOfContact: (AKContact *)contact
 {
-    ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBookRef, recordID);
-    ABMultiValueRef multiValueRecord =(ABMultiValueRef)ABRecordCopyValue(recordRef, kABPersonPhoneProperty);
-    if (multiValueRecord)
+    NSArray *phoneIdentifiers = [contact identifiersForProperty: kABPersonPhoneProperty];
+    if (phoneIdentifiers.count > 0)
     {
-        NSInteger count = ABMultiValueGetCount(multiValueRecord);
-        for (NSInteger i = 0; i < count; ++i) {
-            NSString *value = (NSString *)CFBridgingRelease(ABMultiValueCopyValueAtIndex(multiValueRecord, i));
+        for (NSNumber *identifier in phoneIdentifiers) {
+            NSString *value = [contact valueForMultiValueProperty: kABPersonPhoneProperty andIdentifier: identifier.intValue];
             NSString *digits = value.stringWithNonDigitsRemoved;
             if (digits.length > 0)
             {
                 NSString *key = [digits substringToIndex: 1];
                 NSMutableArray *sectionArray = [self.contactIDsSortedByPhone objectForKey: key];
 
-                NSUInteger index = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray withSortOrdering: self.sortOrdering andAddressBookRef: addressBookRef];
-                [sectionArray insertObject: @(recordID) atIndex: index];
+                NSUInteger index = [AKAddressBook indexOfRecordID: contact.recordID inArray: sectionArray withSortOrdering: self.sortOrdering andAddressBookRef: contact.addressBookRef];
+                [sectionArray insertObject: @(contact.recordID) atIndex: index];
             }
             for (NSString *prefix in [AKAddressBook prefixesToDiscardOnSearch])
             {
@@ -344,81 +346,78 @@
                     {
                         NSString *key = [digits substringToIndex: prefix.length];
                         NSMutableArray *sectionArray = [self.contactIDsSortedByPhone objectForKey: key];
-                        NSUInteger index = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray withSortOrdering: self.sortOrdering andAddressBookRef: addressBookRef];
-                        [sectionArray insertObject: @(recordID) atIndex: index];
+                        NSUInteger index = [AKAddressBook indexOfRecordID: contact.recordID inArray: sectionArray withSortOrdering: self.sortOrdering andAddressBookRef: contact.addressBookRef];
+                        [sectionArray insertObject: @(contact.recordID) atIndex: index];
                     }
                 }
             }
         }
-        CFRelease(multiValueRecord);
     }
 }
 
 #pragma mark - Insert / Remove methods
 
-- (void)contactIdentifiersInsertRecordID: (ABRecordID)recordID withAddressBookRef: (ABAddressBookRef)addressBookRef
+- (void)insertRecordIDinContactIdentifiersForContact: (AKContact *)contact
 {
-  ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBookRef, recordID);
   // First name
-  NSString *firstName = [AKContact nameToDetermineSectionForRecordRef: recordRef withSortOrdering: kABPersonSortByFirstName];
-  NSString *sectionKey = [AKContact sectionKeyForName: firstName];
+  NSString *firstName = [contact nameToDetermineSectionForSortOrdering: kABPersonSortByFirstName];
+    NSString *sectionKey = [contact sectionKeyForName: firstName];
   NSMutableArray *sectionArray = (NSMutableArray *)[self.contactIDsSortedByFirst objectForKey: sectionKey];
-  NSUInteger index = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray withSortOrdering: kABPersonSortByFirstName andAddressBookRef: addressBookRef];
-  [sectionArray insertObject: @(recordID) atIndex: index];
+  NSUInteger index = [AKAddressBook indexOfRecordID: contact.recordID inArray: sectionArray withSortOrdering: kABPersonSortByFirstName andAddressBookRef: contact.addressBookRef];
+  [sectionArray insertObject: @(contact.recordID) atIndex: index];
 
   if ([sectionKey isEqualToString: @"#"] && [firstName isMemberOfCharacterSet: [NSCharacterSet decimalDigitCharacterSet]])
   {
       sectionKey = [firstName substringToIndex: 1];
       sectionArray = (NSMutableArray *)[self.contactIDsSortedByFirst objectForKey: sectionKey];
-      index = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray withSortOrdering: kABPersonSortByFirstName andAddressBookRef: addressBookRef];
-      [sectionArray insertObject: @(recordID) atIndex: index];
+      index = [AKAddressBook indexOfRecordID: contact.recordID inArray: sectionArray withSortOrdering: kABPersonSortByFirstName andAddressBookRef: contact.addressBookRef];
+      [sectionArray insertObject: @(contact.recordID) atIndex: index];
   }
 
   // Last name
-  NSString *lastName = [AKContact nameToDetermineSectionForRecordRef: recordRef withSortOrdering: kABPersonSortByLastName];
-  sectionKey = [AKContact sectionKeyForName: lastName];
+  NSString *lastName = [contact nameToDetermineSectionForSortOrdering: kABPersonSortByLastName];
+  sectionKey = [contact sectionKeyForName: lastName];
   sectionArray = (NSMutableArray *)[self.contactIDsSortedByLast objectForKey: sectionKey];
-  index = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray withSortOrdering: kABPersonSortByLastName andAddressBookRef: addressBookRef];
-  [sectionArray insertObject: @(recordID) atIndex: index];
+  index = [AKAddressBook indexOfRecordID: contact.recordID inArray: sectionArray withSortOrdering: kABPersonSortByLastName andAddressBookRef: contact.addressBookRef];
+  [sectionArray insertObject: @(contact.recordID) atIndex: index];
 
   if ([sectionKey isEqualToString: @"#"] && [lastName isMemberOfCharacterSet: [NSCharacterSet decimalDigitCharacterSet]])
   {
     sectionKey = [lastName substringToIndex: 1];
     sectionArray = (NSMutableArray *)[self.contactIDsSortedByLast objectForKey: sectionKey];
-    index = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray withSortOrdering: kABPersonSortByLastName andAddressBookRef: addressBookRef];
-    [sectionArray insertObject: @(recordID) atIndex: index];
+    index = [AKAddressBook indexOfRecordID: contact.recordID inArray: sectionArray withSortOrdering: kABPersonSortByLastName andAddressBookRef: contact.addressBookRef];
+    [sectionArray insertObject: @(contact.recordID) atIndex: index];
   }
 
   if (self.status == kAddressBookLoading)
   {
     if ([self.presentationDelegate respondsToSelector:@selector(addressBook:didInsertRecordID:)])
     {
-      [self.presentationDelegate addressBook: self didInsertRecordID: recordID];
+      [self.presentationDelegate addressBook: self didInsertRecordID: contact.recordID];
     }
   }
 }
 
-- (void)contactIdentifiersDeleteRecordID: (ABRecordID)recordID withAddressBookRef: (ABAddressBookRef)addressBookRef
+- (void)deleteRecordIDfromContactIdentifiersForContact: (AKContact *)contact
 {
   NSString *sectionKeyByFirst, *sectionKeyByLast;
 
-  ABRecordRef recordRef = ABAddressBookGetPersonWithRecordID(addressBookRef, recordID);
-  if (recordRef)
+  if (contact)
   { // Can still exist when it is removed and added due to a name change
-    NSString *nameByFirst = [AKContact nameToDetermineSectionForRecordRef: recordRef withSortOrdering: kABPersonSortByFirstName];
-    NSString *nameByLast = [AKContact nameToDetermineSectionForRecordRef: recordRef withSortOrdering: kABPersonSortByLastName];
-    sectionKeyByFirst = [AKContact sectionKeyForName: nameByFirst];
-    sectionKeyByLast = [AKContact sectionKeyForName: nameByLast];
+    NSString *nameByFirst = [contact nameToDetermineSectionForSortOrdering: kABPersonSortByFirstName];
+    NSString *nameByLast = [contact nameToDetermineSectionForSortOrdering: kABPersonSortByLastName];
+    sectionKeyByFirst = [contact sectionKeyForName: nameByFirst];
+    sectionKeyByLast = [contact sectionKeyForName: nameByLast];
   }
 
-  NSUInteger indexByFirst = [AKAddressBook removeRecordID: recordID withSectionKey: sectionKeyByFirst fromContactIdentifierDictionary: self.contactIDsSortedByFirst];
-  NSUInteger indexByLast = [AKAddressBook removeRecordID: recordID withSectionKey: sectionKeyByLast fromContactIdentifierDictionary: self.contactIDsSortedByLast];
+  NSUInteger indexByFirst = [AKAddressBook removeRecordID: contact.recordID withSectionKey: sectionKeyByFirst fromContactIdentifierDictionary: self.contactIDsSortedByFirst];
+  NSUInteger indexByLast = [AKAddressBook removeRecordID: contact.recordID withSectionKey: sectionKeyByLast fromContactIdentifierDictionary: self.contactIDsSortedByLast];
 
   if ((indexByFirst != NSNotFound || indexByLast != NSNotFound) && self.status == kAddressBookLoading)
   {
     if ([self.presentationDelegate respondsToSelector:@selector(addressBook:didRemoveRecordID:)])
     {
-      [self.presentationDelegate addressBook: self didRemoveRecordID: recordID];
+      [self.presentationDelegate addressBook: self didRemoveRecordID: contact.recordID];
     }
   }
 }

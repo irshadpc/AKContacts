@@ -16,13 +16,13 @@
 
 - (void)loadAddressBookWithCompletionHandler: (void (^)(BOOL))completionHandler;
 /**
- * Insert a recordID to the sorted array of the section corresponding to the sectionKey of the record
+ * Insert recordID of contact into the sorted array of the section corresponding to the sectionKey of the record
  */
-- (void)contactIdentifiersInsertRecordID: (ABRecordID)recordID withAddressBookRef: (ABAddressBookRef)addressBookRef;
+- (void)insertRecordIDinContactIdentifiersForContact: (AKContact *)contact;
 /**
- * Remove a recordID from the sorted array of the section corresponding to the sectionKey of the record
+ * Remove a recordID of contact from the sorted array of the section corresponding to the sectionKey of the record
  */
-- (void)contactIdentifiersDeleteRecordID: (ABRecordID)recordID withAddressBookRef: (ABAddressBookRef)addressBookRef;
+- (void)deleteRecordIDfromContactIdentifiersForContact: (AKContact *)contact;
 /**
  * The index where a record should appear in an alphabetically sorted array
  */
