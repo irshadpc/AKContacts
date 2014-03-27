@@ -35,7 +35,9 @@ FOUNDATION_EXPORT const int newContactID;
 
 @interface AKContact : AKRecord
 
-- (instancetype)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef;
+@property (assign, nonatomic) ABPersonSortOrdering sortOrdering;
+
+- (instancetype)initWithABRecordID: (ABRecordID) recordID sortOrdering: (ABPersonSortOrdering)sortOrdering andAddressBookRef: (ABAddressBookRef)addressBookRef;
 /**
  * Return displayName sans diacritics and whitespace
  **/
@@ -45,6 +47,7 @@ FOUNDATION_EXPORT const int newContactID;
 - (NSString *)phoneticName;
 - (NSString *)nameDelimiter;
 - (NSString *)displayDetails;
+- (NSNumber *)kind;
 - (NSArray *)linkedContactIDs;
 
 - (NSData *)imageData;
@@ -61,12 +64,11 @@ FOUNDATION_EXPORT const int newContactID;
 
 - (NSInteger)numberOfMatchingTerms: (NSArray *)terms;
 - (NSInteger)numberOfPhoneNumbersMatchingTerms: (NSArray *)terms;
-
-+ (NSString *)sectionKeyForName: (NSString *)name;
+- (NSString *)sectionKeyForName: (NSString *)name;
 /**
  * Return the name of a record from which the section can be determined
  * This name does not include any prefix or suffix
  */
-+ (NSString *)nameToDetermineSectionForRecordRef: (ABRecordRef)recordRef withSortOrdering: (ABPersonSortOrdering)sortOrdering;
+- (NSString *)nameToDetermineSectionForSortOrdering: (ABPersonSortOrdering)sortOrdering;
 
 @end

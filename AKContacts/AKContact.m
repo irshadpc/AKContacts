@@ -40,12 +40,12 @@ const int newContactID = -1<<9;
 
 @implementation AKContact
 
-- (instancetype)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef
+- (instancetype)initWithABRecordID: (ABRecordID) recordID sortOrdering: (ABPersonSortOrdering)sortOrdering andAddressBookRef: (ABAddressBookRef)addressBookRef
 {
     self = [super initWithABRecordID: recordID recordType: kABPersonType andAddressBookRef: addressBookRef];
     if (self)
     {
-
+      _sortOrdering = sortOrdering;
     }
     return  self;
 }
@@ -89,14 +89,13 @@ const int newContactID = -1<<9;
 - (NSString *)sortName
 {
     NSString *ret = nil;
-    NSNumber *kind = (NSNumber *)[self valueForProperty: kABPersonKindProperty];
 
-    if ([kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
+    if ([self.kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
     {
         NSString *first = [self valueForProperty: kABPersonFirstNameProperty];
         NSString *last = [self valueForProperty: kABPersonLastNameProperty];
 
-        if (kABPersonSortByFirstName == [AKAddressBook sharedInstance].sortOrdering)
+        if (kABPersonSortByFirstName == self.sortOrdering)
         {
             ret = [NSString stringWithFormat: @"%@%@%@", first, self.nameDelimiter, last];
         }
@@ -105,7 +104,7 @@ const int newContactID = -1<<9;
             ret = [NSString stringWithFormat: @"%@%@%@", last, self.nameDelimiter, first];
         }
     }
-    else if ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
+    else if ([self.kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
     {
         ret = [self valueForProperty: kABPersonOrganizationProperty];
     }
@@ -115,9 +114,8 @@ const int newContactID = -1<<9;
 - (NSString *)compositeName
 {
   NSString *ret = nil;
-  NSNumber *kind = (NSNumber *)[self valueForProperty: kABPersonKindProperty];
 
-  if ([kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
+  if ([self.kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
   {
     NSMutableArray *array = [[NSMutableArray alloc] init];
     NSString *prefix = [self valueForProperty: kABPersonPrefixProperty];
@@ -148,7 +146,7 @@ const int newContactID = -1<<9;
         ret = [array componentsJoinedByString: self.nameDelimiter];
     }
   }
-  else if ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
+  else if ([self.kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
   {
     ret = [self valueForProperty: kABPersonOrganizationProperty];
   }
@@ -158,9 +156,8 @@ const int newContactID = -1<<9;
 - (NSString *)phoneticName
 {
   NSString *ret = nil;
-  NSNumber *kind = (NSNumber *)[self valueForProperty: kABPersonKindProperty];
 
-  if ([kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
+  if ([self.kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
   {
     NSMutableArray *array = [[NSMutableArray alloc] init];
 
@@ -183,7 +180,7 @@ const int newContactID = -1<<9;
 
     ret = [array componentsJoinedByString: self.nameDelimiter];
   }
-  else if ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
+  else if ([self.kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
   {
     ret = [self valueForProperty: kABPersonOrganizationProperty];
   }
@@ -198,13 +195,12 @@ const int newContactID = -1<<9;
 - (NSString *)displayDetails
 {
   NSString *ret = nil;
-  NSNumber *kind = (NSNumber *)[self valueForProperty: kABPersonKindProperty];
   
-  if ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
+  if ([self.kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
   {
     ret = [self valueForProperty: kABPersonDepartmentProperty];
   }
-  else if ([kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
+  else if ([self.kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
   {
     NSMutableArray *array = [[NSMutableArray alloc] init];
 
@@ -224,6 +220,11 @@ const int newContactID = -1<<9;
     
   }
   return ret;
+}
+
+- (NSNumber *)kind
+{
+  return (NSNumber *)[self valueForProperty: kABPersonKindProperty];
 }
 
 - (NSArray *)linkedContactIDs
@@ -277,8 +278,7 @@ const int newContactID = -1<<9;
   }
   else
   {
-    NSNumber *kind = (NSNumber *)[self valueForProperty: kABPersonKindProperty];
-    NSString *imageName = ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization]) ? @"Company.png" : @"Contact.png";
+    NSString *imageName = ([self.kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization]) ? @"Company.png" : @"Contact.png";
     ret = [UIImage imageNamed: imageName];
   }
   return ret;
@@ -346,7 +346,7 @@ const int newContactID = -1<<9;
 
     AKAddressBook *addressBook = [AKAddressBook sharedInstance];
 
-    [addressBook contactIdentifiersInsertRecordID: self.recordID withAddressBookRef: super.addressBookRef];
+    [addressBook insertRecordIDinContactIdentifiersForContact: self];
 
     if (addressBook.groupID >= 0)
     { // Add to group
@@ -384,9 +384,7 @@ const int newContactID = -1<<9;
     NSInteger termsMatched = 0;
     if (self.recordRef)
     {
-        NSNumber *kind = [self valueForProperty: kABPersonKindProperty];
-
-        if ([kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
+        if ([self.kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
         {
             void(^setBit)(NSInteger *, NSInteger) = ^(NSInteger *byte, NSInteger bit) { *byte |= 1 << bit; };
             BOOL(^isBitSet)(NSInteger *, NSInteger) = ^(NSInteger *byte, NSInteger bit) { return (BOOL)(*byte & (1 << bit)); };
@@ -411,7 +409,7 @@ const int newContactID = -1<<9;
                 }
             }
         }
-        else if ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
+        else if ([self.kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
         {
             NSString *name = [self valueForProperty: kABPersonOrganizationProperty];
             if ([name.stringWithDiacriticsRemoved.lowercaseString hasPrefix: [terms.lastObject lowercaseString]])
@@ -486,7 +484,7 @@ const int newContactID = -1<<9;
 
 #pragma mark - Class methods
 
-+ (NSString *)sectionKeyForName: (NSString *)name
+- (NSString *)sectionKeyForName: (NSString *)name
 {
   NSString *sectionKey = @"#";
   if (name.length)
@@ -497,25 +495,24 @@ const int newContactID = -1<<9;
   return sectionKey;
 }
 
-+ (NSString *)nameToDetermineSectionForRecordRef: (ABRecordRef)recordRef withSortOrdering: (ABPersonSortOrdering)sortOrdering
+- (NSString *)nameToDetermineSectionForSortOrdering: (ABPersonSortOrdering)sortOrdering
 {
-    NSString *ret;
-    NSNumber *kind = (NSNumber *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonKindProperty));
-    if ([kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
+    NSString *name;
+    if ([self.kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
     {
         ABPropertyID property = (sortOrdering == kABPersonSortByFirstName) ? kABPersonFirstNameProperty : kABPersonLastNameProperty;
-        ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, property));
-        if (!ret.length)
+        name = [self valueForProperty: property];
+        if (!name.length)
         {
             property = (property == kABPersonFirstNameProperty) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
-            ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, property));
+            name = [self valueForProperty: property];
         }
     }
-    else if ([kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
+    else if ([self.kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
     {
-        ret = (NSString *)CFBridgingRelease(ABRecordCopyValue(recordRef, kABPersonOrganizationProperty));
+        name = [self valueForProperty: kABPersonOrganizationProperty];
     }
-    return ret;
+    return name;
 }
 
 @end
