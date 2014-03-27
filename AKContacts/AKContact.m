@@ -384,11 +384,11 @@ const int newContactID = -1<<9;
     NSInteger termsMatched = 0;
     if (self.recordRef)
     {
+        void(^setBit)(NSInteger *, NSInteger) = ^(NSInteger *byte, NSInteger bit) { *byte |= 1 << bit; };
+        BOOL(^isBitSet)(NSInteger *, NSInteger) = ^(NSInteger *byte, NSInteger bit) { return (BOOL)(*byte & (1 << bit)); };
+
         if ([self.kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
         {
-            void(^setBit)(NSInteger *, NSInteger) = ^(NSInteger *byte, NSInteger bit) { *byte |= 1 << bit; };
-            BOOL(^isBitSet)(NSInteger *, NSInteger) = ^(NSInteger *byte, NSInteger bit) { return (BOOL)(*byte & (1 << bit)); };
-
             NSArray *properties = @[@(kABPersonFirstNameProperty), @(kABPersonLastNameProperty), @(kABPersonMiddleNameProperty)];
 
             NSInteger termBitmask = 0, nameBitmask = 0;
@@ -411,10 +411,17 @@ const int newContactID = -1<<9;
         }
         else if ([self.kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
         {
-            NSString *name = [self valueForProperty: kABPersonOrganizationProperty];
-            if ([name.stringWithDiacriticsRemoved.lowercaseString hasPrefix: [terms.lastObject lowercaseString]])
+            NSString *value = [self valueForProperty: kABPersonOrganizationProperty];
+            
+            NSInteger termBitmask = 0;
+            for (NSInteger i = 0; i < terms.count; ++i)
             {
-                termsMatched += 1;
+                NSString *term = [[[terms objectAtIndex: i] lowercaseString] stringWithDiacriticsRemoved];
+                if ([value.stringWithDiacriticsRemoved.lowercaseString hasPrefix: term] && !isBitSet(&termBitmask, i))
+                {
+                    termsMatched += 1;
+                    setBit(&termBitmask, i);
+                }
             }
         }
     }
