@@ -286,12 +286,12 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (AKContact *)contactForContactId: (ABRecordID)recordId
 {
-  return [[AKContact alloc] initWithABRecordID: recordId andAddressBookRef: self.addressBookRef];
+  return [[AKContact alloc] initWithABRecordID: recordId sortOrdering: self.sortOrdering andAddressBookRef: self.addressBookRef];
 }
 
 - (AKContact *)contactForContactId: (ABRecordID)recordId withAddressBookRef: (ABAddressBookRef)addressBookRef
 {
-  return [[AKContact alloc] initWithABRecordID: recordId andAddressBookRef: addressBookRef];
+  return [[AKContact alloc] initWithABRecordID: recordId sortOrdering: self.sortOrdering andAddressBookRef: addressBookRef];
 }
 
 - (AKSource *)sourceForContactId: (ABRecordID)recordId
