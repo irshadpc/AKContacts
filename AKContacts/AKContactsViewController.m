@@ -658,14 +658,14 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 {
   dispatch_block_t block = ^{
     AKContact *contact = [addressBook contactForContactId: recordID];
-    NSString *sectionKey = [contact sectionKeyForName: [contact nameToDetermineSectionForSortOrdering: addressBook.sortOrdering]];
+    NSString *sectionKey = [AKContact sectionKeyForName: [contact nameToDetermineSectionForSortOrdering: addressBook.sortOrdering]];
 
     NSMutableArray *sectionArray = [self.dataSource.contactIDs objectForKey: sectionKey];
 
     NSUInteger row = [AKAddressBook indexOfRecordID: recordID inArray: sectionArray
                                    withSortOrdering: addressBook.sortOrdering
                                   andAddressBookRef: contact.addressBookRef];
-
+    
     [sectionArray insertObject: @(recordID) atIndex: row];
 
     NSUInteger section = [self.dataSource.keys indexOfObject: sectionKey];
