@@ -123,7 +123,7 @@
     
     dispatch_block_t block = ^{
         
-        dispatch_semaphore_wait(self.search_semaphore, DISPATCH_TIME_FOREVER);
+        dispatch_semaphore_wait([AKAddressBook sharedInstance].semaphore, DISPATCH_TIME_FOREVER);
         
         if (searchTerm.length > self.searchStack.count)
         {
