@@ -45,9 +45,6 @@
 
 @interface AKContactsTableViewDataSource ()
 
-@property (strong, nonatomic, readonly) dispatch_queue_t search_queue;
-@property (strong, nonatomic, readonly) dispatch_semaphore_t search_semaphore;
-
 /**
  * index is the character index of the last term
  */
@@ -60,17 +57,6 @@
 @end
 
 @implementation AKContactsTableViewDataSource
-
-- (instancetype)init
-{
-    self = [super init];
-    if (self)
-    {
-        _search_queue = dispatch_queue_create([NSStringFromClass([AKContactsTableViewDataSource class]) UTF8String], NULL);
-        _search_semaphore = dispatch_semaphore_create(1);
-    }
-    return self;
-}
 
 - (NSInteger)displayedContactsCount
 {
@@ -206,14 +192,14 @@
             [self loadData];
         }
         
-        dispatch_semaphore_signal(self.search_semaphore);
+        dispatch_semaphore_signal([AKAddressBook sharedInstance].semaphore);
         
         if ([self.delegate respondsToSelector: @selector(dataSourceDidEndSearch:)]) {
             [self.delegate dataSourceDidEndSearch: self];
         }
     };
     
-    dispatch_async(self.search_queue, block);
+    dispatch_async([AKAddressBook sharedInstance].serial_queue, block);
 }
 
 - (AKSearchStackElement *)searchStackElementForTerms: (NSArray *)terms andCharacterIndex: (NSUInteger)index
