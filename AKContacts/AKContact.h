@@ -27,7 +27,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <AddressBook/AddressBook.h>
 
 #import "AKRecord.h"
 
@@ -41,13 +40,13 @@ FOUNDATION_EXPORT const int newContactID;
 /**
  * Return displayName sans diacritics and whitespace
  **/
-- (NSString *)searchName;
-- (NSString *)sortName;
 - (NSString *)compositeName;
 - (NSString *)phoneticName;
 - (NSString *)nameDelimiter;
+- (NSAttributedString *)attributedName;
 - (NSString *)displayDetails;
-- (NSNumber *)kind;
+- (BOOL)isPerson;
+- (BOOL)isOrganization;
 - (NSArray *)linkedContactIDs;
 
 - (NSData *)imageData;
@@ -57,18 +56,18 @@ FOUNDATION_EXPORT const int newContactID;
 - (NSString *)addressForIdentifier: (ABMultiValueIdentifier)identifier andNumRows: (NSInteger *)numRows;
 - (NSString *)instantMessageDescriptionForIdentifier: (ABMultiValueIdentifier)identifier;
 
-- (NSComparisonResult)compareByName:(AKContact *)otherContact;
-
 - (void)commit;
 - (void)revert;
 
 - (NSInteger)numberOfMatchingTerms: (NSArray *)terms;
-- (NSInteger)numberOfPhoneNumbersMatchingTerms: (NSArray *)terms;
-- (NSString *)sectionKeyForName: (NSString *)name;
+- (NSInteger)numberOfPhoneNumbersMatchingTerms: (NSArray *)terms preciseMatch: (BOOL)preciseMatch;
++ (NSString *)sectionKeyForName: (NSString *)name;
 /**
  * Return the name of a record from which the section can be determined
  * This name does not include any prefix or suffix
  */
 - (NSString *)nameToDetermineSectionForSortOrdering: (ABPersonSortOrdering)sortOrdering;
+
+- (ABMultiValueIdentifier)identifierOfMultiValueProperty: (ABPropertyID)propertyID matchingTerm: (NSString *)term;
 
 @end
