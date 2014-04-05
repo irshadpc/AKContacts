@@ -48,135 +48,135 @@
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self)
     {
-      UITextField *textField = [[UITextField alloc] initWithFrame: CGRectZero];
-      [textField setContentVerticalAlignment: UIControlContentVerticalAlignmentCenter];
-      [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
-      [textField setDelegate: self];
-      [textField setFont: [UIFont boldSystemFontOfSize: 17.f]];
-      [self setTextField: textField];
-      [self.contentView addSubview: textField];
+        UITextField *textField = [[UITextField alloc] initWithFrame: CGRectZero];
+        [textField setContentVerticalAlignment: UIControlContentVerticalAlignmentCenter];
+        [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
+        [textField setDelegate: self];
+        [textField setFont: [UIFont boldSystemFontOfSize: 17.f]];
+        [self setTextField: textField];
+        [self.contentView addSubview: textField];
     }
     return self;
 }
 
 - (void)setEditing:(BOOL)editing animated:(BOOL)animated
 {
-  [super setEditing: editing animated: animated];
-
-  self.akBadge.hidden = editing;
+    [super setEditing: editing animated: animated];
+    
+    self.akBadge.hidden = editing;
 }
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated
 {
-  [super setSelected:selected animated:animated];
+    [super setSelected:selected animated:animated];
 }
 
 - (void)configureCellAtIndexPath: (NSIndexPath *)indexPath
 {
-  [self setIndexPath: indexPath];
-  [self.textLabel setText: nil];
-  [self setTag: NSNotFound];
-  [self.textLabel setTextAlignment: NSTextAlignmentLeft];
-  [self setSelectionStyle: UITableViewCellSelectionStyleNone];
-  [self.akBadge removeFromSuperview];
-
-  AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
-
-  NSInteger sourceCount = [akAddressBook.sources count];
-  AKSource *source = [akAddressBook.sources objectAtIndex: indexPath.section];
-
-  NSString *text = nil;
-  NSString *placeholder = NSLocalizedString(@"New Group", @"");;
-  NSInteger tag = kGroupWillCreate;
-
-  if (indexPath.row < [source.groups count])
-  {
-    AKGroup *group = [source.groups objectAtIndex: indexPath.row];
-    if (group.recordID == kGroupWillDelete) {
-      for (NSInteger i = indexPath.row; i < [source.groups count]; ++i)
-      {
-        if (group.recordID != kGroupWillDelete)
-        {
-          group = [source.groups objectAtIndex: i];
-          break;
+    [self setIndexPath: indexPath];
+    [self.textLabel setText: nil];
+    [self setTag: NSNotFound];
+    [self.textLabel setTextAlignment: NSTextAlignmentLeft];
+    [self setSelectionStyle: UITableViewCellSelectionStyleNone];
+    [self.akBadge removeFromSuperview];
+    
+    AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+    
+    NSInteger sourceCount = [akAddressBook.sources count];
+    AKSource *source = [akAddressBook.sources objectAtIndex: indexPath.section];
+    
+    NSString *text = nil;
+    NSString *placeholder = NSLocalizedString(@"New Group", @"");;
+    NSInteger tag = kGroupWillCreate;
+    
+    if (indexPath.row < [source.groups count])
+    {
+        AKGroup *group = [source.groups objectAtIndex: indexPath.row];
+        if (group.recordID == kGroupWillDelete) {
+            for (NSInteger i = indexPath.row; i < [source.groups count]; ++i)
+            {
+                if (group.recordID != kGroupWillDelete)
+                {
+                    group = [source.groups objectAtIndex: i];
+                    break;
+                }
+            }
         }
-      }
+        
+        tag = group.recordID;
+        text = [group valueForProperty: kABGroupNameProperty];
+        
+        if ([group count] > 0)
+        {
+            self.akBadge = [AKBadge badgeWithText: [NSString stringWithFormat: @"%ld", (long)group.count]];
+            [self.akBadge setFrame: CGRectMake(250.f - (self.akBadge.frame.size.width / 2), 9.f, self.akBadge.frame.size.width, self.akBadge.frame.size.height)];
+            [self.contentView addSubview: self.akBadge];
+        }
+        
+        if (group.recordID == kGroupAggregate)
+        {
+            NSMutableArray *groupAggregateName = [[NSMutableArray alloc] initWithObjects: NSLocalizedString(@"All", @""),
+                                                  NSLocalizedString(@"Contacts", @""), nil];
+            if (source.recordID >= 0 && sourceCount > 1) [groupAggregateName insertObject: [source typeName] atIndex: 1];
+            text = [groupAggregateName componentsJoinedByString: @" "];
+        }
+        placeholder = text;
     }
     
-    tag = group.recordID;
-    text = [group valueForProperty: kABGroupNameProperty];
+    [self setTag: tag];
+    [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
     
-    if ([group count] > 0)
-    {
-      self.akBadge = [AKBadge badgeWithText: [NSString stringWithFormat: @"%ld", (long)group.count]];
-      [self.akBadge setFrame: CGRectMake(250.f - (self.akBadge.frame.size.width / 2), 9.f, self.akBadge.frame.size.width, self.akBadge.frame.size.height)];
-      [self.contentView addSubview: self.akBadge];
-    }
-
-    if (group.recordID == kGroupAggregate)
-    {
-      NSMutableArray *groupAggregateName = [[NSMutableArray alloc] initWithObjects: NSLocalizedString(@"All", @""),
-                                            NSLocalizedString(@"Contacts", @""), nil];
-      if (source.recordID >= 0 && sourceCount > 1) [groupAggregateName insertObject: [source typeName] atIndex: 1];
-      text = [groupAggregateName componentsJoinedByString: @" "];
-    }
-    placeholder = text;
-  }
-
-  [self setTag: tag];
-  [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
-
-  [self setAccessoryType: UITableViewCellAccessoryDisclosureIndicator];
-  [self.textField setTag: tag];
-  [self.textField setPlaceholder: placeholder];
-  [self.textField setText: text];
+    [self setAccessoryType: UITableViewCellAccessoryDisclosureIndicator];
+    [self.textField setTag: tag];
+    [self.textField setPlaceholder: placeholder];
+    [self.textField setText: text];
 }
 
 - (void)layoutSubviews
 {
-  [super layoutSubviews];
-
-  CGRect frame = CGRectMake(self.contentView.bounds.origin.x + 15.f,
-                            self.contentView.bounds.origin.y,
-                            self.contentView.bounds.size.width - 20.f,
-                            self.contentView.bounds.size.height);
-  [self.textField setFrame: frame];
-  [self.textField setEnabled: (self.controller.editing && self.tag != kGroupAggregate)];
+    [super layoutSubviews];
+    
+    CGRect frame = CGRectMake(self.contentView.bounds.origin.x + 15.f,
+                              self.contentView.bounds.origin.y,
+                              self.contentView.bounds.size.width - 20.f,
+                              self.contentView.bounds.size.height);
+    [self.textField setFrame: frame];
+    [self.textField setEnabled: (self.controller.editing && self.tag != kGroupAggregate)];
 }
 
 #pragma mark - UITextField delegate
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField
 {
-  [self.controller setFirstResponder: textField];
+    [self.controller setFirstResponder: textField];
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField
 {
-  [self.controller setFirstResponder: nil];
-
-  if ([textField isFirstResponder])
-  {
-    [textField resignFirstResponder];
-  }
-
-  if (textField.tag != kGroupWillCreate && textField.text.length == 0)
-  {
-    [textField setText: textField.placeholder];
-  }
-  else if (textField.text.length > 0)
-  {
-    AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
-    AKSource *source = [akAddressBook.sources objectAtIndex: self.indexPath.section];
-    [source setName: textField.text forGroupWithID: (ABRecordID)textField.tag];
-  }
+    [self.controller setFirstResponder: nil];
+    
+    if ([textField isFirstResponder])
+    {
+        [textField resignFirstResponder];
+    }
+    
+    if (textField.tag != kGroupWillCreate && textField.text.length == 0)
+    {
+        [textField setText: textField.placeholder];
+    }
+    else if (textField.text.length > 0)
+    {
+        AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+        AKSource *source = [akAddressBook.sources objectAtIndex: self.indexPath.section];
+        [source setName: textField.text forGroupWithID: (ABRecordID)textField.tag];
+    }
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
 {
-  if ([textField isFirstResponder])
-    [textField resignFirstResponder];
-  return YES;
+    if ([textField isFirstResponder])
+        [textField resignFirstResponder];
+    return YES;
 }
 
 @end

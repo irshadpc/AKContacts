@@ -43,39 +43,39 @@
 
 + (UITableViewCell *)cellWithController: (AKContactViewController *)controller atRow: (NSInteger)row
 {
-  static NSString *CellIdentifier = @"AKContactSwitchViewCell";
-  
-  AKContactSwitchViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil)
-  {
-    cell = [[AKContactSwitchViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
-  }
-  
-  [cell setController: controller];
-  
-  [cell configureCellAtRow: row];
-  
-  return (UITableViewCell *)cell;
+    static NSString *CellIdentifier = @"AKContactSwitchViewCell";
+    
+    AKContactSwitchViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+    if (cell == nil)
+    {
+        cell = [[AKContactSwitchViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
+    }
+    
+    [cell setController: controller];
+    
+    [cell configureCellAtRow: row];
+    
+    return (UITableViewCell *)cell;
 }
 
 - (void)configureCellAtRow: (NSInteger)row {
-
-  [self setIdentifier: NSNotFound];
-  [self.textLabel setText: nil];
-  [self.detailTextLabel setText: nil];
-  [self setSelectionStyle: UITableViewCellSelectionStyleNone];
-
-  [self.detailTextLabel setText: NSLocalizedString(@"Switch", @"")];
-
-  UISwitch *sw = [[UISwitch alloc] initWithFrame: CGRectZero];
-  [sw addTarget: self action:@selector(uiSwitchDidChangeValue:) forControlEvents: UIControlEventValueChanged];
-  [self setAccessoryView: sw];
+    
+    [self setIdentifier: NSNotFound];
+    [self.textLabel setText: nil];
+    [self.detailTextLabel setText: nil];
+    [self setSelectionStyle: UITableViewCellSelectionStyleNone];
+    
+    [self.detailTextLabel setText: NSLocalizedString(@"Switch", @"")];
+    
+    UISwitch *sw = [[UISwitch alloc] initWithFrame: CGRectZero];
+    [sw addTarget: self action:@selector(uiSwitchDidChangeValue:) forControlEvents: UIControlEventValueChanged];
+    [self setAccessoryView: sw];
 }
 
 #pragma mark - UISwitch
 
 - (void)uiSwitchDidChangeValue: (id)sender {
-  
+    
 }
 
 @end

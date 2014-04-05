@@ -45,192 +45,192 @@
 
 + (AKMessenger *)sharedInstance
 {
-  static dispatch_once_t once;
-  static AKMessenger *messanger;
-  dispatch_once(&once, ^{ messanger = [[self alloc] init]; });
-  return messanger;
+    static dispatch_once_t once;
+    static AKMessenger *messanger;
+    dispatch_once(&once, ^{ messanger = [[self alloc] init]; });
+    return messanger;
 }
 
 #pragma mark - Custom methods
 
 - (void)sendTextWithRecipient: (NSString *)recipient
 {
-  if ([MFMessageComposeViewController canSendText])
-  {
-    MFMessageComposeViewController *messageVC = [[MFMessageComposeViewController alloc] init];
-    [messageVC setMessageComposeDelegate: self];
-    [messageVC setRecipients: [[NSArray alloc] initWithObjects: recipient, nil]];
-    
-    if ([self.delegate respondsToSelector: @selector(presentModalComposeMessageViewController:)])
+    if ([MFMessageComposeViewController canSendText])
     {
-      [self.delegate presentModalComposeMessageViewController: messageVC];
+        MFMessageComposeViewController *messageVC = [[MFMessageComposeViewController alloc] init];
+        [messageVC setMessageComposeDelegate: self];
+        [messageVC setRecipients: [[NSArray alloc] initWithObjects: recipient, nil]];
+        
+        if ([self.delegate respondsToSelector: @selector(presentModalComposeMessageViewController:)])
+        {
+            [self.delegate presentModalComposeMessageViewController: messageVC];
+        }
+        else
+        {
+            NSLog(@"AKMessengerDelegate should respond to presentModalComposeMessageViewController: selector");
+        }
     }
     else
     {
-      NSLog(@"AKMessengerDelegate should respond to presentModalComposeMessageViewController: selector");
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle: NSLocalizedString(@"Cannot Sent Text", @"")
+                                                            message: @"This device cannot send text messages."
+                                                           delegate: self
+                                                  cancelButtonTitle: NSLocalizedString(@"OK", @"")
+                                                  otherButtonTitles: nil];
+        [alertView show];
     }
-  }
-  else
-  {
-    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle: NSLocalizedString(@"Cannot Sent Text", @"")
-                                                        message: @"This device cannot send text messages."
-                                                       delegate: self
-                                              cancelButtonTitle: NSLocalizedString(@"OK", @"")
-                                              otherButtonTitles: nil];
-    [alertView show];
-  }
 }
 
 - (void)sendEmailWithRecipients: (NSArray *)recipients
 {
-  if ([MFMailComposeViewController canSendMail])
-  {
-    MFMailComposeViewController *emailVC = [[MFMailComposeViewController alloc] init];
-    [emailVC setMailComposeDelegate: self];
-    [emailVC setToRecipients: recipients];
-
-    if ([self.delegate respondsToSelector: @selector(presentModalComposeEmailViewController:)])
+    if ([MFMailComposeViewController canSendMail])
     {
-      [self.delegate presentModalComposeEmailViewController: emailVC];
+        MFMailComposeViewController *emailVC = [[MFMailComposeViewController alloc] init];
+        [emailVC setMailComposeDelegate: self];
+        [emailVC setToRecipients: recipients];
+        
+        if ([self.delegate respondsToSelector: @selector(presentModalComposeEmailViewController:)])
+        {
+            [self.delegate presentModalComposeEmailViewController: emailVC];
+        }
+        else
+        {
+            NSLog(@"AKMessengerDelegate should respond to presentModalComposeEmailViewController: selector");
+        }
     }
     else
     {
-      NSLog(@"AKMessengerDelegate should respond to presentModalComposeEmailViewController: selector");
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle: NSLocalizedString(@"Email Not Configured", @"")
+                                                            message: @"Please verify that email is configured on your device."
+                                                           delegate: self
+                                                  cancelButtonTitle: NSLocalizedString(@"OK", @"")
+                                                  otherButtonTitles: nil];
+        [alertView show];
     }
-  }
-  else
-  {
-    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle: NSLocalizedString(@"Email Not Configured", @"")
-                                                        message: @"Please verify that email is configured on your device."
-                                                       delegate: self
-                                              cancelButtonTitle: NSLocalizedString(@"OK", @"")
-                                              otherButtonTitles: nil];
-    [alertView show];
-  }
 }
 
 - (void)showTextActionSheetWithContactID: (ABRecordID)contactID
 {
-  [self setContactID: contactID];
-
-  UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle: NSLocalizedString(@"Send Message", @"")
-                                                           delegate: self
-                                                  cancelButtonTitle: nil
-                                             destructiveButtonTitle: nil otherButtonTitles: nil];
-  AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.contactID];
-
-  NSArray *identifiers = [contact identifiersForProperty: kABPersonPhoneProperty];
-  for (NSNumber *identifier in identifiers)
-  {
-    NSString *value = [contact valueForMultiValueProperty: kABPersonPhoneProperty andIdentifier: [identifier intValue]];
-    [actionSheet addButtonWithTitle: value];
-  }
-
-  identifiers = [contact identifiersForProperty: kABPersonEmailProperty];
-  for (NSNumber *identifier in identifiers)
-  {
-    NSString *value = [contact valueForMultiValueProperty: kABPersonEmailProperty andIdentifier: [identifier intValue]];
-    [actionSheet addButtonWithTitle: value];
-  }
+    [self setContactID: contactID];
     
-  [actionSheet addButtonWithTitle: NSLocalizedString(@"Cancel", @"")];
-  [actionSheet setCancelButtonIndex: ([actionSheet numberOfButtons] - 1)];
+    UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle: NSLocalizedString(@"Send Message", @"")
+                                                             delegate: self
+                                                    cancelButtonTitle: nil
+                                               destructiveButtonTitle: nil otherButtonTitles: nil];
+    AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.contactID];
     
-  if ([self.delegate respondsToSelector: @selector(presentActionSheet:)])
-  {
-    [self.delegate presentActionSheet: actionSheet];
-  }
-  else
-  {
-    NSLog(@"AKMessengerDelegate should respond to presentActionSheet: selector");
-  }
+    NSArray *identifiers = [contact identifiersForMultiValueProperty: kABPersonPhoneProperty];
+    for (NSNumber *identifier in identifiers)
+    {
+        NSString *value = [contact valueForMultiValueProperty: kABPersonPhoneProperty andIdentifier: [identifier intValue]];
+        [actionSheet addButtonWithTitle: value];
+    }
+    
+    identifiers = [contact identifiersForMultiValueProperty: kABPersonEmailProperty];
+    for (NSNumber *identifier in identifiers)
+    {
+        NSString *value = [contact valueForMultiValueProperty: kABPersonEmailProperty andIdentifier: [identifier intValue]];
+        [actionSheet addButtonWithTitle: value];
+    }
+    
+    [actionSheet addButtonWithTitle: NSLocalizedString(@"Cancel", @"")];
+    [actionSheet setCancelButtonIndex: ([actionSheet numberOfButtons] - 1)];
+    
+    if ([self.delegate respondsToSelector: @selector(presentActionSheet:)])
+    {
+        [self.delegate presentActionSheet: actionSheet];
+    }
+    else
+    {
+        NSLog(@"AKMessengerDelegate should respond to presentActionSheet: selector");
+    }
 }
 
 #pragma mark - MFMailComposeViewControllerDelegate
 
 - (void)mailComposeController:(MFMailComposeViewController *)controller didFinishWithResult:(MFMailComposeResult)result error:(NSError *)error
 {
-  switch (result)
-  {
-    case MFMailComposeResultCancelled:
-      break;
-    case MFMailComposeResultSaved:
-      break;
-    case MFMailComposeResultFailed:
-      break;
-    case MFMailComposeResultSent:
-      break;
-    default:
-      break;
-  }
-
-  if ([self.delegate respondsToSelector: @selector(dismissModalViewController)])
-  {
-    [self.delegate dismissModalViewController];
-  }
-  else
-  {
-      NSLog(@"AKMessengerDelegate should respond to dismissModalViewController selector");
-  }
+    switch (result)
+    {
+        case MFMailComposeResultCancelled:
+            break;
+        case MFMailComposeResultSaved:
+            break;
+        case MFMailComposeResultFailed:
+            break;
+        case MFMailComposeResultSent:
+            break;
+        default:
+            break;
+    }
+    
+    if ([self.delegate respondsToSelector: @selector(dismissModalViewController)])
+    {
+        [self.delegate dismissModalViewController];
+    }
+    else
+    {
+        NSLog(@"AKMessengerDelegate should respond to dismissModalViewController selector");
+    }
 }
 
 #pragma mark - MFMessageComposeViewControllerDelegate
 
 - (void)messageComposeViewController:(MFMessageComposeViewController *)controller didFinishWithResult:(MessageComposeResult)result
 {
-  switch (result)
-  {
-    case MessageComposeResultCancelled:
-      break;
-    case MessageComposeResultSent:
-      break;
-    case MessageComposeResultFailed:
-      break;
-    default:
-      break;
-  }
-  if ([self.delegate respondsToSelector: @selector(dismissModalViewController)])
-  {
-    [self.delegate dismissModalViewController];
-  }
-  else
-  {
-    NSLog(@"AKMessengerDelegate should respond to dismissModalViewController selector");
-  }
+    switch (result)
+    {
+        case MessageComposeResultCancelled:
+            break;
+        case MessageComposeResultSent:
+            break;
+        case MessageComposeResultFailed:
+            break;
+        default:
+            break;
+    }
+    if ([self.delegate respondsToSelector: @selector(dismissModalViewController)])
+    {
+        [self.delegate dismissModalViewController];
+    }
+    else
+    {
+        NSLog(@"AKMessengerDelegate should respond to dismissModalViewController selector");
+    }
 }
 
 #pragma mark - UIActionSheetDelegate
 
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
 {
-  if (buttonIndex != actionSheet.cancelButtonIndex)
-  {
-    [self actionSheet: (UIActionSheet *)actionSheet didSelectButtonAtIndex: buttonIndex];
-  }
-  [actionSheet dismissWithClickedButtonIndex: buttonIndex animated: YES];
+    if (buttonIndex != actionSheet.cancelButtonIndex)
+    {
+        [self actionSheet: (UIActionSheet *)actionSheet didSelectButtonAtIndex: buttonIndex];
+    }
+    [actionSheet dismissWithClickedButtonIndex: buttonIndex animated: YES];
 }
 
 - (void)actionSheet:(UIActionSheet *)actionSheet didSelectButtonAtIndex:(NSInteger)buttonIndex
 {
-  AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.contactID];
-
-  NSArray *phoneIdentifiers = [contact identifiersForProperty: kABPersonPhoneProperty];
-  NSArray *emailIdentifiers = [contact identifiersForProperty: kABPersonEmailProperty];
-  NSInteger phoneCount = [contact countForProperty: kABPersonPhoneProperty];
-  NSInteger emailCount = [contact countForProperty: kABPersonEmailProperty];
+    AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: self.contactID];
     
-  if (phoneCount > 0 && buttonIndex < phoneCount)
-  {
-    ABMultiValueIdentifier identifier = [[phoneIdentifiers objectAtIndex: buttonIndex] intValue];
-    NSString *value = [contact valueForMultiValueProperty: kABPersonPhoneProperty andIdentifier: identifier];
-    [self sendTextWithRecipient: value];
-  }
-  else if (emailCount > 0)
-  {
-    ABMultiValueIdentifier identifier = [[emailIdentifiers objectAtIndex: (buttonIndex - phoneCount)] intValue];
-    NSString *value = [contact valueForMultiValueProperty: kABPersonEmailProperty andIdentifier: identifier];
-    [self sendEmailWithRecipients: [[NSArray alloc] initWithObjects: value, nil]];
-  }
+    NSArray *phoneIdentifiers = [contact identifiersForMultiValueProperty: kABPersonPhoneProperty];
+    NSArray *emailIdentifiers = [contact identifiersForMultiValueProperty: kABPersonEmailProperty];
+    NSInteger phoneCount = [contact countForMultiValueProperty: kABPersonPhoneProperty];
+    NSInteger emailCount = [contact countForMultiValueProperty: kABPersonEmailProperty];
+    
+    if (phoneCount > 0 && buttonIndex < phoneCount)
+    {
+        ABMultiValueIdentifier identifier = [[phoneIdentifiers objectAtIndex: buttonIndex] intValue];
+        NSString *value = [contact valueForMultiValueProperty: kABPersonPhoneProperty andIdentifier: identifier];
+        [self sendTextWithRecipient: value];
+    }
+    else if (emailCount > 0)
+    {
+        ABMultiValueIdentifier identifier = [[emailIdentifiers objectAtIndex: (buttonIndex - phoneCount)] intValue];
+        NSString *value = [contact valueForMultiValueProperty: kABPersonEmailProperty andIdentifier: identifier];
+        [self sendEmailWithRecipients: [[NSArray alloc] initWithObjects: value, nil]];
+    }
 }
 
 @end

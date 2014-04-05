@@ -44,13 +44,13 @@
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self)
     {
-      UITextField *textField = [[UITextField alloc] initWithFrame: CGRectZero];
-      [textField setContentVerticalAlignment: UIControlContentVerticalAlignmentCenter];
-      [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
-      [textField setDelegate: self];
-      [textField setFont: [UIFont boldSystemFontOfSize: 17.f]];
-      [self setTextField: textField];
-      [self.contentView addSubview: textField];
+        UITextField *textField = [[UITextField alloc] initWithFrame: CGRectZero];
+        [textField setContentVerticalAlignment: UIControlContentVerticalAlignmentCenter];
+        [textField setClearButtonMode: UITextFieldViewModeWhileEditing];
+        [textField setDelegate: self];
+        [textField setFont: [UIFont boldSystemFontOfSize: 17.f]];
+        [self setTextField: textField];
+        [self.contentView addSubview: textField];
     }
     return self;
 }
@@ -58,100 +58,100 @@
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated
 {
     [super setSelected:selected animated:animated];
-
+    
     // Configure the view for the selected state
 }
 
 - (void)configureCellAtIndexPath: (NSIndexPath *)indexPath
 {
-  [self setIndexPath: indexPath];
-  [self.textLabel setText: nil];
-  [self setTag: NSNotFound];
-  [self.textLabel setTextAlignment: NSTextAlignmentLeft];
-  [self setSelectionStyle: UITableViewCellSelectionStyleNone];
-
-  NSMutableArray *labels = [self.controller.labels objectAtIndex: indexPath.section];
-
-  if (indexPath.row == [labels count])
-  {
-    NSString *placeholder = NSLocalizedString(@"New Label", @"");;
-    [self.textField setPlaceholder: placeholder];
-    [self.textField setText: nil];
-    [self.textField setTag: createLabelTag];
-  }
-  else
-  {
-    AKLabel *akLabel = [labels objectAtIndex: indexPath.row];
-    if (akLabel.status == kLabelStatusDeleting) {
-      for (NSInteger i = indexPath.row; i < [labels count]; ++i)
-      {
-        if (akLabel.status != kLabelStatusDeleting)
-        {
-          akLabel = [labels objectAtIndex: i];
-          break;
-        }
-      }
+    [self setIndexPath: indexPath];
+    [self.textLabel setText: nil];
+    [self setTag: NSNotFound];
+    [self.textLabel setTextAlignment: NSTextAlignmentLeft];
+    [self setSelectionStyle: UITableViewCellSelectionStyleNone];
+    
+    NSMutableArray *labels = [self.controller.labels objectAtIndex: indexPath.section];
+    
+    if (indexPath.row == [labels count])
+    {
+        NSString *placeholder = NSLocalizedString(@"New Label", @"");;
+        [self.textField setPlaceholder: placeholder];
+        [self.textField setText: nil];
+        [self.textField setTag: createLabelTag];
     }
-
-    [self setAccessoryType: ([akLabel selected]) ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone];
-    [self.textField setText: akLabel.localizedLabel];
-    [self.textField setPlaceholder: akLabel.localizedLabel];
-  }
+    else
+    {
+        AKLabel *akLabel = [labels objectAtIndex: indexPath.row];
+        if (akLabel.status == kLabelStatusDeleting) {
+            for (NSInteger i = indexPath.row; i < [labels count]; ++i)
+            {
+                if (akLabel.status != kLabelStatusDeleting)
+                {
+                    akLabel = [labels objectAtIndex: i];
+                    break;
+                }
+            }
+        }
+        
+        [self setAccessoryType: ([akLabel selected]) ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone];
+        [self.textField setText: akLabel.localizedLabel];
+        [self.textField setPlaceholder: akLabel.localizedLabel];
+    }
 }
 
 - (void)layoutSubviews
 {
-  [super layoutSubviews];
-
-  CGRect frame = CGRectMake(self.contentView.bounds.origin.x + 10.f,
-                            self.contentView.bounds.origin.y,
-                            self.contentView.bounds.size.width - 20.f,
-                            self.contentView.bounds.size.height);
-  [self.textField setFrame: frame];
-  [self.textField setEnabled: (self.controller.editing && self.indexPath.section == kCustomSection)];
+    [super layoutSubviews];
+    
+    CGRect frame = CGRectMake(self.contentView.bounds.origin.x + 10.f,
+                              self.contentView.bounds.origin.y,
+                              self.contentView.bounds.size.width - 20.f,
+                              self.contentView.bounds.size.height);
+    [self.textField setFrame: frame];
+    [self.textField setEnabled: (self.controller.editing && self.indexPath.section == kCustomSection)];
 }
 
 #pragma mark - UITextField delegate
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField
 {
-  [self.controller setFirstResponder: textField];
+    [self.controller setFirstResponder: textField];
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField
 {
-  [self.controller setFirstResponder: nil];
-
-  if ([textField isFirstResponder])
-    [textField resignFirstResponder];
-
-  if (textField.tag != createLabelTag && textField.text.length == 0)
-  {
-    [textField setText: textField.placeholder];
-  }
-  else if (textField.text.length > 0)
-  {
-    NSMutableArray *labels = [self.controller.labels objectAtIndex: kCustomSection];
-
-    AKLabel *label = [[AKLabel alloc] initWithLabel: textField.text andIsStandard: NO];
+    [self.controller setFirstResponder: nil];
     
-    if (self.indexPath.row == [labels count])
-    { // Create
-      [label setStatus: kLabelStatusCreating];
-      [labels addObject: label];
+    if ([textField isFirstResponder])
+        [textField resignFirstResponder];
+    
+    if (textField.tag != createLabelTag && textField.text.length == 0)
+    {
+        [textField setText: textField.placeholder];
     }
-    else
-    { // Rename
-      [labels replaceObjectAtIndex: self.indexPath.row withObject: label];
+    else if (textField.text.length > 0)
+    {
+        NSMutableArray *labels = [self.controller.labels objectAtIndex: kCustomSection];
+        
+        AKLabel *label = [[AKLabel alloc] initWithLabel: textField.text andIsStandard: NO];
+        
+        if (self.indexPath.row == [labels count])
+        { // Create
+            [label setStatus: kLabelStatusCreating];
+            [labels addObject: label];
+        }
+        else
+        { // Rename
+            [labels replaceObjectAtIndex: self.indexPath.row withObject: label];
+        }
     }
-  }
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
 {
-  if ([textField isFirstResponder])
-    [textField resignFirstResponder];
-  return YES;
+    if ([textField isFirstResponder])
+        [textField resignFirstResponder];
+    return YES;
 }
 
 @end

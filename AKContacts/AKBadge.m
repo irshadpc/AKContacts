@@ -43,42 +43,42 @@
 
 + (AKBadge *)badgeWithText: (NSString *)text
 {
-  return [[AKBadge alloc] initWithText: text];
+    return [[AKBadge alloc] initWithText: text];
 }
 
 - (id)initWithText: (NSString *)text
 {
-  self = [super initWithFrame:CGRectMake(0.f, 0.f, 25.f, 25.f)];
+    self = [super initWithFrame:CGRectMake(0.f, 0.f, 25.f, 25.f)];
 	if(self != nil)
-  {
+    {
 		self.backgroundColor = [UIColor clearColor];
 		_textColor = [UIColor whiteColor];
-
+        
 		_frameColor = [UIColor whiteColor];
 		_insetColor = [UIColor redColor];
 		_cornerRoundness = 0.4;
 		[self autoBadgeSizeWithText: text];
-
-  }
-  return self;
+        
+    }
+    return self;
 }
 
 - (void)autoBadgeSizeWithText:(NSString *)text
 {
 	CGSize retValue;
 	CGFloat rectWidth, rectHeight;
-  NSDictionary *attr = @{NSFontAttributeName: [UIFont boldSystemFontOfSize:12]};
-  CGSize stringSize = [text sizeWithAttributes: attr];
-
+    NSDictionary *attr = @{NSFontAttributeName: [UIFont boldSystemFontOfSize:12]};
+    CGSize stringSize = [text sizeWithAttributes: attr];
+    
 	CGFloat flexSpace;
 	if ([text length] >= 2)
-  {
+    {
 		flexSpace = [text length];
 		rectWidth = 25 + (stringSize.width + flexSpace); rectHeight = 25;
 		retValue = CGSizeMake(rectWidth, rectHeight);
 	}
-  else
-  {
+    else
+    {
 		retValue = CGSizeMake(25.f, 25.f);
 	}
 	self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, retValue.width, retValue.height);
@@ -96,27 +96,27 @@
 	CGFloat maxY = CGRectGetMaxY(rect) - puffer;
 	CGFloat minX = CGRectGetMinX(rect) + puffer;
 	CGFloat minY = CGRectGetMinY(rect) + puffer;
-  
-  CGContextBeginPath(context);
+    
+    CGContextBeginPath(context);
 	CGContextSetFillColorWithColor(context, [self.insetColor CGColor]);
 	CGContextAddArc(context, maxX-radius, minY+radius, radius, M_PI+(M_PI/2), 0, 0);
 	CGContextAddArc(context, maxX-radius, maxY-radius, radius, 0, M_PI/2, 0);
 	CGContextAddArc(context, minX+radius, maxY-radius, radius, M_PI/2, M_PI, 0);
 	CGContextAddArc(context, minX+radius, minY+radius, radius, M_PI, M_PI+M_PI/2, 0);
-  if (SYSTEM_VERSION_LESS_THAN(@"7.0"))
-  {
-    CGContextSetShadowWithColor(context, CGSizeMake(1.f, 1.f), 3, [[UIColor blackColor] CGColor]);
-  }
-  CGContextFillPath(context);
-  
+    if (SYSTEM_VERSION_LESS_THAN(@"7.0"))
+    {
+        CGContextSetShadowWithColor(context, CGSizeMake(1.f, 1.f), 3, [[UIColor blackColor] CGColor]);
+    }
+    CGContextFillPath(context);
+    
 	CGContextRestoreGState(context);
-  
+    
 }
 
 - (void)drawShineWithContext:(CGContextRef)context withRect:(CGRect)rect
 {
 	CGContextSaveGState(context);
-  
+    
 	CGFloat radius = CGRectGetMaxY(rect) * self.cornerRoundness;
 	CGFloat puffer = CGRectGetMaxY(rect) * .1f;
 	CGFloat maxX = CGRectGetMaxX(rect) - puffer;
@@ -129,20 +129,20 @@
 	CGContextAddArc(context, minX+radius, maxY-radius, radius, M_PI/2, M_PI, 0);
 	CGContextAddArc(context, minX+radius, minY+radius, radius, M_PI, M_PI+M_PI/2, 0);
 	CGContextClip(context);
-
+    
 	size_t num_locations = 2;
 	CGFloat locations[2] = { .0f, .4f };
 	CGFloat components[8] = { .92f, .92f, .92f, 1.f, .82f, .82f, .82f, .4f };
-
+    
 	CGColorSpaceRef cspace;
 	CGGradientRef gradient;
 	cspace = CGColorSpaceCreateDeviceRGB();
 	gradient = CGGradientCreateWithColorComponents (cspace, components, locations, num_locations);
 	
 	CGPoint startPoint = CGPointMake(0.f, 0.f);
-  CGPoint endPoint = CGPointMake(0.f, maxY);
+    CGPoint endPoint = CGPointMake(0.f, maxY);
 	CGContextDrawLinearGradient(context, gradient, startPoint, endPoint, 0);
-
+    
 	CGColorSpaceRelease(cspace);
 	CGGradientRelease(gradient);
 	
@@ -158,8 +158,8 @@
 	CGFloat maxY = CGRectGetMaxY(rect) - puffer;
 	CGFloat minX = CGRectGetMinX(rect) + puffer;
 	CGFloat minY = CGRectGetMinY(rect) + puffer;
-
-  CGContextBeginPath(context);
+    
+    CGContextBeginPath(context);
 	CGFloat lineSize = 2.f;
 	CGContextSetLineWidth(context, lineSize);
 	CGContextSetStrokeColorWithColor(context, [self.frameColor CGColor]);
@@ -175,34 +175,34 @@
 - (void)drawRect:(CGRect)rect
 {
 	CGContextRef context = UIGraphicsGetCurrentContext();
-
+    
 	[self drawRoundedRectWithContext:context withRect:rect];
-
-  if (SYSTEM_VERSION_LESS_THAN(@"7.0"))
-  {
-    [self drawShineWithContext:context withRect:rect];
-
-    [self drawFrameWithContext:context withRect:rect];
-  }
-
+    
+    if (SYSTEM_VERSION_LESS_THAN(@"7.0"))
+    {
+        [self drawShineWithContext:context withRect:rect];
+        
+        [self drawFrameWithContext:context withRect:rect];
+    }
+    
 	if ([self.text length] > 0)
-  {
+    {
 		[self.textColor set];
 		CGFloat sizeOfFont = 13.5f;
 		if ([self.text length] < 2)
-    {
+        {
 			sizeOfFont += sizeOfFont * .2f;
 		}
 		UIFont *textFont = [UIFont boldSystemFontOfSize: sizeOfFont];
-    if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0"))
-    {
-      textFont = [UIFont systemFontOfSize: sizeOfFont];
-    }
-    
-    NSDictionary *attr = @{NSFontAttributeName: textFont, NSForegroundColorAttributeName: [UIColor whiteColor]};
-    CGSize textSize = [self.text sizeWithAttributes: attr];
-    [self.text drawAtPoint: CGPointMake((rect.size.width/2-textSize.width/2), (rect.size.height/2-textSize.height/2))
-            withAttributes: attr];
+        if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0"))
+        {
+            textFont = [UIFont systemFontOfSize: sizeOfFont];
+        }
+        
+        NSDictionary *attr = @{NSFontAttributeName: textFont, NSForegroundColorAttributeName: [UIColor whiteColor]};
+        CGSize textSize = [self.text sizeWithAttributes: attr];
+        [self.text drawAtPoint: CGPointMake((rect.size.width/2-textSize.width/2), (rect.size.height/2-textSize.height/2))
+                withAttributes: attr];
 	}
 }
 

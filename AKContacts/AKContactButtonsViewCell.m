@@ -52,115 +52,115 @@ typedef NS_ENUM(NSInteger, ButtonTags) {
 
 + (UITableViewCell *)cellWithController:(AKContactViewController *)controller atRow:(NSInteger)row
 {
-  static NSString *CellIdentifier = @"AKContactButtonsViewCell";
-  
-  AKContactButtonsViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil)
-  {
-    cell = [[AKContactButtonsViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier: CellIdentifier];
-  }
-
-  [cell setController: controller];
-
-  [cell configureCellAtRow: row];
-
-  return (UITableViewCell *)cell;
+    static NSString *CellIdentifier = @"AKContactButtonsViewCell";
+    
+    AKContactButtonsViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+    if (cell == nil)
+    {
+        cell = [[AKContactButtonsViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier: CellIdentifier];
+    }
+    
+    [cell setController: controller];
+    
+    [cell configureCellAtRow: row];
+    
+    return (UITableViewCell *)cell;
 }
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
-  
-  self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-  if (self) {
-
-    UIColor *blue = [UIColor colorWithRed: .196f green: .3098f blue: .52f alpha: 1.f];
-    BOOL iOS7 = SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0");
-    if (iOS7)
-    {
-      blue = [UIColor colorWithRed: 0.f green: 0.478431 blue: 1.f alpha: 1.f];
-    }
-
-    UIButton *button = [UIButton buttonWithType: UIButtonTypeRoundedRect];
-    [button setTag: kButtonText];
-    [button setTitleColor: blue forState: UIControlStateNormal];
-    [button.titleLabel setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
-    [button setTitle: NSLocalizedString(@"Send Message", @"") forState: UIControlStateNormal];
-    [button addTarget: self action:@selector(buttonTouchUpInside:) forControlEvents: UIControlEventTouchUpInside];
-    [self setTextButton: button];
-    [self.contentView addSubview: self.textButton];
     
-    button = [UIButton buttonWithType: UIButtonTypeRoundedRect];
-    [button setTag: kButtonGroup];
-    [button setTitleColor: blue forState: UIControlStateNormal];
-    [button.titleLabel setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
-    [button setTitle: NSLocalizedString(@"Add to Group", @"") forState: UIControlStateNormal];
-    [button addTarget: self action: @selector(buttonTouchUpInside:) forControlEvents: UIControlEventTouchUpInside];
-    [self setGroupButton: button];
-    [self.contentView addSubview: self.groupButton];
-  }
-  return self;
+    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
+    if (self) {
+        
+        UIColor *blue = [UIColor colorWithRed: .196f green: .3098f blue: .52f alpha: 1.f];
+        BOOL iOS7 = SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0");
+        if (iOS7)
+        {
+            blue = [UIColor colorWithRed: 0.f green: 0.478431 blue: 1.f alpha: 1.f];
+        }
+        
+        UIButton *button = [UIButton buttonWithType: UIButtonTypeRoundedRect];
+        [button setTag: kButtonText];
+        [button setTitleColor: blue forState: UIControlStateNormal];
+        [button.titleLabel setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
+        [button setTitle: NSLocalizedString(@"Send Message", @"") forState: UIControlStateNormal];
+        [button addTarget: self action:@selector(buttonTouchUpInside:) forControlEvents: UIControlEventTouchUpInside];
+        [self setTextButton: button];
+        [self.contentView addSubview: self.textButton];
+        
+        button = [UIButton buttonWithType: UIButtonTypeRoundedRect];
+        [button setTag: kButtonGroup];
+        [button setTitleColor: blue forState: UIControlStateNormal];
+        [button.titleLabel setFont: [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
+        [button setTitle: NSLocalizedString(@"Add to Group", @"") forState: UIControlStateNormal];
+        [button addTarget: self action: @selector(buttonTouchUpInside:) forControlEvents: UIControlEventTouchUpInside];
+        [self setGroupButton: button];
+        [self.contentView addSubview: self.groupButton];
+    }
+    return self;
 }
 
 -(void)configureCellAtRow: (NSInteger)row
 {
-  [self.textLabel setText: nil];
-  [self.detailTextLabel setText: nil];
-  [self setSelectionStyle: UITableViewCellSelectionStyleNone];
-  [self setBackgroundView: [[UIView alloc] initWithFrame:CGRectZero]];
+    [self.textLabel setText: nil];
+    [self.detailTextLabel setText: nil];
+    [self setSelectionStyle: UITableViewCellSelectionStyleNone];
+    [self setBackgroundView: [[UIView alloc] initWithFrame:CGRectZero]];
 }
 
 - (void)layoutSubviews
 {
-  CGFloat posX = 10.f;
-  CGFloat width = (self.contentView.bounds.size.width - 3.f * posX) / 2.f;
-  CGRect frame = CGRectMake(posX, 0.f, width, self.frame.size.height);
-  [self.textButton setFrame: frame];
-
-  posX = width + 2.f * posX;
-  frame = CGRectMake(posX, 0.f, width, self.frame.size.height);
-  [self.groupButton setFrame: frame];
+    CGFloat posX = 10.f;
+    CGFloat width = (self.contentView.bounds.size.width - 3.f * posX) / 2.f;
+    CGRect frame = CGRectMake(posX, 0.f, width, self.frame.size.height);
+    [self.textButton setFrame: frame];
+    
+    posX = width + 2.f * posX;
+    frame = CGRectMake(posX, 0.f, width, self.frame.size.height);
+    [self.groupButton setFrame: frame];
 }
 
 #pragma mark - UIButton
 
 - (void)buttonTouchUpInside: (id)sender
 {
-  UIButton *button = (UIButton *)sender;
-  if (button.tag == kButtonText)
-  {
-      AKContact *contact = self.controller.contact;
-      NSInteger phoneCount = [contact countForProperty: kABPersonPhoneProperty];
-      NSInteger emailCount = [contact countForProperty: kABPersonEmailProperty];
-
-      AKMessenger *messanger = [AKMessenger sharedInstance];
-      
-      if (phoneCount == 1 && emailCount == 0)
-      {
-          ABMultiValueIdentifier identifier = [[[contact identifiersForProperty: kABPersonPhoneProperty] objectAtIndex: 0] intValue];
-          NSString *phoneNumber = [contact valueForMultiValueProperty: kABPersonPhoneProperty andIdentifier: identifier];
-          [messanger sendTextWithRecipient: phoneNumber];
-      }
-      else if (phoneCount == 0 && emailCount == 1)
-      {
-          ABMultiValueIdentifier identifier = [[[contact identifiersForProperty: kABPersonEmailProperty] objectAtIndex: 0] intValue];
-          NSString *email = [contact valueForMultiValueProperty: kABPersonEmailProperty andIdentifier: identifier];
-          [messanger sendEmailWithRecipients: [[NSArray alloc] initWithObjects: email, nil]];
-      }
-      else
-      {
-          [messanger showTextActionSheetWithContactID: self.controller.contact.recordID];
-      }
-  }
-  else
-  {
-    AKGroupPickerViewController *groupSelectView = [[AKGroupPickerViewController alloc] initWithContactID: self.controller.contact.recordID];
-    UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: groupSelectView];
-
+    UIButton *button = (UIButton *)sender;
+    if (button.tag == kButtonText)
+    {
+        AKContact *contact = self.controller.contact;
+        NSInteger phoneCount = [contact countForMultiValueProperty: kABPersonPhoneProperty];
+        NSInteger emailCount = [contact countForMultiValueProperty: kABPersonEmailProperty];
+        
+        AKMessenger *messanger = [AKMessenger sharedInstance];
+        
+        if (phoneCount == 1 && emailCount == 0)
+        {
+            ABMultiValueIdentifier identifier = [[[contact identifiersForMultiValueProperty: kABPersonPhoneProperty] objectAtIndex: 0] intValue];
+            NSString *phoneNumber = [contact valueForMultiValueProperty: kABPersonPhoneProperty andIdentifier: identifier];
+            [messanger sendTextWithRecipient: phoneNumber];
+        }
+        else if (phoneCount == 0 && emailCount == 1)
+        {
+            ABMultiValueIdentifier identifier = [[[contact identifiersForMultiValueProperty: kABPersonEmailProperty] objectAtIndex: 0] intValue];
+            NSString *email = [contact valueForMultiValueProperty: kABPersonEmailProperty andIdentifier: identifier];
+            [messanger sendEmailWithRecipients: [[NSArray alloc] initWithObjects: email, nil]];
+        }
+        else
+        {
+            [messanger showTextActionSheetWithContactID: self.controller.contact.recordID];
+        }
+    }
+    else
+    {
+        AKGroupPickerViewController *groupSelectView = [[AKGroupPickerViewController alloc] initWithContactID: self.controller.contact.recordID];
+        UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController: groupSelectView];
+        
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
-    [self.controller.navigationController presentViewController: navigationController animated: YES completion: nil];
+        [self.controller.navigationController presentViewController: navigationController animated: YES completion: nil];
 #else
-    [self.controller.navigationController presentModalViewController: navigationController animated: YES];
+        [self.controller.navigationController presentModalViewController: navigationController animated: YES];
 #endif
-  }
+    }
 }
 
 @end

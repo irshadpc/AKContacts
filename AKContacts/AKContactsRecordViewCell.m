@@ -46,61 +46,61 @@
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated
 {
     [super setSelected:selected animated:animated];
-
+    
     // Configure the view for the selected state
 }
 
 - (void)configureCellAtIndexPath:(NSIndexPath *)indexPath
 {
-  AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
-
-  NSString *key = nil;
-  if ([self.controller.dataSource.keys count] > indexPath.section)
-    key = [self.controller.dataSource.keys objectAtIndex: indexPath.section];
-
-  NSArray *identifiersArray = [self.controller.dataSource.contactIDs objectForKey: key];
-  if ([identifiersArray count] == 0) return;
-  NSNumber *recordId = [identifiersArray objectAtIndex: indexPath.row];
-  AKContact *contact = [akAddressBook contactForContactId: recordId.intValue];
-  if (!contact) return;
-  [self setTag: [contact recordID]];
-  [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
-  [self.textLabel setFont: [UIFont systemFontOfSize: 20.f]];
-
-  [self setAccessoryView: nil];
-  NSString *compositeName = contact.compositeName;
-  if (!compositeName)
-  {
-    [self.textLabel setFont: [UIFont italicSystemFontOfSize: 20.f]];
-    [self.textLabel setText: NSLocalizedString(@"No Name", @"")];
-  }
-  else
-  {
-    if ([self.textLabel respondsToSelector:@selector(setAttributedText:)])
+    AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
+    
+    NSString *key = nil;
+    if ([self.controller.dataSource.keys count] > indexPath.section)
+        key = [self.controller.dataSource.keys objectAtIndex: indexPath.section];
+    
+    NSArray *identifiersArray = [self.controller.dataSource.contactIDs objectForKey: key];
+    if ([identifiersArray count] == 0) return;
+    NSNumber *recordId = [identifiersArray objectAtIndex: indexPath.row];
+    AKContact *contact = [akAddressBook contactForContactId: recordId.intValue];
+    if (!contact) return;
+    [self setTag: [contact recordID]];
+    [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
+    [self.textLabel setFont: [UIFont systemFontOfSize: 20.f]];
+    
+    [self setAccessoryView: nil];
+    NSString *compositeName = contact.compositeName;
+    if (!compositeName)
     {
-      NSMutableAttributedString *text = [[NSMutableAttributedString alloc] initWithString: compositeName];
-      [text addAttribute: NSFontAttributeName value: [UIFont systemFontOfSize: 20.f] range: NSMakeRange(0, text.length - 1)];
-
-      if ([contact.kind isEqualToNumber: (NSNumber *)kABPersonKindPerson])
-      {
-        NSString *lastName = [contact valueForProperty: kABPersonLastNameProperty];
-        if (lastName.length > 0)
-        {
-          NSRange range = [compositeName rangeOfString: lastName];
-          [text addAttribute: NSFontAttributeName value: [UIFont boldSystemFontOfSize: 20.f] range: range];
-        }
-      }
-      else if ([contact.kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization])
-      {
-          [text addAttribute: NSFontAttributeName value: [UIFont boldSystemFontOfSize: 20.f] range: NSMakeRange(0, text.length)];
-      }
-      [self.textLabel setAttributedText: text];
+        [self.textLabel setFont: [UIFont italicSystemFontOfSize: 20.f]];
+        [self.textLabel setText: NSLocalizedString(@"No Name", @"")];
     }
     else
     {
-      [self.textLabel setText: compositeName];
+        if ([self.textLabel respondsToSelector:@selector(setAttributedText:)])
+        {
+            NSMutableAttributedString *text = [[NSMutableAttributedString alloc] initWithString: compositeName];
+            [text addAttribute: NSFontAttributeName value: [UIFont systemFontOfSize: 20.f] range: NSMakeRange(0, text.length - 1)];
+            
+            if (contact.isPerson)
+            {
+                NSString *lastName = [contact valueForProperty: kABPersonLastNameProperty];
+                if (lastName.length > 0)
+                {
+                    NSRange range = [compositeName rangeOfString: lastName];
+                    [text addAttribute: NSFontAttributeName value: [UIFont boldSystemFontOfSize: 20.f] range: range];
+                }
+            }
+            else if (contact.isOrganization)
+            {
+                [text addAttribute: NSFontAttributeName value: [UIFont boldSystemFontOfSize: 20.f] range: NSMakeRange(0, text.length)];
+            }
+            [self.textLabel setAttributedText: text];
+        }
+        else
+        {
+            [self.textLabel setText: compositeName];
+        }
     }
-  }
 }
 
 @end

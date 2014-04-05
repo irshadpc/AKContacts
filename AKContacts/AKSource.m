@@ -47,274 +47,274 @@ NSString *const defaultsSourceKey = @"Source_%d";
 
 - (instancetype)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef
 {
-  self = [super initWithABRecordID: recordID recordType: kABSourceType andAddressBookRef: addressBookRef];
-  if (self)
-  {
-    _isDefault = NO;
-    _groups = [[NSMutableArray alloc] init];
-  }
-  return  self;
+    self = [super initWithABRecordID: recordID recordType: kABSourceType andAddressBookRef: addressBookRef];
+    if (self)
+    {
+        _isDefault = NO;
+        _groups = [[NSMutableArray alloc] init];
+    }
+    return  self;
 }
 
 - (NSString *)typeName
 {
-  if (super.recordID < 0)
-  {
-    switch (super.recordID)
+    if (super.recordID < 0)
     {
-      case kSourceAggregate:
-        return nil;
-      default:
-        return nil;
+        switch (super.recordID)
+        {
+            case kSourceAggregate:
+                return nil;
+            default:
+                return nil;
+        }
     }
-  }
-
-  ABSourceType type = [(NSNumber *)[self valueForProperty: kABSourceTypeProperty] intValue];
-  type = type & ~kABSourceTypeSearchableMask;
-
-  switch (type)
-  {
-    case kABSourceTypeLocal:
-      return [[UIDevice currentDevice] localizedModel];
-
-    case kABSourceTypeExchange:
-      return @"Exchange";
-
-    case kABSourceTypeMobileMe:
-      return @"MobileMe";
-
-    case kABSourceTypeLDAP:
-      return @"LDAP";
-
-    case kABSourceTypeCardDAV:
-      return ([(NSString *)[self valueForProperty: kABSourceNameProperty] isEqualToString: @"Card"]) ? @"iCloud" : @"CardDAV";
-
-    default:
-      return @"Anonym Source";
-  }
+    
+    ABSourceType type = [(NSNumber *)[self valueForProperty: kABSourceTypeProperty] intValue];
+    type = type & ~kABSourceTypeSearchableMask;
+    
+    switch (type)
+    {
+        case kABSourceTypeLocal:
+            return [[UIDevice currentDevice] localizedModel];
+            
+        case kABSourceTypeExchange:
+            return @"Exchange";
+            
+        case kABSourceTypeMobileMe:
+            return @"MobileMe";
+            
+        case kABSourceTypeLDAP:
+            return @"LDAP";
+            
+        case kABSourceTypeCardDAV:
+            return ([(NSString *)[self valueForProperty: kABSourceNameProperty] isEqualToString: @"Card"]) ? @"iCloud" : @"CardDAV";
+            
+        default:
+            return @"Anonym Source";
+    }
 }
 
 - (AKGroup *)groupForGroupId: (NSInteger)recordId
 {
-  AKGroup *ret = nil;
-  
-  for (AKGroup *group in _groups)
-  {
-    if (group.recordID == recordId)
+    AKGroup *ret = nil;
+    
+    for (AKGroup *group in _groups)
     {
-      ret = group;
-      break;
+        if (group.recordID == recordId)
+        {
+            ret = group;
+            break;
+        }
     }
-  }
-  return ret;
+    return ret;
 }
 
 - (BOOL)hasEditableGroups
 {
-  if (super.recordID < 0)
-  {
-    switch (super.recordID)
+    if (super.recordID < 0)
     {
-      case kSourceAggregate: return NO;
-      default: return NO;
+        switch (super.recordID)
+        {
+            case kSourceAggregate: return NO;
+            default: return NO;
+        }
     }
-  }
-
-  NSInteger type = [(NSNumber *)[self valueForProperty: kABSourceTypeProperty] integerValue];
-  type = type & ~kABSourceTypeSearchableMask;
-
-  switch (type)
-  {
-    case kABSourceTypeLocal: return YES;
-    case kABSourceTypeExchange: return NO;
-    case kABSourceTypeMobileMe: return NO;
-    case kABSourceTypeLDAP: return NO;
-    case kABSourceTypeCardDAV: return self.canCreateRecord;
-    default: return NO;
-  }
+    
+    NSInteger type = [(NSNumber *)[self valueForProperty: kABSourceTypeProperty] integerValue];
+    type = type & ~kABSourceTypeSearchableMask;
+    
+    switch (type)
+    {
+        case kABSourceTypeLocal: return YES;
+        case kABSourceTypeExchange: return NO;
+        case kABSourceTypeMobileMe: return NO;
+        case kABSourceTypeLDAP: return NO;
+        case kABSourceTypeCardDAV: return self.canCreateRecord;
+        default: return NO;
+    }
 }
 
 - (void)commitGroups
 {
-  NSMutableArray *groupsToRemove = [[NSMutableArray alloc] init];
-  
-  for (AKGroup *group in self.groups)
-  {
-    if (group.recordID == kGroupWillCreate)
+    NSMutableArray *groupsToRemove = [[NSMutableArray alloc] init];
+    
+    for (AKGroup *group in self.groups)
     {
-      [[AKAddressBook sharedInstance] setNeedReload: NO];
-
-      CFErrorRef error = NULL;
-      ABRecordRef record = ABGroupCreateInSource(self.recordRef);
-      ABRecordSetValue(record, kABGroupNameProperty, (__bridge CFTypeRef)(group.provisoryName), &error);
-      if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-      
-      ABAddressBookAddRecord(self.addressBookRef, record, &error);
-      if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-
-      ABAddressBookSave(self.addressBookRef, &error);
-      if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-
-      ABRecordID recordID = ABRecordGetRecordID(record);
-      CFRelease(record);
-
-      [group setRecordID: recordID];
-      [group setProvisoryName: nil];
+        if (group.recordID == kGroupWillCreate)
+        {
+            [[AKAddressBook sharedInstance] setNeedReload: NO];
+            
+            CFErrorRef error = NULL;
+            ABRecordRef record = ABGroupCreateInSource(self.recordRef);
+            ABRecordSetValue(record, kABGroupNameProperty, (__bridge CFTypeRef)(group.provisoryName), &error);
+            if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+            
+            ABAddressBookAddRecord(self.addressBookRef, record, &error);
+            if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+            
+            ABAddressBookSave(self.addressBookRef, &error);
+            if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+            
+            ABRecordID recordID = ABRecordGetRecordID(record);
+            CFRelease(record);
+            
+            [group setRecordID: recordID];
+            [group setProvisoryName: nil];
+        }
+        else if (group.provisoryName != nil)
+        {
+            [[AKAddressBook sharedInstance] setNeedReload: NO];
+            
+            CFErrorRef error = NULL;
+            ABRecordSetValue(group.recordRef, kABGroupNameProperty, (__bridge CFTypeRef)(group.provisoryName), &error);
+            if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+            
+            ABAddressBookSave(self.addressBookRef, &error);
+            if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+        }
+        else if (group.recordID == kGroupWillDelete)
+        {
+            [[AKAddressBook sharedInstance] setNeedReload: NO];
+            
+            [groupsToRemove addObject: group];
+            CFErrorRef error = NULL;
+            ABAddressBookRemoveRecord(self.addressBookRef, group.recordRef, &error);
+            if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+            
+            ABAddressBookSave(self.addressBookRef, &error);
+            if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+        }
     }
-    else if (group.provisoryName != nil)
-    {
-      [[AKAddressBook sharedInstance] setNeedReload: NO];
-
-      CFErrorRef error = NULL;
-      ABRecordSetValue(group.recordRef, kABGroupNameProperty, (__bridge CFTypeRef)(group.provisoryName), &error);
-      if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-      
-      ABAddressBookSave(self.addressBookRef, &error);
-      if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-    }
-    else if (group.recordID == kGroupWillDelete)
-    {
-      [[AKAddressBook sharedInstance] setNeedReload: NO];
-
-      [groupsToRemove addObject: group];
-      CFErrorRef error = NULL;
-      ABAddressBookRemoveRecord(self.addressBookRef, group.recordRef, &error);
-      if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-      
-      ABAddressBookSave(self.addressBookRef, &error);
-      if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-    }
-  }
-  [self.groups removeObjectsInArray: groupsToRemove];
-
-  [self commitGroupsOrder];
+    [self.groups removeObjectsInArray: groupsToRemove];
+    
+    [self commitGroupsOrder];
 }
 
 - (void)commitGroupsOrder
 {
-  NSMutableArray *groupsOrder = [[NSMutableArray alloc] init];
-
-  for (AKGroup *group in self.groups)
-  {
-    [groupsOrder addObject: [NSNumber numberWithInteger: group.recordID]];
-  }
-
-  NSString *sourceKey = [NSString stringWithFormat: defaultsSourceKey, self.recordID];
-  [[NSUserDefaults standardUserDefaults] setObject: [NSArray arrayWithArray: groupsOrder]
-                                            forKey: sourceKey];
+    NSMutableArray *groupsOrder = [[NSMutableArray alloc] init];
+    
+    for (AKGroup *group in self.groups)
+    {
+        [groupsOrder addObject: [NSNumber numberWithInteger: group.recordID]];
+    }
+    
+    NSString *sourceKey = [NSString stringWithFormat: defaultsSourceKey, self.recordID];
+    [[NSUserDefaults standardUserDefaults] setObject: [NSArray arrayWithArray: groupsOrder]
+                                              forKey: sourceKey];
 }
 
 - (void)revertGroups
 {
-  // Unmark any groups marked for removal
-  
-  for (AKGroup *group in self.groups)
-  {
-    if (group.recordID == kGroupWillDelete)
+    // Unmark any groups marked for removal
+    
+    for (AKGroup *group in self.groups)
     {
-      [group setRecordID: ABRecordGetRecordID(group.recordRef)];
+        if (group.recordID == kGroupWillDelete)
+        {
+            [group setRecordID: ABRecordGetRecordID(group.recordRef)];
+        }
     }
-  }
-  [self revertGroupsOrder];
+    [self revertGroupsOrder];
 }
 
 - (void)revertGroupsOrder
 {
-  NSString *sourceKey = [NSString stringWithFormat: defaultsSourceKey, self.recordID];
-  NSArray *order = [[NSUserDefaults standardUserDefaults] arrayForKey: sourceKey];
-
-  if (order != nil)
-  {
-    [self.groups sortUsingComparator: ^NSComparisonResult(id obj1, id obj2)
+    NSString *sourceKey = [NSString stringWithFormat: defaultsSourceKey, self.recordID];
+    NSArray *order = [[NSUserDefaults standardUserDefaults] arrayForKey: sourceKey];
+    
+    if (order != nil)
     {
-      NSNumber *groupID1 = [NSNumber numberWithInteger: [(AKGroup *)obj1 recordID]];
-      NSNumber *groupID2 = [NSNumber numberWithInteger: [(AKGroup *)obj2 recordID]];
-      
-      NSInteger index1 = [order indexOfObject: groupID1];
-      NSInteger index2 = [order indexOfObject: groupID2];
-      
-      if (index1 < index2) return NSOrderedAscending;
-      else if (index1 > index2) return NSOrderedDescending;
-      else return NSOrderedSame;
-    }];
-  } else {
-
-    [self commitGroupsOrder];
-  }
+        [self.groups sortUsingComparator: ^NSComparisonResult(id obj1, id obj2)
+         {
+             NSNumber *groupID1 = [NSNumber numberWithInteger: [(AKGroup *)obj1 recordID]];
+             NSNumber *groupID2 = [NSNumber numberWithInteger: [(AKGroup *)obj2 recordID]];
+             
+             NSInteger index1 = [order indexOfObject: groupID1];
+             NSInteger index2 = [order indexOfObject: groupID2];
+             
+             if (index1 < index2) return NSOrderedAscending;
+             else if (index1 > index2) return NSOrderedDescending;
+             else return NSOrderedSame;
+         }];
+    } else {
+        
+        [self commitGroupsOrder];
+    }
 }
 
 - (NSArray *)indexPathsOfGroupsOutOfPosition
 {
-  AKAddressBook *addressBook = [AKAddressBook sharedInstance];
-
-  NSString *sourceKey = [NSString stringWithFormat: defaultsSourceKey, self.recordID];
-  NSArray *order = [[NSUserDefaults standardUserDefaults] arrayForKey: sourceKey];
-
-  NSMutableArray *indexPaths = [[NSMutableArray alloc] init];
-  
-  NSInteger removedGroups = 0;
-  
-  for (AKGroup *group in self.groups)
-  {
-    if (group.recordID == kGroupWillDelete)
+    AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+    
+    NSString *sourceKey = [NSString stringWithFormat: defaultsSourceKey, self.recordID];
+    NSArray *order = [[NSUserDefaults standardUserDefaults] arrayForKey: sourceKey];
+    
+    NSMutableArray *indexPaths = [[NSMutableArray alloc] init];
+    
+    NSInteger removedGroups = 0;
+    
+    for (AKGroup *group in self.groups)
     {
-      removedGroups += 1;
+        if (group.recordID == kGroupWillDelete)
+        {
+            removedGroups += 1;
+        }
+        else
+        {
+            NSNumber *recordID = [NSNumber numberWithInteger: group.recordID];
+            NSInteger index = [order indexOfObject: recordID];
+            NSInteger currentIndex = [self.groups indexOfObject: group];
+            if (currentIndex != NSNotFound && index != NSNotFound && index != currentIndex)
+            {
+                [indexPaths addObject: [NSIndexPath indexPathForRow: currentIndex - removedGroups
+                                                          inSection: [addressBook.sources indexOfObject: self]]];
+            }
+        }
     }
-    else
-    {
-      NSNumber *recordID = [NSNumber numberWithInteger: group.recordID];
-      NSInteger index = [order indexOfObject: recordID];
-      NSInteger currentIndex = [self.groups indexOfObject: group];
-      if (currentIndex != NSNotFound && index != NSNotFound && index != currentIndex)
-      {
-        [indexPaths addObject: [NSIndexPath indexPathForRow: currentIndex - removedGroups
-                                                  inSection: [addressBook.sources indexOfObject: self]]];
-      }
-    }
-  }
-
-  return [[NSArray alloc] initWithArray: indexPaths];
+    
+    return [[NSArray alloc] initWithArray: indexPaths];
 }
 
 - (NSArray *)indexPathsOfDeletedGroups
 {
-  AKAddressBook *addressBook = [AKAddressBook sharedInstance];
-
-  NSMutableArray *indexPaths = [[NSMutableArray alloc] init];
-  
-  for (AKGroup *group in self.groups)
-  {
-    if (group.recordID == kGroupWillDelete)
+    AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+    
+    NSMutableArray *indexPaths = [[NSMutableArray alloc] init];
+    
+    for (AKGroup *group in self.groups)
     {
-      [indexPaths addObject: [NSIndexPath indexPathForRow: [self.groups indexOfObject: group]
-                                                inSection: [addressBook.sources indexOfObject: self]]];
+        if (group.recordID == kGroupWillDelete)
+        {
+            [indexPaths addObject: [NSIndexPath indexPathForRow: [self.groups indexOfObject: group]
+                                                      inSection: [addressBook.sources indexOfObject: self]]];
+        }
     }
-  }
-  return [[NSArray alloc] initWithArray: indexPaths];
+    return [[NSArray alloc] initWithArray: indexPaths];
 }
 
 - (NSArray *)indexPathsOfCreatedGroups
 {
-  AKAddressBook *addressBook = [AKAddressBook sharedInstance];
-
-  NSMutableArray *indexPaths = [[NSMutableArray alloc] init];
-
-  NSInteger removedGroups = 0;
-  
-  for (AKGroup *group in self.groups)
-  {
-    if (group.recordID == kGroupWillCreate)
+    AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+    
+    NSMutableArray *indexPaths = [[NSMutableArray alloc] init];
+    
+    NSInteger removedGroups = 0;
+    
+    for (AKGroup *group in self.groups)
     {
-      NSInteger row = [self.groups count] - removedGroups - 1;
-      NSIndexPath *indexPath = [NSIndexPath indexPathForRow: row inSection: [addressBook.sources indexOfObject: self]];
-      [indexPaths addObject: indexPath];
+        if (group.recordID == kGroupWillCreate)
+        {
+            NSInteger row = [self.groups count] - removedGroups - 1;
+            NSIndexPath *indexPath = [NSIndexPath indexPathForRow: row inSection: [addressBook.sources indexOfObject: self]];
+            [indexPaths addObject: indexPath];
+        }
+        else if (group.recordID == kGroupWillDelete)
+        {
+            removedGroups += 1;
+        }
     }
-    else if (group.recordID == kGroupWillDelete)
-    {
-      removedGroups += 1;
-    }
-  }
-  return [[NSArray alloc] initWithArray: indexPaths];
+    return [[NSArray alloc] initWithArray: indexPaths];
 }
 
 - (void)setName: (NSString *)name forGroupWithID: (ABRecordID)groupID

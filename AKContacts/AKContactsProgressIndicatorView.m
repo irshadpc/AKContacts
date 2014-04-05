@@ -49,7 +49,7 @@ static const CGFloat kRadius = 11.f;
         UIActivityIndicatorView *activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle: UIActivityIndicatorViewStyleGray];
         [activity startAnimating];
         [self addSubview: activity];
-
+        
         _spinLayer = [CAShapeLayer layer];
         UIColor *stroke = [UIColor colorWithRed: .196f green: .3098f blue: .52f alpha: .8f];
         _spinLayer.strokeColor = stroke.CGColor;
@@ -57,7 +57,7 @@ static const CGFloat kRadius = 11.f;
         _spinLayer.fillColor = [UIColor clearColor].CGColor;
         _spinLayer.strokeEnd = 0.f;
         [[self layer] addSublayer: _spinLayer];
-
+        
         NSString *keyPath = NSStringFromSelector(@selector(completedUnitCount));
         [[AKAddressBook sharedInstance].loadProgress addObserver: self forKeyPath: keyPath options: NSKeyValueObservingOptionNew context: NULL];
     }
@@ -66,14 +66,14 @@ static const CGFloat kRadius = 11.f;
 
 - (void)dealloc
 {
-  NSString *keyPath = NSStringFromSelector(@selector(completedUnitCount));
-  [[AKAddressBook sharedInstance].loadProgress removeObserver: self forKeyPath: keyPath];
+    NSString *keyPath = NSStringFromSelector(@selector(completedUnitCount));
+    [[AKAddressBook sharedInstance].loadProgress removeObserver: self forKeyPath: keyPath];
 }
 
 - (void)layoutSubviews
 {
     [super layoutSubviews];
-
+    
     CGRect outer = [self bounds];
     UIBezierPath *outerPath = [UIBezierPath bezierPathWithArcCenter: CGPointMake(CGRectGetMidX(outer), CGRectGetMidY(outer))
                                                              radius: kRadius
@@ -84,24 +84,24 @@ static const CGFloat kRadius = 11.f;
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 { // This is not dispatched on main queue
-  NSUInteger completedUnitCount = [AKAddressBook sharedInstance].loadProgress.completedUnitCount;
-  NSUInteger totalUnitCount = [AKAddressBook sharedInstance].loadProgress.totalUnitCount;
-
-  NSUInteger denom = (totalUnitCount > 100) ? (totalUnitCount / 100) : totalUnitCount;
-  if (completedUnitCount % denom == 0)
-  {
-    dispatch_async(dispatch_get_main_queue(), ^{
-      CGFloat progress = (CGFloat)completedUnitCount / totalUnitCount;
-      [CATransaction begin];
-      [CATransaction setDisableActions: YES];
-      [[self spinLayer] setStrokeEnd: progress];
-      [CATransaction commit];
-    });
-  }
-  if (completedUnitCount == totalUnitCount)
-  {
-    [self removeFromSuperview];
-  }
+    NSUInteger completedUnitCount = [AKAddressBook sharedInstance].loadProgress.completedUnitCount;
+    NSUInteger totalUnitCount = [AKAddressBook sharedInstance].loadProgress.totalUnitCount;
+    
+    NSUInteger denom = (totalUnitCount > 100) ? (totalUnitCount / 100) : totalUnitCount;
+    if (completedUnitCount % denom == 0)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            CGFloat progress = (CGFloat)completedUnitCount / totalUnitCount;
+            [CATransaction begin];
+            [CATransaction setDisableActions: YES];
+            [[self spinLayer] setStrokeEnd: progress];
+            [CATransaction commit];
+        });
+    }
+    if (completedUnitCount == totalUnitCount)
+    {
+        [self removeFromSuperview];
+    }
 }
 
 @end

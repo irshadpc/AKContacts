@@ -44,76 +44,76 @@ NSString *const defaultsLabelKey = @"Label_%d";
 
 + (NSString *)defaultLabelForABPropertyID: (ABPropertyID)property
 {
-  if (property == kABPersonPhoneProperty)
-  {
-    return (__bridge NSString *)(kABPersonPhoneMobileLabel);
-  }
-  else if (property == kABPersonEmailProperty)
-  {
-    return (__bridge NSString *)(kABWorkLabel);
-  }
-  else if (property == kABPersonAddressProperty)
-  {
-    return (__bridge NSString *)(kABHomeLabel);
-  }
-  else if (property == kABPersonURLProperty)
-  {
-    return (__bridge NSString *)(kABPersonHomePageLabel);
-  }
-  else if (property == kABPersonDateProperty)
-  {
-    return (__bridge NSString *)(kABPersonAnniversaryLabel);
-  }
-  else if (property == kABPersonRelatedNamesProperty)
-  {
-    return (__bridge NSString *)(kABPersonMotherLabel);
-  }
-  else if (property == kABPersonSocialProfileProperty)
-  {
-    return (__bridge NSString *)(kABPersonSocialProfileServiceFacebook);
-  }
-  else
-  {
-    return (__bridge NSString *)(kABOtherLabel);
-  }
+    if (property == kABPersonPhoneProperty)
+    {
+        return (__bridge NSString *)(kABPersonPhoneMobileLabel);
+    }
+    else if (property == kABPersonEmailProperty)
+    {
+        return (__bridge NSString *)(kABWorkLabel);
+    }
+    else if (property == kABPersonAddressProperty)
+    {
+        return (__bridge NSString *)(kABHomeLabel);
+    }
+    else if (property == kABPersonURLProperty)
+    {
+        return (__bridge NSString *)(kABPersonHomePageLabel);
+    }
+    else if (property == kABPersonDateProperty)
+    {
+        return (__bridge NSString *)(kABPersonAnniversaryLabel);
+    }
+    else if (property == kABPersonRelatedNamesProperty)
+    {
+        return (__bridge NSString *)(kABPersonMotherLabel);
+    }
+    else if (property == kABPersonSocialProfileProperty)
+    {
+        return (__bridge NSString *)(kABPersonSocialProfileServiceFacebook);
+    }
+    else
+    {
+        return (__bridge NSString *)(kABOtherLabel);
+    }
 }
 
 + (NSString *)defaultLocalizedLabelForABPropertyID: (ABPropertyID)property
 {
-  NSString *defaultLabel = [AKLabel defaultLabelForABPropertyID: property];
-  return CFBridgingRelease(ABAddressBookCopyLocalizedLabel((__bridge CFStringRef)(defaultLabel)));
+    NSString *defaultLabel = [AKLabel defaultLabelForABPropertyID: property];
+    return CFBridgingRelease(ABAddressBookCopyLocalizedLabel((__bridge CFStringRef)(defaultLabel)));
 }
 
 + (NSString *)localizedNameForLabel: (CFStringRef)label
 {
-  return (NSString *)CFBridgingRelease(ABAddressBookCopyLocalizedLabel(label));
+    return (NSString *)CFBridgingRelease(ABAddressBookCopyLocalizedLabel(label));
 }
 
 #pragma mark - Instance methods
 
 - (id)initWithLabel: (NSString *)label andIsStandard: (BOOL)standard
 {
-  self = [super init];
-  if (self)
-  {
-    _label = [label copy];
-    _standard = standard;
-    _status = kLabelStatusNormal;
-  }
-  return  self;
-
+    self = [super init];
+    if (self)
+    {
+        _label = [label copy];
+        _standard = standard;
+        _status = kLabelStatusNormal;
+    }
+    return  self;
+    
 }
 
 - (NSString *)localizedLabel
 {
-  if (self.standard == YES)
-  {
-    return [AKLabel localizedNameForLabel: (__bridge CFStringRef)(self.label)];
-  }
-  else
-  {
-    return self.label;
-  }
+    if (self.standard == YES)
+    {
+        return [AKLabel localizedNameForLabel: (__bridge CFStringRef)(self.label)];
+    }
+    else
+    {
+        return self.label;
+    }
 }
 
 @end

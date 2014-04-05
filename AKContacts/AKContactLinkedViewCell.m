@@ -44,40 +44,40 @@
 
 + (UITableViewCell *)cellWithController: (AKContactViewController *)controller atRow: (NSInteger)row
 {
-  static NSString *CellIdentifier = @"AKContactLinkedViewCell";
-  
-  AKContactLinkedViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil)
-  {
-    cell = [[AKContactLinkedViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
-  }
-
-  [cell setController: controller];
-
-  [cell configureCellAtRow: row];
-
-  return (UITableViewCell *)cell;
+    static NSString *CellIdentifier = @"AKContactLinkedViewCell";
+    
+    AKContactLinkedViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+    if (cell == nil)
+    {
+        cell = [[AKContactLinkedViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
+    }
+    
+    [cell setController: controller];
+    
+    [cell configureCellAtRow: row];
+    
+    return (UITableViewCell *)cell;
 }
 
 - (void)configureCellAtRow:(NSInteger)row
 {
-  [self.textLabel setText: nil];
-  [self.detailTextLabel setText: nil];
-  [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
-  [self setAccessoryType: UITableViewCellAccessoryNone];
-  
-  ABRecordID recordID = [[[self.controller.contact linkedContactIDs] objectAtIndex: row] intValue];
-
-  if (recordID != self.controller.parentLinkedContactID)
-  {
-    [self setAccessoryType: UITableViewCellAccessoryDisclosureIndicator];
-  }
-
-  AKSource *source = [[AKAddressBook sharedInstance] sourceForContactId: recordID];
-  AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: recordID];
-
-  [self.textLabel setText: [source typeName]];
-  [self.detailTextLabel setText: contact.compositeName];
+    [self.textLabel setText: nil];
+    [self.detailTextLabel setText: nil];
+    [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
+    [self setAccessoryType: UITableViewCellAccessoryNone];
+    
+    ABRecordID recordID = [[[self.controller.contact linkedContactIDs] objectAtIndex: row] intValue];
+    
+    if (recordID != self.controller.parentLinkedContactID)
+    {
+        [self setAccessoryType: UITableViewCellAccessoryDisclosureIndicator];
+    }
+    
+    AKSource *source = [[AKAddressBook sharedInstance] sourceForContactId: recordID];
+    AKContact *contact = [[AKAddressBook sharedInstance] contactForContactId: recordID];
+    
+    [self.textLabel setText: [source typeName]];
+    [self.detailTextLabel setText: contact.compositeName];
 }
 
 @end

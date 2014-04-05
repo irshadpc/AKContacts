@@ -43,85 +43,85 @@
 
 + (UITableViewCell *)cellWithController:(AKContactViewController *)controller atRow:(NSInteger)row
 {
-  static NSString *CellIdentifier = @"AKContactDeleteButtonViewCell";
-  
-  AKContactDeleteButtonViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil)
-  {
-    cell = [[AKContactDeleteButtonViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier: CellIdentifier];
-  }
-  
-  [cell setController: controller];
-  
-  [cell configureCell];
-  
-  return (UITableViewCell *)cell;
+    static NSString *CellIdentifier = @"AKContactDeleteButtonViewCell";
+    
+    AKContactDeleteButtonViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+    if (cell == nil)
+    {
+        cell = [[AKContactDeleteButtonViewCell alloc] initWithStyle: UITableViewCellStyleDefault reuseIdentifier: CellIdentifier];
+    }
+    
+    [cell setController: controller];
+    
+    [cell configureCell];
+    
+    return (UITableViewCell *)cell;
 }
 
 - (void)configureCell
 {
-  [self setSelectionStyle: UITableViewCellSelectionStyleNone];
-  [self setBackgroundColor: [UIColor clearColor]];
-  [self setBackgroundView: [[UIView alloc] initWithFrame: CGRectZero]];
-
-  for (UIView *subView in [self.contentView subviews])
-  {
-    [subView removeFromSuperview];
-  }
-
-  CGRect frame = self.frame;
-  frame.origin.x = 10.f;
-  frame.size.width = frame.size.width - 20.f;
-
-  UIButton *button = nil;
-  if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0"))
-  {
-    button = [UIButton buttonWithType: UIButtonTypeSystem];
-    [button setTintColor: [UIColor redColor]];
-  }
-  else
-  {
-    button = [UIButton buttonWithType: UIButtonTypeCustom];
-    [button setBackgroundColor: [UIColor clearColor]];
-    [button setAutoresizingMask: UIViewAutoresizingFlexibleWidth];
-    UIImage *image = [[UIImage imageNamed: @"ButtonDelete.png"] stretchableImageWithLeftCapWidth: 4 topCapHeight: 0];
-    [button setBackgroundImage: image forState: UIControlStateNormal];
+    [self setSelectionStyle: UITableViewCellSelectionStyleNone];
+    [self setBackgroundColor: [UIColor clearColor]];
+    [self setBackgroundView: [[UIView alloc] initWithFrame: CGRectZero]];
+    
+    for (UIView *subView in [self.contentView subviews])
+    {
+        [subView removeFromSuperview];
+    }
+    
+    CGRect frame = self.frame;
+    frame.origin.x = 10.f;
+    frame.size.width = frame.size.width - 20.f;
+    
+    UIButton *button = nil;
+    if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0"))
+    {
+        button = [UIButton buttonWithType: UIButtonTypeSystem];
+        [button setTintColor: [UIColor redColor]];
+    }
+    else
+    {
+        button = [UIButton buttonWithType: UIButtonTypeCustom];
+        [button setBackgroundColor: [UIColor clearColor]];
+        [button setAutoresizingMask: UIViewAutoresizingFlexibleWidth];
+        UIImage *image = [[UIImage imageNamed: @"ButtonDelete.png"] stretchableImageWithLeftCapWidth: 4 topCapHeight: 0];
+        [button setBackgroundImage: image forState: UIControlStateNormal];
+        [button addTarget: self action: @selector(deleteButtonTouchUpInside:) forControlEvents: UIControlEventTouchUpInside];
+        
+        [button.titleLabel setFont: [UIFont boldSystemFontOfSize: 22.f]];
+        [button.titleLabel setShadowOffset: CGSizeMake(0.f, -1.f)];
+        [button.titleLabel setShadowColor: [UIColor grayColor]];
+    }
+    [button setFrame: frame];
     [button addTarget: self action: @selector(deleteButtonTouchUpInside:) forControlEvents: UIControlEventTouchUpInside];
-
-    [button.titleLabel setFont: [UIFont boldSystemFontOfSize: 22.f]];
-    [button.titleLabel setShadowOffset: CGSizeMake(0.f, -1.f)];
-    [button.titleLabel setShadowColor: [UIColor grayColor]];
-  }
-  [button setFrame: frame];
-  [button addTarget: self action: @selector(deleteButtonTouchUpInside:) forControlEvents: UIControlEventTouchUpInside];
-  [button setTitle: NSLocalizedString(@"Delete Contact", @"") forState: UIControlStateNormal];
-
-  [self addSubview: button];
+    [button setTitle: NSLocalizedString(@"Delete Contact", @"") forState: UIControlStateNormal];
+    
+    [self addSubview: button];
 }
 
 - (void)deleteButtonTouchUpInside: (id)sender
 {
-  UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle: nil
-                                                           delegate: self
-                                                  cancelButtonTitle: NSLocalizedString(@"Cancel", @"")
-                                             destructiveButtonTitle: NSLocalizedString(@"Delete Contact", @"")
-                                                  otherButtonTitles: nil];
-  [actionSheet showInView: self.controller.view];
+    UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle: nil
+                                                             delegate: self
+                                                    cancelButtonTitle: NSLocalizedString(@"Cancel", @"")
+                                               destructiveButtonTitle: NSLocalizedString(@"Delete Contact", @"")
+                                                    otherButtonTitles: nil];
+    [actionSheet showInView: self.controller.view];
 }
 
 #pragma mark - UIActionSheet delegate
 
 - (void)actionSheet:(UIActionSheet *)actionSheet didDismissWithButtonIndex:(NSInteger)buttonIndex
 {
-  if (buttonIndex == actionSheet.destructiveButtonIndex)
-  {
-    [[AKAddressBook sharedInstance] deleteRecordID: self.controller.contact.recordID];
-    if ([self.controller.delegate respondsToSelector: @selector(recordDidRemoveWithContactID:)])
+    if (buttonIndex == actionSheet.destructiveButtonIndex)
     {
-      [self.controller.delegate recordDidRemoveWithContactID: self.controller.contact.recordID];
+        [[AKAddressBook sharedInstance] deleteRecordID: self.controller.contact.recordID];
+        if ([self.controller.delegate respondsToSelector: @selector(recordDidRemoveWithContactID:)])
+        {
+            [self.controller.delegate recordDidRemoveWithContactID: self.controller.contact.recordID];
+        }
+        [self.controller.navigationController popViewControllerAnimated: YES];
     }
-    [self.controller.navigationController popViewControllerAnimated: YES];
-  }
 }
 
 @end

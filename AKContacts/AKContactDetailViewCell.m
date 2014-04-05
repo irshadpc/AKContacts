@@ -51,364 +51,364 @@
 
 + (UITableViewCell *)cellWithController:(AKContactViewController *)controller andProperty:(ABPropertyID)property atRow:(NSInteger)row
 {
-  static NSString *CellIdentifier = @"AKContactDetailViewCell";
-
-  AKContactDetailViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
-  if (cell == nil)
-  {
-    cell = [[AKContactDetailViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
-  }
-
-  [cell setController: controller];
-
-  [cell configureCellForProperty: property atRow: row];
-
-  return (UITableViewCell *)cell;
+    static NSString *CellIdentifier = @"AKContactDetailViewCell";
+    
+    AKContactDetailViewCell *cell = [controller.tableView dequeueReusableCellWithIdentifier: CellIdentifier];
+    if (cell == nil)
+    {
+        cell = [[AKContactDetailViewCell alloc] initWithStyle: UITableViewCellStyleValue2 reuseIdentifier: CellIdentifier];
+    }
+    
+    [cell setController: controller];
+    
+    [cell configureCellForProperty: property atRow: row];
+    
+    return (UITableViewCell *)cell;
 }
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
-  self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-  if (self)
-  {
-    _textField = [[UITextField alloc] initWithFrame: CGRectZero];
-    [_textField setContentVerticalAlignment: UIControlContentVerticalAlignmentCenter];
-    [_textField setClearButtonMode: UITextFieldViewModeWhileEditing];
-    [_textField setDelegate: self];
-
-    BOOL iOS7 = SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0");
-    [_textField setFont: (iOS7) ? [UIFont systemFontOfSize: [UIFont systemFontSize]] : [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
-
-    _textView = [[UITextView alloc] initWithFrame: CGRectZero];
-    [_textView setDelegate: self];
-    [_textView setBackgroundColor: [UIColor clearColor]];
-    [_textView setFont: (iOS7) ? [UIFont systemFontOfSize: [UIFont systemFontSize]] : [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
-
-    _separator = [[UIView alloc] initWithFrame: CGRectZero];
-    [_separator setBackgroundColor: [UIColor lightGrayColor]];
-    [_separator setAutoresizingMask: UIViewAutoresizingFlexibleHeight];
-    [self.contentView addSubview: _separator];
-  }
-  return self;
+    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
+    if (self)
+    {
+        _textField = [[UITextField alloc] initWithFrame: CGRectZero];
+        [_textField setContentVerticalAlignment: UIControlContentVerticalAlignmentCenter];
+        [_textField setClearButtonMode: UITextFieldViewModeWhileEditing];
+        [_textField setDelegate: self];
+        
+        BOOL iOS7 = SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0");
+        [_textField setFont: (iOS7) ? [UIFont systemFontOfSize: [UIFont systemFontSize]] : [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
+        
+        _textView = [[UITextView alloc] initWithFrame: CGRectZero];
+        [_textView setDelegate: self];
+        [_textView setBackgroundColor: [UIColor clearColor]];
+        [_textView setFont: (iOS7) ? [UIFont systemFontOfSize: [UIFont systemFontSize]] : [UIFont boldSystemFontOfSize: [UIFont systemFontSize]]];
+        
+        _separator = [[UIView alloc] initWithFrame: CGRectZero];
+        [_separator setBackgroundColor: [UIColor lightGrayColor]];
+        [_separator setAutoresizingMask: UIViewAutoresizingFlexibleHeight];
+        [self.contentView addSubview: _separator];
+    }
+    return self;
 }
 
 - (void)configureCellForProperty:(ABPropertyID)property atRow:(NSInteger)row
 {
-  [self setAbPropertyID: property];
-  [self setTag: NSNotFound];
-  [self.textLabel setText: nil];
-  [self.detailTextLabel setText: nil];
-  [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
-  [self.textField setKeyboardType: UIKeyboardTypeDefault];
-  [self.textField setInputView: nil];
-  [self.textField setInputAccessoryView: nil];
-
-  AKContact *contact = self.controller.contact;
-
-  NSString *text = nil;
-  NSString *placeholder = nil;
-  NSString *label = nil;
-
-  [self.textField removeFromSuperview];
-  [self.textView removeFromSuperview];
-  [self.contentView addSubview: (self.abPropertyID == kABPersonNoteProperty) ? self.textView : self.textField];
-
-  if (self.abPropertyID == kABPersonPhoneProperty ||
-      self.abPropertyID == kABPersonEmailProperty ||
-      self.abPropertyID == kABPersonURLProperty)
-  {
-    NSArray *identifiers = [contact identifiersForProperty: self.abPropertyID];
-    [self setTag: (row < [contact countForProperty: self.abPropertyID]) ? [[identifiers objectAtIndex: row] integerValue] : NSNotFound];
-
-    text = [contact valueForMultiValueProperty: self.abPropertyID andIdentifier: (ABMultiValueIdentifier)self.tag];
-    label = [contact localizedLabelForMultiValueProperty: self.abPropertyID andIdentifier: (ABMultiValueIdentifier)self.tag];
-
-    [self.textField setKeyboardType: (self.abPropertyID == kABPersonPhoneProperty) ? UIKeyboardTypePhonePad : UIKeyboardTypeDefault];
-  }
-  else if (self.abPropertyID == kABPersonNoteProperty)
-  {
-    label = [AKContact localizedNameForProperty: self.abPropertyID];
-
-    text =  [contact valueForProperty: kABPersonNoteProperty];
-    [self.textView setText: text];
-
-    [self setSelectionStyle: UITableViewCellSelectionStyleNone];
-  }
-  else if (self.abPropertyID == kABPersonBirthdayProperty)
-  {
-    NSDate *date = (NSDate *)[contact valueForProperty: kABPersonBirthdayProperty];
-    text = (date) ? [NSDateFormatter localizedStringFromDate: date
-                                                   dateStyle: NSDateFormatterLongStyle
-                                                   timeStyle: NSDateFormatterNoStyle] : nil;
-    label = [AKContact localizedNameForProperty: self.abPropertyID];
-
-    [self.textField setInputView: [self datePickerInputViewWithDate: (date) ? date : [NSDate date]]];
-    [self.textField setInputAccessoryView: [self datePickerInputAccessoryView]];
-
-    [self setSelectionStyle: UITableViewCellSelectionStyleNone];
-  }
-  else if (self.abPropertyID == kABPersonDateProperty)
-  {
-    NSDate *date = nil;
+    [self setAbPropertyID: property];
+    [self setTag: NSNotFound];
+    [self.textLabel setText: nil];
+    [self.detailTextLabel setText: nil];
+    [self setSelectionStyle: UITableViewCellSelectionStyleBlue];
+    [self.textField setKeyboardType: UIKeyboardTypeDefault];
+    [self.textField setInputView: nil];
+    [self.textField setInputAccessoryView: nil];
     
-    NSArray *identifiers = [contact identifiersForProperty: self.abPropertyID];
-    [self setTag: (row < [contact countForProperty: kABPersonDateProperty]) ? [[identifiers objectAtIndex: row] integerValue] : NSNotFound];
-
-    date = (NSDate *)[contact valueForMultiValueProperty: kABPersonDateProperty andIdentifier: (ABMultiValueIdentifier)self.tag];
-    text = (date) ? [NSDateFormatter localizedStringFromDate: date
-                                                   dateStyle: NSDateFormatterLongStyle
-                                                   timeStyle: NSDateFormatterNoStyle] : nil;
-    label = [contact localizedLabelForMultiValueProperty: kABPersonDateProperty andIdentifier: (ABMultiValueIdentifier)self.tag];
-
-    [self setSelectionStyle: UITableViewCellSelectionStyleNone];
-
-    [self.textField setInputView: [self datePickerInputViewWithDate: (date) ? date : [NSDate date]]];
-    [self.textField setInputAccessoryView: [self datePickerInputAccessoryView]];
-  }
-  else if (self.abPropertyID == kABPersonSocialProfileProperty)
-  {
-    NSArray *identifiers = [contact identifiersForProperty: self.abPropertyID];
-    [self setTag: (row < [contact countForProperty: self.abPropertyID]) ? [[identifiers objectAtIndex: row] integerValue] : NSNotFound];
-      
-    NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID andIdentifier: (ABMultiValueIdentifier)self.tag];
-      
-    text = [dict objectForKey: (NSString *)kABPersonSocialProfileUsernameKey];
-    label = [contact localizedLabelForMultiValueProperty: self.abPropertyID andIdentifier: (ABMultiValueIdentifier)self.tag];
-  }
-  else if (self.abPropertyID == kABPersonInstantMessageProperty)
-  {
-    NSArray *identifiers = [contact identifiersForProperty: self.abPropertyID];
-    [self setTag: (row < [contact countForProperty: self.abPropertyID]) ? [[identifiers objectAtIndex: row] integerValue] : NSNotFound];
-
-    NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID andIdentifier: (ABMultiValueIdentifier)self.tag];
-
-    text = [dict objectForKey: (NSString *)kABPersonInstantMessageUsernameKey];
-    label = [contact localizedLabelForMultiValueProperty: self.abPropertyID andIdentifier: (ABMultiValueIdentifier)self.tag];
-  }
-
-  placeholder = (text) ? text : [AKContact localizedNameForProperty: self.abPropertyID];
-
-  [self.textField setPlaceholder: placeholder];
-  [self.textField setText: text];
-  if ([label compare: @"iPhone"] != NSOrderedSame) label = [label lowercaseString];
-  [self.textLabel setText: label];
+    AKContact *contact = self.controller.contact;
+    
+    NSString *text = nil;
+    NSString *placeholder = nil;
+    NSString *label = nil;
+    
+    [self.textField removeFromSuperview];
+    [self.textView removeFromSuperview];
+    [self.contentView addSubview: (self.abPropertyID == kABPersonNoteProperty) ? self.textView : self.textField];
+    
+    if (self.abPropertyID == kABPersonPhoneProperty ||
+        self.abPropertyID == kABPersonEmailProperty ||
+        self.abPropertyID == kABPersonURLProperty)
+    {
+        NSArray *identifiers = [contact identifiersForMultiValueProperty: self.abPropertyID];
+        [self setTag: (row < [contact countForMultiValueProperty: self.abPropertyID]) ? [[identifiers objectAtIndex: row] integerValue] : NSNotFound];
+        
+        text = [contact valueForMultiValueProperty: self.abPropertyID andIdentifier: (ABMultiValueIdentifier)self.tag];
+        label = [contact localizedLabelForMultiValueProperty: self.abPropertyID andIdentifier: (ABMultiValueIdentifier)self.tag];
+        
+        [self.textField setKeyboardType: (self.abPropertyID == kABPersonPhoneProperty) ? UIKeyboardTypePhonePad : UIKeyboardTypeDefault];
+    }
+    else if (self.abPropertyID == kABPersonNoteProperty)
+    {
+        label = [AKContact localizedNameForProperty: self.abPropertyID];
+        
+        text =  [contact valueForProperty: kABPersonNoteProperty];
+        [self.textView setText: text];
+        
+        [self setSelectionStyle: UITableViewCellSelectionStyleNone];
+    }
+    else if (self.abPropertyID == kABPersonBirthdayProperty)
+    {
+        NSDate *date = (NSDate *)[contact valueForProperty: kABPersonBirthdayProperty];
+        text = (date) ? [NSDateFormatter localizedStringFromDate: date
+                                                       dateStyle: NSDateFormatterLongStyle
+                                                       timeStyle: NSDateFormatterNoStyle] : nil;
+        label = [AKContact localizedNameForProperty: self.abPropertyID];
+        
+        [self.textField setInputView: [self datePickerInputViewWithDate: (date) ? date : [NSDate date]]];
+        [self.textField setInputAccessoryView: [self datePickerInputAccessoryView]];
+        
+        [self setSelectionStyle: UITableViewCellSelectionStyleNone];
+    }
+    else if (self.abPropertyID == kABPersonDateProperty)
+    {
+        NSDate *date = nil;
+        
+        NSArray *identifiers = [contact identifiersForMultiValueProperty: self.abPropertyID];
+        [self setTag: (row < [contact countForMultiValueProperty: kABPersonDateProperty]) ? [[identifiers objectAtIndex: row] integerValue] : NSNotFound];
+        
+        date = (NSDate *)[contact valueForMultiValueProperty: kABPersonDateProperty andIdentifier: (ABMultiValueIdentifier)self.tag];
+        text = (date) ? [NSDateFormatter localizedStringFromDate: date
+                                                       dateStyle: NSDateFormatterLongStyle
+                                                       timeStyle: NSDateFormatterNoStyle] : nil;
+        label = [contact localizedLabelForMultiValueProperty: kABPersonDateProperty andIdentifier: (ABMultiValueIdentifier)self.tag];
+        
+        [self setSelectionStyle: UITableViewCellSelectionStyleNone];
+        
+        [self.textField setInputView: [self datePickerInputViewWithDate: (date) ? date : [NSDate date]]];
+        [self.textField setInputAccessoryView: [self datePickerInputAccessoryView]];
+    }
+    else if (self.abPropertyID == kABPersonSocialProfileProperty)
+    {
+        NSArray *identifiers = [contact identifiersForMultiValueProperty: self.abPropertyID];
+        [self setTag: (row < [contact countForMultiValueProperty: self.abPropertyID]) ? [[identifiers objectAtIndex: row] integerValue] : NSNotFound];
+        
+        NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID andIdentifier: (ABMultiValueIdentifier)self.tag];
+        
+        text = [dict objectForKey: (NSString *)kABPersonSocialProfileUsernameKey];
+        label = [contact localizedLabelForMultiValueProperty: self.abPropertyID andIdentifier: (ABMultiValueIdentifier)self.tag];
+    }
+    else if (self.abPropertyID == kABPersonInstantMessageProperty)
+    {
+        NSArray *identifiers = [contact identifiersForMultiValueProperty: self.abPropertyID];
+        [self setTag: (row < [contact countForMultiValueProperty: self.abPropertyID]) ? [[identifiers objectAtIndex: row] integerValue] : NSNotFound];
+        
+        NSDictionary *dict = (NSDictionary *)[contact valueForMultiValueProperty: self.abPropertyID andIdentifier: (ABMultiValueIdentifier)self.tag];
+        
+        text = [dict objectForKey: (NSString *)kABPersonInstantMessageUsernameKey];
+        label = [contact localizedLabelForMultiValueProperty: self.abPropertyID andIdentifier: (ABMultiValueIdentifier)self.tag];
+    }
+    
+    placeholder = (text) ? text : [AKContact localizedNameForProperty: self.abPropertyID];
+    
+    [self.textField setPlaceholder: placeholder];
+    [self.textField setText: text];
+    if ([label compare: @"iPhone"] != NSOrderedSame) label = [label lowercaseString];
+    [self.textLabel setText: label];
 }
 
 - (void)layoutSubviews
 {
-  [super layoutSubviews];
-
-  BOOL iOS7 = SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0");
-
-  CGFloat offset = (iOS7 && self.controller.editing == NO) ? 115.f : 85.f;
-  
-  CGRect frame = CGRectMake(self.contentView.bounds.origin.x + offset,
-                            self.contentView.bounds.origin.y,
-                            self.contentView.bounds.size.width - offset,
-                            self.contentView.bounds.size.height);
-  [self.textField setFrame: frame];
-  [self.textField setUserInteractionEnabled: self.controller.editing];
-
-  if (iOS7 == YES && self.controller.editing == YES)
-  {
-    frame = CGRectMake(-20.f, self.textLabel.frame.origin.y,
-                       self.textLabel.frame.size.width,
-                       self.textLabel.frame.size.height);
-    [self.textLabel setFrame: frame];
-  }
-
-  offset = 7.f;
-  
-  frame.size.height -= 10.f;
-  frame.origin.x -= offset;
-  frame.size.width += offset;
-  [self.textView setFrame: frame];
-  
-  [self.separator setFrame: CGRectMake(80.f, 0.f, 1.f, self.contentView.bounds.size.height)];
-  [self.separator setHidden: !self.controller.editing];
-
-  if (self.abPropertyID == kABPersonNoteProperty)
-  {
-    [self.textLabel setFrame: CGRectMake(self.textLabel.frame.origin.x, (iOS7) ? 8.f : 13.f,
-                                         self.textLabel.frame.size.width,
-                                         self.textLabel.frame.size.height)];
-  }
+    [super layoutSubviews];
+    
+    BOOL iOS7 = SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0");
+    
+    CGFloat offset = (iOS7 && self.controller.editing == NO) ? 115.f : 85.f;
+    
+    CGRect frame = CGRectMake(self.contentView.bounds.origin.x + offset,
+                              self.contentView.bounds.origin.y,
+                              self.contentView.bounds.size.width - offset,
+                              self.contentView.bounds.size.height);
+    [self.textField setFrame: frame];
+    [self.textField setUserInteractionEnabled: self.controller.editing];
+    
+    if (iOS7 == YES && self.controller.editing == YES)
+    {
+        frame = CGRectMake(-20.f, self.textLabel.frame.origin.y,
+                           self.textLabel.frame.size.width,
+                           self.textLabel.frame.size.height);
+        [self.textLabel setFrame: frame];
+    }
+    
+    offset = 7.f;
+    
+    frame.size.height -= 10.f;
+    frame.origin.x -= offset;
+    frame.size.width += offset;
+    [self.textView setFrame: frame];
+    
+    [self.separator setFrame: CGRectMake(80.f, 0.f, 1.f, self.contentView.bounds.size.height)];
+    [self.separator setHidden: !self.controller.editing];
+    
+    if (self.abPropertyID == kABPersonNoteProperty)
+    {
+        [self.textLabel setFrame: CGRectMake(self.textLabel.frame.origin.x, (iOS7) ? 8.f : 13.f,
+                                             self.textLabel.frame.size.width,
+                                             self.textLabel.frame.size.height)];
+    }
 }
 
 #pragma mark - UITextField delegate
 
 - (BOOL)textFieldShouldBeginEditing:(UITextField *)textField
 {
-  [self.controller setFirstResponder: textField];
-  return YES;
+    [self.controller setFirstResponder: textField];
+    return YES;
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField
 {
-  if ([textField isFirstResponder])
-    [textField resignFirstResponder];
-
-  [self.controller setFirstResponder: nil];
-
-  AKContact *contact = self.controller.contact;
-  
-  NSString *oldValue = [contact valueForMultiValueProperty: self.abPropertyID andIdentifier: (ABMultiValueIdentifier)self.tag];
-  if ([textField.text isEqualToString: oldValue] || [textField.text length] == 0)
-    return;
-
-  if (self.abPropertyID == kABPersonPhoneProperty ||
+    if ([textField isFirstResponder])
+        [textField resignFirstResponder];
+    
+    [self.controller setFirstResponder: nil];
+    
+    AKContact *contact = self.controller.contact;
+    
+    NSString *oldValue = [contact valueForMultiValueProperty: self.abPropertyID andIdentifier: (ABMultiValueIdentifier)self.tag];
+    if ([textField.text isEqualToString: oldValue] || [textField.text length] == 0)
+        return;
+    
+    if (self.abPropertyID == kABPersonPhoneProperty ||
         self.abPropertyID == kABPersonEmailProperty)
-  {
-    ABPropertyID identifier = (ABPropertyID)self.tag;
-    NSString *value = ([textField.text length] > 0) ? textField.text : nil;
-    NSString *label = [contact labelForMultiValueProperty: self.abPropertyID andIdentifier: identifier];
-    [contact setValue: value andLabel: label forMultiValueProperty: self.abPropertyID andIdentifier: &identifier];
-    if (identifier != self.tag)
     {
-      [self setTag: identifier];
+        ABPropertyID identifier = (ABPropertyID)self.tag;
+        NSString *value = ([textField.text length] > 0) ? textField.text : nil;
+        NSString *label = [contact labelForMultiValueProperty: self.abPropertyID andIdentifier: identifier];
+        [contact setValue: value andLabel: label forMultiValueProperty: self.abPropertyID andIdentifier: &identifier];
+        if (identifier != self.tag)
+        {
+            [self setTag: identifier];
+        }
     }
-  }
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
 {
-  if ([textField isFirstResponder])
-    [textField resignFirstResponder];
-  return YES;
+    if ([textField isFirstResponder])
+        [textField resignFirstResponder];
+    return YES;
 }
 
 #pragma mark - UITextView delegate
 
 - (BOOL)textViewShouldBeginEditing:(UITextView *)textView
 { // On iOS 7 -textViewDidBeginEditing: called after -keyboardWillShow:
-  [self.controller setFirstResponder: textView];
-  return YES;
+    [self.controller setFirstResponder: textView];
+    return YES;
 }
 
 - (void)textViewDidEndEditing:(UITextField *)textView
 {
-  if ([textView isFirstResponder])
-    [textView resignFirstResponder];
-
-  [self.controller setFirstResponder: nil];
-
-  if (self.abPropertyID == kABPersonNoteProperty)
-  {
-    AKContact *contact = self.controller.contact;
-
-    NSString *oldValue = [contact valueForProperty: kABPersonNoteProperty];
-    if ([textView.text isEqualToString: oldValue] || [textView.text length] == 0)
-      return;
+    if ([textView isFirstResponder])
+        [textView resignFirstResponder];
     
-    NSString *value = ([textView.text length] > 0) ? textView.text : nil;
-    [contact setValue: value forProperty: kABPersonNoteProperty];
-  }
+    [self.controller setFirstResponder: nil];
+    
+    if (self.abPropertyID == kABPersonNoteProperty)
+    {
+        AKContact *contact = self.controller.contact;
+        
+        NSString *oldValue = [contact valueForProperty: kABPersonNoteProperty];
+        if ([textView.text isEqualToString: oldValue] || [textView.text length] == 0)
+            return;
+        
+        NSString *value = ([textView.text length] > 0) ? textView.text : nil;
+        [contact setValue: value forProperty: kABPersonNoteProperty];
+    }
 }
 
 - (BOOL)textViewShouldReturn:(UITextField *)textField
 {
-  if ([textField isFirstResponder])
-    [textField resignFirstResponder];
-  return YES;
+    if ([textField isFirstResponder])
+        [textField resignFirstResponder];
+    return YES;
 }
 
 #pragma mark - Date Picker
 
 - (UIView *)datePickerInputViewWithDate: (NSDate *)date
 {
-  UIDatePicker *picker = [[UIDatePicker alloc] initWithFrame: CGRectZero];
-  [picker setDatePickerMode: UIDatePickerModeDate];
-  [picker addTarget: self
-             action: @selector(datePickerDidChangeValue:)
-   forControlEvents: UIControlEventValueChanged];
-
-  [picker setDate: date];
-  return picker;
+    UIDatePicker *picker = [[UIDatePicker alloc] initWithFrame: CGRectZero];
+    [picker setDatePickerMode: UIDatePickerModeDate];
+    [picker addTarget: self
+               action: @selector(datePickerDidChangeValue:)
+     forControlEvents: UIControlEventValueChanged];
+    
+    [picker setDate: date];
+    return picker;
 }
 
 - (UIView *)datePickerInputAccessoryView
 {
-  UIToolbar *toolbar = [[UIToolbar alloc] initWithFrame: CGRectMake(0.f, 0.f, 320.f, 44.f)];
-  [toolbar setBarStyle: UIBarStyleBlackTranslucent];
-  [toolbar sizeToFit];
-  NSMutableArray *barItems = [[NSMutableArray alloc] init];
-  
-  UIBarButtonItem *cancelButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel
+    UIToolbar *toolbar = [[UIToolbar alloc] initWithFrame: CGRectMake(0.f, 0.f, 320.f, 44.f)];
+    [toolbar setBarStyle: UIBarStyleBlackTranslucent];
+    [toolbar sizeToFit];
+    NSMutableArray *barItems = [[NSMutableArray alloc] init];
+    
+    UIBarButtonItem *cancelButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel
+                                                                                  target: self
+                                                                                  action: @selector(datePickerDidEndEditing:)];
+    [cancelButton setTag: UIBarButtonSystemItemCancel];
+    [barItems addObject: cancelButton];
+    
+    UIBarButtonItem *flexSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemFlexibleSpace
+                                                                               target: self
+                                                                               action: nil];
+    [barItems addObject: flexSpace];
+    
+    UIBarButtonItem *doneButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone
                                                                                 target: self
                                                                                 action: @selector(datePickerDidEndEditing:)];
-  [cancelButton setTag: UIBarButtonSystemItemCancel];
-  [barItems addObject: cancelButton];
-  
-  UIBarButtonItem *flexSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemFlexibleSpace
-                                                                             target: self
-                                                                             action: nil];
-  [barItems addObject: flexSpace];
-  
-  UIBarButtonItem *doneButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone
-                                                                              target: self
-                                                                              action: @selector(datePickerDidEndEditing:)];
-  [doneButton setTag: UIBarButtonSystemItemDone];
-  [barItems addObject: doneButton];
-
-  [toolbar setItems: barItems animated:NO];
-  return toolbar;
+    [doneButton setTag: UIBarButtonSystemItemDone];
+    [barItems addObject: doneButton];
+    
+    [toolbar setItems: barItems animated:NO];
+    return toolbar;
 }
 
 - (void)datePickerDidChangeValue: (id)sender
 {
-  UIDatePicker *picker = (UIDatePicker *)sender;
-  [self.textField setText: [NSDateFormatter localizedStringFromDate: picker.date
-                                                          dateStyle: NSDateFormatterLongStyle
-                                                          timeStyle: NSDateFormatterNoStyle]];
+    UIDatePicker *picker = (UIDatePicker *)sender;
+    [self.textField setText: [NSDateFormatter localizedStringFromDate: picker.date
+                                                            dateStyle: NSDateFormatterLongStyle
+                                                            timeStyle: NSDateFormatterNoStyle]];
 }
 
 - (void)datePickerDidEndEditing: (id)sender
 {
-  if ([self.textField isFirstResponder])
-    [self.textField resignFirstResponder];
-  
-  AKContact *contact = self.controller.contact;
-  
-  UIBarButtonItem *button = (UIBarButtonItem *)sender;
-  if (button.tag == UIBarButtonSystemItemDone)
-  {
-    UIDatePicker *datePicker = (UIDatePicker *)self.textField.inputView;
-
-    NSString *text = [NSDateFormatter localizedStringFromDate: datePicker.date
-                                                    dateStyle: NSDateFormatterLongStyle
-                                                    timeStyle: NSDateFormatterNoStyle];
-    [self.textField setText: text];
+    if ([self.textField isFirstResponder])
+        [self.textField resignFirstResponder];
     
-    if (self.abPropertyID == kABPersonBirthdayProperty)
+    AKContact *contact = self.controller.contact;
+    
+    UIBarButtonItem *button = (UIBarButtonItem *)sender;
+    if (button.tag == UIBarButtonSystemItemDone)
     {
-      [contact setValue: datePicker.date forProperty: self.abPropertyID];
+        UIDatePicker *datePicker = (UIDatePicker *)self.textField.inputView;
+        
+        NSString *text = [NSDateFormatter localizedStringFromDate: datePicker.date
+                                                        dateStyle: NSDateFormatterLongStyle
+                                                        timeStyle: NSDateFormatterNoStyle];
+        [self.textField setText: text];
+        
+        if (self.abPropertyID == kABPersonBirthdayProperty)
+        {
+            [contact setValue: datePicker.date forProperty: self.abPropertyID];
+        }
+        else if (self.abPropertyID == kABPersonDateProperty)
+        {
+            ABPropertyID identifier = (ABPropertyID)self.tag;
+            [contact setValue: datePicker.date andLabel: nil forMultiValueProperty: kABPersonDateProperty andIdentifier: &identifier];
+        }
     }
-    else if (self.abPropertyID == kABPersonDateProperty)
+    else if (button.tag == UIBarButtonSystemItemCancel)
     {
-      ABPropertyID identifier = (ABPropertyID)self.tag;
-      [contact setValue: datePicker.date andLabel: nil forMultiValueProperty: kABPersonDateProperty andIdentifier: &identifier];
+        if (self.abPropertyID == kABPersonBirthdayProperty)
+        {
+            NSDate *date = (NSDate *)[contact valueForProperty: kABPersonBirthdayProperty];
+            NSString *text = [NSDateFormatter localizedStringFromDate: date
+                                                            dateStyle: NSDateFormatterLongStyle
+                                                            timeStyle: NSDateFormatterNoStyle];
+            [self.textField setText: text];
+        }
+        else if (self.abPropertyID == kABPersonDateProperty)
+        {
+            NSDate *date = (NSDate *)[contact valueForMultiValueProperty: kABPersonDateProperty
+                                                           andIdentifier: (ABMultiValueIdentifier)self.tag];
+            NSString *text = (date) ? [NSDateFormatter localizedStringFromDate: date
+                                                                     dateStyle: NSDateFormatterLongStyle
+                                                                     timeStyle: NSDateFormatterNoStyle] : nil;
+            [self.detailTextLabel setText: text];
+        }
     }
-  }
-  else if (button.tag == UIBarButtonSystemItemCancel)
-  {
-    if (self.abPropertyID == kABPersonBirthdayProperty)
-    {
-      NSDate *date = (NSDate *)[contact valueForProperty: kABPersonBirthdayProperty];
-      NSString *text = [NSDateFormatter localizedStringFromDate: date
-                                                    dateStyle: NSDateFormatterLongStyle
-                                                    timeStyle: NSDateFormatterNoStyle];
-      [self.textField setText: text];
-    }
-    else if (self.abPropertyID == kABPersonDateProperty)
-    {
-      NSDate *date = (NSDate *)[contact valueForMultiValueProperty: kABPersonDateProperty
-                                                     andIdentifier: (ABMultiValueIdentifier)self.tag];
-      NSString *text = (date) ? [NSDateFormatter localizedStringFromDate: date
-                                                               dateStyle: NSDateFormatterLongStyle
-                                                               timeStyle: NSDateFormatterNoStyle] : nil;
-      [self.detailTextLabel setText: text];
-    }
-  }
 }
 
 @end

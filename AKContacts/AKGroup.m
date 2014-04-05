@@ -38,106 +38,106 @@ NSString *const DefaultsKeyGroups = @"Groups";
 
 - (instancetype)initWithABRecordID: (ABRecordID) recordID andAddressBookRef: (ABAddressBookRef)addressBookRef
 {
-  self = [super initWithABRecordID: recordID recordType: kABGroupType andAddressBookRef: addressBookRef];
-  if (self)
-  {
-    _memberIDs = [[NSMutableSet alloc] init];
-  }
-  return  self;
+    self = [super initWithABRecordID: recordID recordType: kABGroupType andAddressBookRef: addressBookRef];
+    if (self)
+    {
+        _memberIDs = [[NSMutableSet alloc] init];
+    }
+    return  self;
 }
 
 - (NSInteger)count
 {
-  if (self.isMainAggregate == NO)
-  {
-    return [self.memberIDs count];
-  }
-  else
-  {
-    NSInteger ret = 0;
-    AKAddressBook *addressBook = [AKAddressBook sharedInstance];
-    for (AKSource *source in addressBook.sources)
+    if (self.isMainAggregate == NO)
     {
-      for (AKGroup *group in source.groups)
-      {
-        if (group.isMainAggregate == YES) continue;
-        if (group.recordID == kGroupAggregate)
-        {
-          ret += [group count];
-        }
-      }
+        return [self.memberIDs count];
     }
-    return ret;
-  }
+    else
+    {
+        NSInteger ret = 0;
+        AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+        for (AKSource *source in addressBook.sources)
+        {
+            for (AKGroup *group in source.groups)
+            {
+                if (group.isMainAggregate == YES) continue;
+                if (group.recordID == kGroupAggregate)
+                {
+                    ret += [group count];
+                }
+            }
+        }
+        return ret;
+    }
 }
 
 - (void)insertMemberWithID: (ABRecordID)recordID
 {
-  NSNumber *identifier = [NSNumber numberWithInteger: recordID];
-  if ([self.memberIDs member: identifier] == nil)
-  {
-    AKAddressBook *addressBook = [AKAddressBook sharedInstance];
-    AKContact *contact = [addressBook contactForContactId: recordID];
-
-    CFErrorRef error = NULL;
-    ABGroupAddMember(self.recordRef, contact.recordRef, &error);
-    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-
-    [self.memberIDs addObject: identifier];
-  }
+    NSNumber *identifier = [NSNumber numberWithInteger: recordID];
+    if ([self.memberIDs member: identifier] == nil)
+    {
+        AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+        AKContact *contact = [addressBook contactForContactId: recordID];
+        
+        CFErrorRef error = NULL;
+        ABGroupAddMember(self.recordRef, contact.recordRef, &error);
+        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+        
+        [self.memberIDs addObject: identifier];
+    }
 }
 
 - (void)removeMemberWithID: (ABRecordID)recordID
 {
-  NSNumber *identifier = [NSNumber numberWithInteger: recordID];
-  if ([self.memberIDs member: identifier] != nil)
-  {
-    AKAddressBook *addressBook = [AKAddressBook sharedInstance];
-    AKContact *contact = [addressBook contactForContactId: recordID];
-      
-    CFErrorRef error = NULL;
-    ABGroupRemoveMember(self.recordRef, contact.recordRef, &error);
-    if (error != NULL) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-
-    if (self.deleteMemberIDs == nil)
+    NSNumber *identifier = [NSNumber numberWithInteger: recordID];
+    if ([self.memberIDs member: identifier] != nil)
     {
-      self.deleteMemberIDs = [[NSMutableSet alloc] init];
+        AKAddressBook *addressBook = [AKAddressBook sharedInstance];
+        AKContact *contact = [addressBook contactForContactId: recordID];
+        
+        CFErrorRef error = NULL;
+        ABGroupRemoveMember(self.recordRef, contact.recordRef, &error);
+        if (error != NULL) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+        
+        if (self.deleteMemberIDs == nil)
+        {
+            self.deleteMemberIDs = [[NSMutableSet alloc] init];
+        }
+        [self.deleteMemberIDs addObject: identifier];
+        
+        [self.memberIDs removeObject: identifier];
     }
-    [self.deleteMemberIDs addObject: identifier];
-
-    [self.memberIDs removeObject: identifier];
-  }
 }
 
 - (void)commitMembers
 {
-  if (self.deleteMemberIDs != nil)
-  {
-    [self setDeleteMemberIDs: nil];
-  }
-
-  if (ABAddressBookHasUnsavedChanges(super.addressBookRef))
-  {
-    [[AKAddressBook sharedInstance] setNeedReload: NO];
-
-    CFErrorRef error = NULL;
-    ABAddressBookSave(super.addressBookRef, &error);
-    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-  }
+    if (self.deleteMemberIDs != nil)
+    {
+        [self setDeleteMemberIDs: nil];
+    }
+    
+    if (ABAddressBookHasUnsavedChanges(super.addressBookRef))
+    {
+        [[AKAddressBook sharedInstance] setNeedReload: NO];
+        
+        CFErrorRef error = NULL;
+        ABAddressBookSave(super.addressBookRef, &error);
+        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+    }
 }
 
 - (void)revertMembers
 {
-  if (self.deleteMemberIDs != nil)
-  {
-    [self.memberIDs addObjectsFromArray: self.deleteMemberIDs.allObjects];
-    [self setDeleteMemberIDs: nil];
-  }
-
-  if (ABAddressBookHasUnsavedChanges(super.addressBookRef))
-  {
-    ABAddressBookRevert(super.addressBookRef);
-  }
+    if (self.deleteMemberIDs != nil)
+    {
+        [self.memberIDs addObjectsFromArray: self.deleteMemberIDs.allObjects];
+        [self setDeleteMemberIDs: nil];
+    }
+    
+    if (ABAddressBookHasUnsavedChanges(super.addressBookRef))
+    {
+        ABAddressBookRevert(super.addressBookRef);
+    }
 }
 
 @end
