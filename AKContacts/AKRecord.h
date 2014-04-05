@@ -27,7 +27,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <AddressBook/AddressBook.h>
 
 @interface AKRecord : NSObject
 
@@ -48,17 +47,18 @@
  * Set a value corresponding to an ABPropertyID.
  **/
 - (void)setValue: (id)value forProperty: (ABPropertyID)property;
-
 /**
  * Return the number of elements in an ABMultiValue type
  **/
-- (NSInteger)countForProperty: (ABPropertyID) property;
-
+- (NSInteger)countForMultiValueProperty: (ABPropertyID) property;
 /**
  * Return the list of identifiers for an ABMultiValue type
  **/
-- (NSArray *)identifiersForProperty: (ABPropertyID) property;
-
+- (NSArray *)identifiersForMultiValueProperty: (ABPropertyID)property;
+/**
+ * Return the list of all values for an ABMultiValue type
+ */
+- (NSArray *)valuesForMultiValueProperty: (ABPropertyID)property;
 /**
  * Return a value of an idenfifier for an ABMultiValue type
  * Return type can be NSString, NSDate, NSDictionary
@@ -73,5 +73,7 @@
 - (void)setValue: (id)value andLabel: (NSString *)label forMultiValueProperty: (ABPropertyID)property andIdentifier: (ABRecordID *)identifier;
 
 + (NSString *)localizedNameForProperty: (ABPropertyID)property;
++ (BOOL)isMultiValueProperty: (ABPropertyID)property;
++ (ABPropertyType)primitiveTypeOfProperty: (ABPropertyID)property;
 
 @end
