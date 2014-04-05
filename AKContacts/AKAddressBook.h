@@ -30,17 +30,19 @@
 
 FOUNDATION_EXPORT const void *const IsOnMainQueueKey;
 FOUNDATION_EXPORT const BOOL ShowGroups;
+FOUNDATION_EXPORT const NSInteger kUnkownContactID;
 
+@class AKAddressBook;
 @class AKContact;
 @class AKGroup;
 @class AKSource;
 
 typedef NS_ENUM(NSInteger, AddressBookStatus)
 {
-  kAddressBookOffline = 0,
-  kAddressBookInitializing,
-  kAddressBookLoading,
-  kAddressBookOnline
+    kAddressBookOffline = 0,
+    kAddressBookInitializing,
+    kAddressBookLoading,
+    kAddressBookOnline
 };
 
 typedef struct AKSourceGroup {
@@ -70,7 +72,11 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 
 @property (assign, nonatomic) ABAddressBookRef addressBookRef;
 
-@property (assign, nonatomic) NSInteger status;
+@property (strong, nonatomic, readonly) dispatch_queue_t serial_queue;
+
+@property (strong, nonatomic, readonly) dispatch_semaphore_t semaphore;
+
+@property (assign, nonatomic) AddressBookStatus status;
 
 @property (strong, nonatomic) NSProgress *loadProgress;
 /**
@@ -80,12 +86,17 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 /**
  * Arrays of Contact IDs with alphabetic lookup letters as keys
  **/
-@property (strong, nonatomic) NSMutableDictionary *contactIDsSortedByFirst;
-@property (strong, nonatomic) NSMutableDictionary *contactIDsSortedByLast;
+@property (strong, nonatomic) NSMutableDictionary *hashTableSortedByFirst;
+@property (strong, nonatomic) NSMutableDictionary *hashTableSortedByLast;
 /**
  * Arrays of Contact IDs with phone number first numbers as keys
  **/
-@property (strong, nonatomic) NSMutableDictionary *contactIDsSortedByPhone;
+@property (strong, nonatomic) NSMutableDictionary *hashTableSortedByPhone;
+@property (strong, nonatomic) NSCache *phoneNumberCache;
+
+@property (nonatomic, readonly) NSDictionary *hashTable;
+@property (nonatomic, readonly) NSDictionary *hashTableSortedInverse;
+@property (nonatomic, readonly) NSArray *allContactIDs;
 /**
  * ID of displayed source and group
  **/
@@ -96,21 +107,26 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 
 @property (assign, nonatomic, readonly) NSInteger contactsCount;
 
-@property (strong, nonatomic) NSDate *dateAddressBookLoaded;
+@property (nonatomic) NSDate *dateAddressBookLoaded;
 
 @property (assign, nonatomic, readonly) ABPersonSortOrdering sortOrdering;
+
+@property (assign, nonatomic, readonly) ABAuthorizationStatus authorizationStatus;
 
 + (AKAddressBook *)sharedInstance;
 + (NSArray *)sectionKeys;
 + (NSArray *)prefixesToDiscardOnSearch;
-- (void)requestAddressBookAccess;
-- (NSDictionary *)contactIDs;
-- (NSDictionary *)inverseSortedContactIDs;
+
+- (void)requestAddressBookAccessWithCompletionHandler:(void (^)(BOOL))completionHandler;
+- (void)reloadAddressBook;
+- (void)loadAddressBook;
+- (void)deleteRecordID: (ABRecordID)recordID;
+
 - (AKSource *)defaultSource;
 - (AKSource *)sourceForSourceId: (ABRecordID)recordId;
 - (AKContact *)contactForContactId: (ABRecordID)recordId;
 - (AKContact *)contactForContactId: (ABRecordID)recordId withAddressBookRef: (ABAddressBookRef)addressBookRef;
+- (AKContact *)contactForPhoneNumber: (NSString *)phoneNumber;
 - (AKSource *)sourceForContactId: (ABRecordID)recordId;
-- (void)deleteRecordID: (ABRecordID)recordID;
 
 @end
