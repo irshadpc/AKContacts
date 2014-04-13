@@ -29,8 +29,10 @@
 #import <Foundation/Foundation.h>
 
 @class AKContactsTableViewDataSource;
+@class AKContact;
 
 @protocol AKContactsTableViewDataSourceDelegate <NSObject>
+@optional
 - (void)dataSourceWillBeginSearch: (AKContactsTableViewDataSource *)dataSource;
 - (void)dataSourceDidBeginSearch: (AKContactsTableViewDataSource *)dataSource;
 - (void)dataSourceWillEndSearch: (AKContactsTableViewDataSource *)dataSource;
@@ -47,12 +49,30 @@
  * Subset of all contactIDs that are displayed
  **/
 @property (strong, nonatomic) NSMutableDictionary *contactIDs;
+/**
+ * Set of contactIDs that are displayed
+ */
+@property (strong, nonatomic) NSSet *displayedContactIDs;
+@property (assign, nonatomic, readonly) NSInteger displayedContactsCount;
+/**
+ * Search results
+ */
+@property (strong, nonatomic) NSArray *filteredContactIDs;
 
-@property (strong, nonatomic) NSMutableArray *searchStack;
+@property (strong, readonly) NSString *searchTerm;
 
 @property (assign, nonatomic) id<AKContactsTableViewDataSourceDelegate> delegate;
+/**
+ * Set this to a multiValueProperty identifier (eg: kABPersonPhoneProperty)
+ * and the search results array will include each contact ID as many times
+ * as the count of that multiValueProperty the contact has
+ * In plain english: if 2 phone numbers belong to the contact who has the
+ * contactID 123 then 123 will apear twice in the search results
+ * Default value is kABMultiValueInvalidIdentifier
+ */
+@property (assign, nonatomic) ABPropertyID manifoldingPropertyID;
 
-- (NSInteger)displayedContactsCount;
+- (AKContact *)contactForIndexPath: (NSIndexPath *)indexPath;
 
 - (void)loadData;
 - (void)handleSearchForTerm: (NSString *)searchTerm;
