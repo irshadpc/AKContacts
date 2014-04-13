@@ -265,11 +265,8 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
     NSString *statusKeyPath = NSStringFromSelector(@selector(status));
     if (object == [AKAddressBook sharedInstance] && [keyPath isEqualToString: statusKeyPath])
     {
-        NSInteger oldValue = [[change objectForKey: NSKeyValueChangeOldKey] integerValue];
-        NSInteger newValue = [[change objectForKey: NSKeyValueChangeNewKey] integerValue];
-        
-        if (!(oldValue == kAddressBookLoading && newValue == kAddressBookOnline) &&
-            !(oldValue == kAddressBookOnline && newValue == kAddressBookLoading))
+        if ([[AKAddressBook sharedInstance] hasStatus: kAddressBookOnline] ||
+            [[AKAddressBook sharedInstance] isLoading])        
         {
             [self reloadTableViewData];
             
@@ -346,8 +343,8 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 {
     AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
     
-    if (akAddressBook.status == kAddressBookOnline ||
-        akAddressBook.status == kAddressBookLoading)
+    if ([akAddressBook hasStatus: kAddressBookOnline]  ||
+        [akAddressBook isLoading])
         return (self.dataSource.displayedContactsCount > 0) ? [self.dataSource.keys count] : 1;
     else
         return 1;
@@ -360,8 +357,8 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
     
     AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
     
-    if (akAddressBook.status == kAddressBookOnline ||
-        akAddressBook.status == kAddressBookLoading)
+    if ([akAddressBook hasStatus: kAddressBookOnline]  ||
+        [akAddressBook isLoading])
     {
         if (self.dataSource.displayedContactsCount > 0)
         {
@@ -380,8 +377,8 @@ typedef NS_ENUM(NSInteger, ActionSheetButtons)
 {
     AKAddressBook *akAddressBook = [AKAddressBook sharedInstance];
     
-    if (akAddressBook.status == kAddressBookOnline ||
-        akAddressBook.status == kAddressBookLoading)
+    if ([akAddressBook hasStatus: kAddressBookOnline]  ||
+        [akAddressBook isLoading])
     {
         if (self.dataSource.displayedContactsCount == 0)
         {
