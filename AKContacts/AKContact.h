@@ -38,13 +38,19 @@ FOUNDATION_EXPORT const int newContactID;
 
 - (instancetype)initWithABRecordID: (ABRecordID) recordID sortOrdering: (ABPersonSortOrdering)sortOrdering andAddressBookRef: (ABAddressBookRef)addressBookRef;
 /**
- * Return displayName sans diacritics and whitespace
+ * Return concatenated name of: first, last, middle, prefix, suffix
  **/
 - (NSString *)compositeName;
+/**
+ * Returns compoisteName, or phoneNumber or emailAddress or 'No Name'
+ * The first non-nil value of the above is returned. Does not return nil.
+ */
+- (NSString *)displayName;
 - (NSString *)phoneticName;
 - (NSString *)nameDelimiter;
 - (NSAttributedString *)attributedName;
 - (NSString *)displayDetails;
+- (BOOL)isNative;
 - (BOOL)isPerson;
 - (BOOL)isOrganization;
 - (NSArray *)linkedContactIDs;
@@ -60,7 +66,7 @@ FOUNDATION_EXPORT const int newContactID;
 - (void)revert;
 
 - (NSInteger)numberOfMatchingTerms: (NSArray *)terms;
-- (NSInteger)numberOfPhoneNumbersMatchingTerms: (NSArray *)terms preciseMatch: (BOOL)preciseMatch;
+- (NSArray *)indexesOfPhoneNumbersMatchingTerms: (NSArray *)terms preciseMatch: (BOOL)preciseMatch;
 + (NSString *)sectionKeyForName: (NSString *)name;
 /**
  * Return the name of a record from which the section can be determined

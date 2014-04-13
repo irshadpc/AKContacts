@@ -75,17 +75,21 @@ const int newContactID = -1<<9;
         [addressBook setNeedReload: NO];
         
         ABRecordRef recordRef = ABPersonCreateInSource((source.recordID >= 0) ? source.recordRef : NULL);
-        
-        CFErrorRef error = NULL;
-        ABAddressBookAddRecord(super.addressBookRef, recordRef, &error);
-        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-        
-        ABAddressBookSave(super.addressBookRef, &error);
-        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-        
-        // Do not set super.recordID here!
-        recordID = ABRecordGetRecordID(recordRef);
-        CFRelease(recordRef); // Do not leak
+        if (recordRef) {
+            CFErrorRef error = NULL;
+            ABAddressBookAddRecord(super.addressBookRef, recordRef, &error);
+            if (error) { CFStringRef desc = CFErrorCopyDescription(error); NSLog(@"ABAddressBookAddRecord (%ld): %@", CFErrorGetCode(error), desc); CFRelease(desc); error = NULL; }
+            
+            ABAddressBookSave(super.addressBookRef, &error);
+            if (error) { CFStringRef desc = CFErrorCopyDescription(error); NSLog(@"ABAddressBookSave (%ld): %@", CFErrorGetCode(error), desc); CFRelease(desc); error = NULL; }
+            
+            // Do not set super.recordID here!
+            recordID = ABRecordGetRecordID(recordRef);
+            CFRelease(recordRef); // Do not leak
+        }
+        else {
+            NSLog(@"Failed to create contact record");
+        }
     }
     ret = ABAddressBookGetPersonWithRecordID(super.addressBookRef, recordID);
     super.age = [NSDate date];
@@ -133,6 +137,28 @@ const int newContactID = -1<<9;
         ret = [self valueForProperty: kABPersonOrganizationProperty];
     }
     return ret;
+}
+
+- (NSString *)displayName
+{
+    NSString *displayName = self.compositeName;
+    
+    ABPropertyID phoneProperty = kABPersonPhoneProperty, emailProperty = kABPersonEmailProperty;
+    
+    if (displayName.stringWithWhiteSpaceTrimmed.length == 0) {
+        if ([self countForMultiValueProperty:phoneProperty] > 0) {
+            NSArray *identifiers = [self identifiersForMultiValueProperty: phoneProperty];
+            displayName = [self valueForMultiValueProperty: phoneProperty andIdentifier: [identifiers.firstObject intValue]];
+        }
+        else if ([self countForMultiValueProperty: emailProperty] > 0) {
+            NSArray *identifiers = [self identifiersForMultiValueProperty: emailProperty];
+            displayName = [self valueForMultiValueProperty: emailProperty andIdentifier: [identifiers.firstObject intValue]];
+        }
+        else {
+            displayName = NSLocalizedString(@"No Name","");
+        }
+    }
+    return displayName;
 }
 
 - (NSString *)phoneticName
@@ -223,6 +249,11 @@ const int newContactID = -1<<9;
     return ret;
 }
 
+- (BOOL)isNative
+{
+    return YES;
+}
+
 - (BOOL)isPerson
 {
     NSNumber *kind = (NSNumber *)[self valueForProperty: kABPersonKindProperty];
@@ -268,11 +299,11 @@ const int newContactID = -1<<9;
 {
     CFErrorRef error = NULL; // Remove first to update full and thumbnail image
     ABPersonRemoveImageData([self recordRef], &error);
-    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+    if (error) { CFStringRef desc = CFErrorCopyDescription(error); NSLog(@"ABPersonRemoveImageData (%ld): %@", CFErrorGetCode(error), desc); CFRelease(desc); error = NULL; }
     if (pictureData)
     {
         ABPersonSetImageData([self recordRef], (__bridge CFDataRef)pictureData, &error);
-        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+        if (error) { CFStringRef desc = CFErrorCopyDescription(error); NSLog(@"ABPersonSetImageData (%ld): %@", CFErrorGetCode(error), desc); CFRelease(desc); error = NULL; }
     }
 }
 
@@ -283,12 +314,6 @@ const int newContactID = -1<<9;
     if (data)
     {
         ret = [UIImage imageWithData: data];
-    }
-    else
-    {
-        //        NSString *imageName = ([self.kind isEqualToNumber: (NSNumber *)kABPersonKindOrganization]) ? @"Company.png" : @"Contact.png";
-        NSString *imageName = @"noProfilePicIcon";
-        ret = [UIImage imageNamed: imageName];
     }
     return ret;
 }
@@ -338,7 +363,7 @@ const int newContactID = -1<<9;
         
         CFErrorRef error = NULL;
         ABAddressBookSave(super.addressBookRef, &error);
-        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+        if (error) { CFStringRef desc = CFErrorCopyDescription(error); NSLog(@"ABAddressBookSave (%ld): %@", CFErrorGetCode(error), desc); CFRelease(desc); error = NULL; }
     }
     
     if (self.recordID == newContactID)
@@ -366,10 +391,10 @@ const int newContactID = -1<<9;
         
         CFErrorRef error = NULL;
         ABAddressBookRemoveRecord(super.addressBookRef, self.recordRef, &error);
-        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+        if (error) { CFStringRef desc = CFErrorCopyDescription(error); NSLog(@"ABAddressBookRemoveRecord (%ld): %@", CFErrorGetCode(error), desc); CFRelease(desc); error = NULL; }
         
         ABAddressBookSave(super.addressBookRef, &error);
-        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+        if (error) { CFStringRef desc = CFErrorCopyDescription(error); NSLog(@"ABAddressBookSave (%ld): %@", CFErrorGetCode(error), desc); CFRelease(desc); error = NULL; }
     }
     
     if (ABAddressBookHasUnsavedChanges(super.addressBookRef))
@@ -423,18 +448,18 @@ const int newContactID = -1<<9;
     return termsMatched;
 }
 
-- (NSInteger)numberOfPhoneNumbersMatchingTerms: (NSArray *)terms preciseMatch:(BOOL)preciseMatch
+- (NSArray *)indexesOfPhoneNumbersMatchingTerms: (NSArray *)terms preciseMatch: (BOOL)preciseMatch
 {
-    NSArray *(^digitsTerms)(NSArray *) = ^(NSArray *terms) {
-        NSMutableArray *digitTerms = [[NSMutableArray alloc] init];
+    NSArray *(^phoneTerms)(NSArray *) = ^(NSArray *terms) {
+        NSMutableArray *phoneTerms = [[NSMutableArray alloc] init];
         for (NSString *term in terms)
         {
-            if (term.stringWithNonDigitsRemoved.length > 0)
+            if (term.stringWithNormalizedPhoneNumber.length > 0)
             {
-                [digitTerms addObject: term];
+                [phoneTerms addObject: term];
             }
         }
-        return [digitTerms copy];
+        return [phoneTerms copy];
     };
     
     BOOL (^stringMatchesTerm)(NSString *, NSString *) = ^(NSString *string, NSString *term) {
@@ -446,44 +471,41 @@ const int newContactID = -1<<9;
         }
     };
     
-    NSInteger termsMatched = 0;
-    terms = digitsTerms(terms);
+    NSMutableArray *matchingIndexes = [[NSMutableArray alloc] init];
+    terms = phoneTerms(terms);
     if (terms.count > 0)
     {
         if (self.recordRef)
         {
             ABPropertyID property = kABPersonPhoneProperty;
             NSArray *identifiers = [self identifiersForMultiValueProperty: property];
-            if (identifiers.count)
+            for (NSInteger index = 0; index < identifiers.count; ++index)
             {
-                for (NSNumber *identifier in identifiers)
+                ABMultiValueIdentifier identifier = [[identifiers objectAtIndex: index] intValue];
+                NSString *value = [self valueForMultiValueProperty: property andIdentifier: identifier];
+                NSString *digits = value.stringWithNonDigitsRemoved;
+                if (digits.length > 0)
                 {
-                    NSString *value = [self valueForMultiValueProperty: property andIdentifier: identifier.intValue];
-                    NSString *digits = value.stringWithNonDigitsRemoved;
-                    if (digits.length > 0)
+                    for (NSString *term in terms)
                     {
-                        for (NSString *term in terms)
+                        if (term.length == 0)
                         {
-                            NSString *termDigits = term.stringWithNonDigitsRemoved;
-                            if (termDigits.length == 0)
+                            continue;
+                        }
+                        if (stringMatchesTerm(digits, term) || stringMatchesTerm(value.stringWithNormalizedPhoneNumber, term) || stringMatchesTerm(value, term))
+                        {
+                            [matchingIndexes addObject: @(index)];
+                            break;
+                        }
+                        for (NSString *prefix in [AKAddressBook countryCodePrefixes])
+                        {
+                            if ([digits hasPrefix: prefix])
                             {
-                                continue;
-                            }
-                            if (stringMatchesTerm(digits, termDigits) || (stringMatchesTerm(value, termDigits)))
-                            {
-                                termsMatched += 1;
-                                break;
-                            }
-                            for (NSString *prefix in [AKAddressBook prefixesToDiscardOnSearch])
-                            {
-                                if ([digits hasPrefix: prefix])
+                                digits = [digits substringFromIndex: prefix.length];
+                                if (digits.length > 0 && stringMatchesTerm(digits, term))
                                 {
-                                    digits = [digits substringFromIndex: prefix.length];
-                                    if (digits.length > 0 && stringMatchesTerm(digits, termDigits))
-                                    {
-                                        termsMatched += 1;
-                                        break;
-                                    }
+                                    [matchingIndexes addObject: @(index)];
+                                    break;
                                 }
                             }
                         }
@@ -492,7 +514,7 @@ const int newContactID = -1<<9;
             }
         }
     }
-    return (termsMatched > 0) ? 1 : 0;
+    return [matchingIndexes copy];
 }
 
 - (NSString *)nameToDetermineSectionForSortOrdering: (ABPersonSortOrdering)sortOrdering
