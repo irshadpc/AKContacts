@@ -106,7 +106,7 @@
     {
         ABRecordSetValue(self.recordRef, property, (__bridge CFTypeRef)(value), &error);
     }
-    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+    if (error) { CFStringRef desc = CFErrorCopyDescription(error); NSLog(@"ABAddressBookRemoveRecord/ABRecordSetValue (%ld): %@", CFErrorGetCode(error), desc); CFRelease(desc); error = NULL; }
 }
 
 - (NSInteger)countForMultiValueProperty: (ABPropertyID) property
@@ -133,7 +133,7 @@
     
     if ([AKRecord isMultiValueProperty: property])
     {
-        ABMultiValueRef multiValueRecord =(ABMultiValueRef)ABRecordCopyValue(self.recordRef, property);
+        ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(self.recordRef, property);
         if (multiValueRecord) {
             NSInteger count = ABMultiValueGetCount(multiValueRecord);
             NSMutableArray *identifiers = [[NSMutableArray alloc] initWithCapacity: count];
@@ -148,23 +148,96 @@
     return ret;
 }
 
-- (NSArray *)valuesForMultiValueProperty: (ABPropertyID)property
+- (NSInteger)countForLinkedMultiValueProperty: (ABPropertyID) property
 {
-    NSMutableArray *values;
+    NSInteger count = 0;
+    if ([AKRecord isMultiValueProperty: property])
+    {
+        NSArray *linkedRecords = (NSArray *)CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople([self recordRef]));
+        for (id obj in linkedRecords)
+        {
+            ABRecordRef recordRef = (__bridge ABRecordRef)obj;
+            ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(recordRef, property);
+            if (multiValueRecord) {
+                count += ABMultiValueGetCount(multiValueRecord);
+                CFRelease(multiValueRecord);
+            }
+        }
+    }
+    return count;
+}
+
+- (NSArray *)valuesForLinkedMultiValueProperty: (ABPropertyID)property
+{
+    NSMutableArray *values = [[NSMutableArray alloc] init];
     
     if ([AKRecord isMultiValueProperty: property])
     {
-        values = [[NSMutableArray alloc] init];
-        for (NSNumber *identifier in [self identifiersForMultiValueProperty: property])
+        NSArray *linkedRecords = (NSArray *)CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople([self recordRef]));
+        for (id obj in linkedRecords)
         {
-            NSString *value = [self valueForMultiValueProperty: property andIdentifier: identifier.intValue];
-            if (value)
-            {
-                [values addObject: value];
+            ABRecordRef recordRef = (__bridge ABRecordRef)obj;
+            ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(recordRef, property);
+            if (multiValueRecord) {
+                NSInteger count = ABMultiValueGetCount(multiValueRecord);
+                for (NSInteger i = 0; i < count; ++i) {
+                    ABMultiValueIdentifier identifier = (ABMultiValueIdentifier)ABMultiValueGetIdentifierAtIndex(multiValueRecord, i);
+                    CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, identifier);
+                    if (index != -1)
+                    {
+                        id value = (id)CFBridgingRelease(ABMultiValueCopyValueAtIndex(multiValueRecord, index));
+                        [values addObject: value];
+                    }
+                }
+                CFRelease(multiValueRecord);
             }
         }
     }
     return [values copy];
+}
+
+- (NSArray *)labelsForLinkedMultiValueProperty: (ABPropertyID)property
+{
+    NSMutableArray *labels = [[NSMutableArray alloc] init];
+    
+    if ([AKRecord isMultiValueProperty: property])
+    {
+        NSArray *linkedRecords = (NSArray *)CFBridgingRelease(ABPersonCopyArrayOfAllLinkedPeople([self recordRef]));
+        for (id obj in linkedRecords)
+        {
+            ABRecordRef recordRef = (__bridge ABRecordRef)obj;
+            ABMultiValueRef multiValueRecord = (ABMultiValueRef)ABRecordCopyValue(recordRef, property);
+            if (multiValueRecord) {
+                NSInteger count = ABMultiValueGetCount(multiValueRecord);
+                for (NSInteger i = 0; i < count; ++i) {
+                    ABMultiValueIdentifier identifier = (ABMultiValueIdentifier)ABMultiValueGetIdentifierAtIndex(multiValueRecord, i);
+                    CFIndex index = ABMultiValueGetIndexForIdentifier(multiValueRecord, identifier);
+                    NSString *label;
+                    if (index != -1)
+                    {
+                        label = (NSString *)CFBridgingRelease(ABMultiValueCopyLabelAtIndex(multiValueRecord, index));
+                    }
+                    else
+                    {
+                        label = [AKLabel defaultLabelForABPropertyID: property];
+                    }
+                    [labels addObject: label];
+                }
+                CFRelease(multiValueRecord);
+            }
+        }
+    }
+    return [labels copy];
+}
+
+- (NSArray *)localizedLabelsForLinkedMultiValueProperty: (ABPropertyID)property
+{
+    NSMutableArray *labels = [[NSMutableArray alloc] init];
+    
+    for (NSString *label in [self labelsForLinkedMultiValueProperty: property]) {
+        [labels addObject: [AKLabel localizedNameForLabel: (__bridge CFStringRef)(label)]];
+    }
+    return [labels copy];
 }
 
 - (id)valueForMultiValueProperty: (ABPropertyID)property andIdentifier: (ABMultiValueIdentifier)identifier
@@ -266,7 +339,7 @@
         {
             CFErrorRef error = NULL;
             ABRecordSetValue(self.recordRef, property, mutableRecord, &error);
-            if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+            if (error) { CFStringRef desc = CFErrorCopyDescription(error); NSLog(@"ABRecordSetValue (%ld): %@", CFErrorGetCode(error), desc); CFRelease(desc); error = NULL; }
         }
         CFRelease(mutableRecord);
     }

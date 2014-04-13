@@ -41,32 +41,41 @@
 /**
  * Return a value corresponding to an ABPropertyID.
  * Return type can be NSString, NSDate
- **/
+ */
 - (id)valueForProperty: (ABPropertyID)property;
 /**
  * Set a value corresponding to an ABPropertyID.
- **/
+ */
 - (void)setValue: (id)value forProperty: (ABPropertyID)property;
 /**
  * Return the number of elements in an ABMultiValue type
- **/
+ */
 - (NSInteger)countForMultiValueProperty: (ABPropertyID) property;
 /**
  * Return the list of identifiers for an ABMultiValue type
- **/
+ */
 - (NSArray *)identifiersForMultiValueProperty: (ABPropertyID)property;
 /**
- * Return the list of all values for an ABMultiValue type
+ * Return the number of elements in an ABMultiValue type; including linked records
  */
-- (NSArray *)valuesForMultiValueProperty: (ABPropertyID)property;
+- (NSInteger)countForLinkedMultiValueProperty: (ABPropertyID) property;
+/**
+ * Return all values for an ABMultiValue type; includes values of linked records
+ */
+- (NSArray *)valuesForLinkedMultiValueProperty: (ABPropertyID)property;
+/**
+ * Return all labels for an ABMultiValue type; includes values of linked records
+ */
+- (NSArray *)labelsForLinkedMultiValueProperty: (ABPropertyID)property;
+- (NSArray *)localizedLabelsForLinkedMultiValueProperty: (ABPropertyID)property;
 /**
  * Return a value of an idenfifier for an ABMultiValue type
  * Return type can be NSString, NSDate, NSDictionary
- **/
+ */
 - (id)valueForMultiValueProperty: (ABPropertyID)property andIdentifier: (ABMultiValueIdentifier)identifier;
 /**
  * Return a label of an identifier for an ABMultiValue type
- **/
+ */
 - (NSString *)labelForMultiValueProperty: (ABPropertyID)property andIdentifier: (ABMultiValueIdentifier)identifier;
 - (NSString *)localizedLabelForMultiValueProperty: (ABPropertyID)property andIdentifier: (ABMultiValueIdentifier)identifier;
 
