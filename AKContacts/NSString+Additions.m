@@ -41,4 +41,21 @@
     return [self stringByFoldingWithOptions: NSDiacriticInsensitiveSearch locale: [NSLocale currentLocale]];
 }
 
+- (NSString *)stringWithNormalizedPhoneNumber
+{
+    NSString *normalizedPhoneNumber = self;
+    if ([normalizedPhoneNumber hasPrefix: @"+"]) {
+        normalizedPhoneNumber = [NSString stringWithFormat: @"+%@", normalizedPhoneNumber.stringWithNonDigitsRemoved];
+    }
+    else {
+        normalizedPhoneNumber = normalizedPhoneNumber.stringWithNonDigitsRemoved;
+    }
+    return normalizedPhoneNumber;
+}
+
+- (NSString *)stringWithWhiteSpaceTrimmed
+{
+    return [self stringByTrimmingCharactersInSet: [NSCharacterSet whitespaceCharacterSet]];
+}
+
 @end

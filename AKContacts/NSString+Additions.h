@@ -15,5 +15,7 @@
 
 @property (readonly) NSString *stringWithNonDigitsRemoved;
 @property (readonly) NSString *stringWithDiacriticsRemoved;
+@property (readonly) NSString *stringWithNormalizedPhoneNumber;
+@property (readonly) NSString *stringWithWhiteSpaceTrimmed;
 
 @end
