@@ -42,8 +42,7 @@
     dispatch_block_t block = ^{
         
         if ([self unarchiveCache]) {
-            self.status = kAddressBookOnline;
-            self.status = kAddressBookLoading;
+            [self setLoading: YES];
         }
         else if (!self.hashTableSortedByFirst || !self.hashTableSortedByLast || !self.hashTableSortedByPhone) {
             self.hashTableSortedByFirst = [[NSMutableDictionary alloc] init];
@@ -55,7 +54,7 @@
                 [self.hashTableSortedByFirst setObject: [[NSMutableArray alloc] init] forKey: sectionKey];
                 [self.hashTableSortedByLast setObject: [[NSMutableArray alloc] init] forKey: sectionKey];
             }
-            NSArray *sectionKeys = @[@"0",@"1",@"2",@"3",@"4",@"5",@"6",@"7",@"8",@"9"];
+            NSArray *sectionKeys = @[@"0",@"1",@"2",@"3",@"4",@"5",@"6",@"7",@"8",@"9",@"+",noPhoneNumberKey];
             for (NSString *sectionKey in sectionKeys)
             {
                 [self.hashTableSortedByFirst setObject: [[NSMutableArray alloc] init] forKey: sectionKey];
@@ -67,7 +66,7 @@
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
         CFErrorRef error = NULL;
         ABAddressBookRef addressBookRef = ABAddressBookCreateWithOptions(NULL, &error);
-        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+        if (error) { CFStringRef desc = CFErrorCopyDescription(error); NSLog(@"ABAddressBookCreateWithOptions (%ld): %@", CFErrorGetCode(error), desc); CFRelease(desc); error = NULL; }
 #else
         ABAddressBookRef addressBook = ABAddressBookCreate();
 #endif
@@ -77,25 +76,18 @@
         
         [self loadGroupsWithABAddressBookRef: addressBookRef];
         
-        [self loadContactsWithABAddressBookRef: addressBookRef];
+        BOOL contactsChanged = [self loadContactsWithABAddressBookRef: addressBookRef];
         
         CFRelease(addressBookRef);
-        
-        if (self.status == kAddressBookLoading)
-        {
-            if ([self.presentationDelegate respondsToSelector:@selector(addressBookDidEndUpdates:)])
-            {
-                [self.presentationDelegate addressBookDidEndUpdates: self];
-            }
-        }
         
         [self archiveCache];
         
         if (completionHandler) {
-            completionHandler(YES);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completionHandler(contactsChanged);
+            });
         }
     };
-    
     dispatch_async(self.serial_queue, block);
 }
 
@@ -208,12 +200,14 @@
     }
 }
 
-- (void)loadContactsWithABAddressBookRef: (ABAddressBookRef)addressBookRef
+- (BOOL)loadContactsWithABAddressBookRef: (ABAddressBookRef)addressBookRef
 {
     NSAssert(!dispatch_get_specific(IsOnMainQueueKey), @"Must not be dispatched on main queue");
     
+    BOOL change = NO;
+    
     NSMutableSet *allContactIdentifiers = [[NSMutableSet alloc] init];
-    if (self.status == kAddressBookLoading)
+    if (self.isLoading)
     {
         [allContactIdentifiers addObjectsFromArray: self.allContactIDs];
     }
@@ -229,6 +223,8 @@
     
     NSDate *start = [NSDate date];
     
+    self.contactsCount = ABAddressBookGetPersonCount(self.addressBookRef);
+    self.nativeContactsCount = self.contactsCount;
     NSLog(@"Number of contacts: %ld", (long)self.contactsCount);
     self.loadProgress.totalUnitCount = self.contactsCount;
     self.loadProgress.completedUnitCount = 0;
@@ -255,22 +251,15 @@
             
             AKContact *contact = [self contactForContactId: recordID withAddressBookRef: addressBookRef];
             
-            NSLog(@"%d intHash: %lu RecordHash: %lu", recordID, (unsigned long)[contactID hash], (unsigned long)[(__bridge id)recordRef hash]);
-            
             [nativeContactIDs addObject: contactID];
             
             NSDate *created = [contact valueForProperty: kABPersonCreationDateProperty];
             NSDate *modified = [contact valueForProperty: kABPersonModificationDateProperty];
             
             NSArray *linkedContactIDs = [contact linkedContactIDs];
-            NSMutableSet *linkedRecordIDs = [[NSMutableSet alloc] init];
-            for (NSNumber *contactID in linkedContactIDs)
+            if (linkedContactIDs.count > 0 && ![allLinkedRecordIDs member: contactID])
             {
-                [linkedRecordIDs addObject: contactID];
-            }
-            if (linkedRecordIDs.count > 1 && ![allLinkedRecordIDs intersectsSet: linkedRecordIDs])
-            {
-                [allLinkedRecordIDs addObject: linkedRecordIDs.anyObject];
+                [allLinkedRecordIDs addObjectsFromArray: linkedContactIDs];
             }
             
             if (!self.dateAddressBookLoaded || [self.dateAddressBookLoaded compare: created] != NSOrderedDescending)
@@ -294,10 +283,10 @@
         }
     }
     
-    NSLog(@"Native Address book sweep %.2f", fabs([[NSDate date] timeIntervalSinceDate: start]));
+    NSLog(@"Native address book scanned in: %.2f", fabs([[NSDate date] timeIntervalSinceDate: start]));
     start = [NSDate date];
     
-    if (self.status == kAddressBookLoading)
+    if (self.isLoading)
     {
         if ([self.presentationDelegate respondsToSelector: @selector(addressBookWillBeginUpdates:)])
         {
@@ -312,6 +301,7 @@
         }
         for (NSNumber *recordID in allContactIdentifiers)
         {
+            change = YES;
             AKContact *contact = [self contactForContactId: recordID.intValue withAddressBookRef: addressBookRef];
             [self deleteRecordIDfromContactIdentifiersForContact: contact];
         }
@@ -319,9 +309,10 @@
     
     for (NSNumber *recordID in createdRecordIDs)
     {
+        change = YES;
         self.loadProgress.completedUnitCount += 1;
         AKContact *contact =  [self contactForContactId: recordID.intValue withAddressBookRef: addressBookRef];
-        if (self.status == kAddressBookLoading)
+        if (self.isLoading)
         {
             NSLog(@"% 3d : %@ is new", recordID.intValue, contact.compositeName);
         }
@@ -333,36 +324,54 @@
     }
     for (NSNumber *recordID in changedRecordIDs)
     {
+        change = YES;
         self.loadProgress.completedUnitCount += 1;
         AKContact *contact = [self contactForContactId: recordID.intValue withAddressBookRef: addressBookRef];
-        if (self.status == kAddressBookLoading)
+        if (self.isLoading)
         {
             NSLog(@"% 3d : %@ did change", recordID.intValue, contact.compositeName);
         }
         [self deleteRecordIDfromContactIdentifiersForContact: contact];
         [self insertRecordIDinContactIdentifiersForContact: contact withAddressBookRef: addressBookRef];
+        [self processPhoneNumbersOfContact: contact withABAddressBookRef: addressBookRef];
     }
     
-    NSLog(@"Lookup table contstructed %.2f", fabs([[NSDate date] timeIntervalSinceDate: start]));
+    if ([self.presentationDelegate respondsToSelector:@selector(addressBookDidEndUpdates:)])
+    {
+        [self.presentationDelegate addressBookDidEndUpdates: self];
+    }
+    
+    NSLog(@"Lookup table constructed in: %.2f", fabs([[NSDate date] timeIntervalSinceDate: start]));
+    return change;
 }
 
 - (void)processPhoneNumbersOfContact: (AKContact *)contact withABAddressBookRef: (ABAddressBookRef)addressBookRef
 {
-    NSArray *phoneIdentifiers = [contact identifiersForMultiValueProperty: kABPersonPhoneProperty];
-    if (phoneIdentifiers.count > 0)
+    ABPropertyID property = kABPersonPhoneProperty;
+    NSArray *phoneNumbers = [contact valuesForLinkedMultiValueProperty: property];
+    if (phoneNumbers.count > 0)
     {
-        for (NSNumber *identifier in phoneIdentifiers) {
-            NSString *value = [contact valueForMultiValueProperty: kABPersonPhoneProperty andIdentifier: identifier.intValue];
-            NSString *digits = value.stringWithNonDigitsRemoved;
+        for (NSString *phoneNumber in phoneNumbers) {
+            NSString *normalizedPhoneNumber = phoneNumber.stringWithNormalizedPhoneNumber;
+            NSString *digits = phoneNumber.stringWithNonDigitsRemoved;
             if (digits.length > 0)
             {
                 NSString *key = [digits substringToIndex: 1];
                 NSMutableArray *sectionArray = [self.hashTableSortedByPhone objectForKey: key];
                 
-                NSUInteger index = [AKAddressBook indexOfRecordID: contact.recordID inArray: sectionArray withSortOrdering: self.sortOrdering andAddressBookRef: addressBookRef];
-                [sectionArray insertObject: @(contact.recordID) atIndex: index];
+                if ([sectionArray indexOfObject: @(contact.recordID)] == NSNotFound) {
+                    [sectionArray addObject: @(contact.recordID)];
+                }
             }
-            for (NSString *prefix in [AKAddressBook prefixesToDiscardOnSearch])
+            if ([normalizedPhoneNumber hasPrefix: @"+"])
+            {
+                NSMutableArray *sectionArray = [self.hashTableSortedByPhone objectForKey: @"+"];
+                
+                if ([sectionArray indexOfObject: @(contact.recordID)] == NSNotFound) {
+                    [sectionArray addObject: @(contact.recordID)];
+                }
+            }
+            for (NSString *prefix in [AKAddressBook countryCodePrefixes])
             {
                 if ([digits hasPrefix: prefix])
                 {
@@ -371,12 +380,18 @@
                     {
                         NSString *key = [digits substringToIndex: prefix.length];
                         NSMutableArray *sectionArray = [self.hashTableSortedByPhone objectForKey: key];
-                        NSUInteger index = [AKAddressBook indexOfRecordID: contact.recordID inArray: sectionArray withSortOrdering: self.sortOrdering andAddressBookRef: addressBookRef];
-                        [sectionArray insertObject: @(contact.recordID) atIndex: index];
+                        if ([sectionArray indexOfObject: @(contact.recordID)] == NSNotFound) {
+                            [sectionArray addObject: @(contact.recordID)];
+                        }
                     }
                 }
             }
         }
+    }
+    else
+    {
+        NSMutableArray *sectionArray = [self.hashTableSortedByPhone objectForKey: noPhoneNumberKey];
+        [sectionArray addObject: @(contact.recordID)];
     }
 }
 
@@ -415,7 +430,7 @@
         [sectionArray insertObject: @(contact.recordID) atIndex: index];
     }
     
-    if (self.status == kAddressBookLoading)
+    if (self.isLoading)
     {
         if ([self.presentationDelegate respondsToSelector:@selector(addressBook:didInsertRecordID:)])
         {
@@ -439,7 +454,7 @@
     NSUInteger indexByFirst = [AKAddressBook removeRecordID: contact.recordID withSectionKey: sectionKeyByFirst fromContactIdentifierDictionary: self.hashTableSortedByFirst];
     NSUInteger indexByLast = [AKAddressBook removeRecordID: contact.recordID withSectionKey: sectionKeyByLast fromContactIdentifierDictionary: self.hashTableSortedByLast];
     
-    if ((indexByFirst != NSNotFound || indexByLast != NSNotFound) && self.status == kAddressBookLoading)
+    if ((indexByFirst != NSNotFound || indexByLast != NSNotFound) && self.isLoading)
     {
         if ([self.presentationDelegate respondsToSelector:@selector(addressBook:didRemoveRecordID:)])
         {
@@ -476,7 +491,6 @@
             index = [sectionArray indexOfObject: @(recordID)];
             if (index != NSNotFound)
             {
-                NSLog(@"Moved from section: %@", key);
                 break;
             }
         }
@@ -507,87 +521,86 @@
     return fileName;
 }
 
-+ (NSString *)documentsDirectoryPath
-{
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    return [paths objectAtIndex: 0];
-}
-
 #pragma mark - Comparators
 
 + (NSComparator)recordIDBasedComparatorWithSortOrdering: (ABPersonSortOrdering)sortOrdering andAddressBookRef: (ABAddressBookRef)addressBookRef
 {
     NSComparator comparator = ^NSComparisonResult(id obj1, id obj2) {
-        ABRecordID recordID1 = [(NSNumber *)obj1 intValue];
-        ABRecordID recordID2 = [(NSNumber *)obj2 intValue];
         
-        __weak AKContact *contact1 = [[AKAddressBook sharedInstance] contactForContactId: recordID1 withAddressBookRef: addressBookRef];
-        __weak AKContact *contact2 = [[AKAddressBook sharedInstance] contactForContactId: recordID2 withAddressBookRef: addressBookRef];
-        
-        ABPropertyID prop1 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonFirstNameProperty : kABPersonLastNameProperty;
-        ABPropertyID prop2 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonFirstNameProperty : kABPersonLastNameProperty;
-        
-        NSString *elem1, *elem2;
-        NSComparisonResult result = NSOrderedSame;
-        
-        if (contact1.isPerson && contact2.isPerson)
-        {
-            elem1 = [contact1 valueForProperty: prop1];
-            elem2 = [contact2 valueForProperty: prop2];
+        @autoreleasepool {
+            ABRecordID recordID1 = [(NSNumber *)obj1 intValue];
+            ABRecordID recordID2 = [(NSNumber *)obj2 intValue];
             
-            result = [elem1 localizedCaseInsensitiveCompare: elem2];
-            if (result == NSOrderedSame)
+            AKContact *contact1 = [[AKAddressBook sharedInstance] contactForContactId: recordID1 withAddressBookRef: addressBookRef];
+            AKContact *contact2 = [[AKAddressBook sharedInstance] contactForContactId: recordID2 withAddressBookRef: addressBookRef];
+            
+            ABPropertyID prop1 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonFirstNameProperty : kABPersonLastNameProperty;
+            ABPropertyID prop2 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonFirstNameProperty : kABPersonLastNameProperty;
+            
+            NSString *elem1, *elem2;
+            NSComparisonResult result = NSOrderedSame;
+            
+            if (contact1.isPerson && contact2.isPerson)
             {
+                elem1 = [contact1 valueForProperty: prop1];
+                elem2 = [contact2 valueForProperty: prop2];
+                
                 prop1 = prop2 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
+                if (!elem1) {
+                    elem1 = [contact1 valueForProperty: prop1];
+                }
+                if (!elem2) {
+                    elem2 = [contact2 valueForProperty: prop2];
+                }
+                
+                result = [elem1 localizedCaseInsensitiveCompare: elem2];
+                if (result == NSOrderedSame)
+                {
+                    elem1 = [contact1 valueForProperty: prop1];
+                    elem2 = [contact2 valueForProperty: prop2];
+                    
+                    result = [elem1 localizedCaseInsensitiveCompare: elem2];
+                }
+            }
+            else if (contact1.isPerson && contact2.isOrganization)
+            {
+                prop2 = kABPersonOrganizationProperty;
                 
                 elem1 = [contact1 valueForProperty: prop1];
                 elem2 = [contact2 valueForProperty: prop2];
                 
-                result = [elem1 localizedCaseInsensitiveCompare: elem2];
-            }
-        }
-        else if (contact1.isPerson && contact2.isOrganization)
-        {
-            prop2 = kABPersonOrganizationProperty;
-            
-            elem1 = [contact1 valueForProperty: prop1];
-            elem2 = [contact2 valueForProperty: prop2];
-            
-            result = [elem1 localizedCaseInsensitiveCompare: elem2];
-            if (result == NSOrderedSame)
-            {
                 prop1 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
+                if (!elem1) {
+                    elem1 = [contact1 valueForProperty: prop1];
+                }
+                
+                result = [elem1 localizedCaseInsensitiveCompare: elem2];
+            }
+            else if (contact1.isOrganization && contact2.isPerson)
+            {
+                prop1 = kABPersonOrganizationProperty;
                 
                 elem1 = [contact1 valueForProperty: prop1];
-                result = [elem1 localizedCaseInsensitiveCompare: elem2];
-            }
-        }
-        else if (contact1.isOrganization && contact2.isPerson)
-        {
-            prop1 = kABPersonOrganizationProperty;
-            
-            elem1 = [contact1 valueForProperty: prop1];
-            elem2 = [contact2 valueForProperty: prop2];
-            
-            result = [elem1 localizedCaseInsensitiveCompare: elem2];
-            if (result == NSOrderedSame)
-            {
-                prop2 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
-                
                 elem2 = [contact2 valueForProperty: prop2];
+                
+                prop2 = (sortOrdering == kABPersonSortByFirstName) ? kABPersonLastNameProperty : kABPersonFirstNameProperty;
+                if (!elem2) {
+                    elem2 =  [contact2 valueForProperty: prop2];
+                }
+                
                 result = [elem1 localizedCaseInsensitiveCompare: elem2];
             }
+            else if (contact1.isOrganization && contact2.isOrganization)
+            {
+                prop1 = prop2 = kABPersonOrganizationProperty;
+                
+                elem1 = [contact1 valueForProperty: prop1];
+                elem2 = [contact2 valueForProperty: prop2];
+                
+                result = [elem1 localizedCaseInsensitiveCompare: elem2];
+            }
+            return result;
         }
-        else if (contact1.isOrganization && contact2.isOrganization)
-        {
-            prop1 = prop2 = kABPersonOrganizationProperty;
-            
-            elem1 = [contact1 valueForProperty: prop1];
-            elem2 = [contact2 valueForProperty: prop2];
-            
-            result = [elem1 localizedCaseInsensitiveCompare: elem2];
-        }
-        return result;
     };
     return comparator;
 }

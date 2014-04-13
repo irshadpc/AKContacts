@@ -26,14 +26,15 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-
 #import "AKAddressBook.h"
+
+@protocol HWContactProtocol;
 
 @interface AKAddressBook (Loader)
 
 - (void)loadSourcesWithABAddressBookRef: (ABAddressBookRef)addressBookRef;
 - (void)loadGroupsWithABAddressBookRef: (ABAddressBookRef)addressBookRef;
-- (void)loadContactsWithABAddressBookRef: (ABAddressBookRef)addressBookRef;
+- (BOOL)loadContactsWithABAddressBookRef: (ABAddressBookRef)addressBookRef;
 
 - (void)processPhoneNumbersOfContact: (AKContact *)contact withABAddressBookRef: (ABAddressBookRef)addressBookRef;
 
@@ -56,7 +57,7 @@
 /**
  * The index where a record should appear in an alphabetically sorted array
  */
-+ (NSUInteger)indexOfRecordID: (ABRecordID)recordID inArray: (NSArray *)array withSortOrdering: (ABPersonSortOrdering)sortOrdering andAddressBookRef: (ABAddressBookRef)addressBookRef;
++ (NSUInteger)indexOfRecordID: (ABRecordID) recordID inArray: (NSArray *)array withSortOrdering: (ABPersonSortOrdering)sortOrdering andAddressBookRef: (ABAddressBookRef)addressBookRef;
 /**
  * Removes a recordID from a dictionary storing recordIDs organized into sections
  */
@@ -67,7 +68,5 @@
 + (NSString *)fileNameForSelector: (SEL)selector;
 
 + (NSComparator)recordIDBasedComparatorWithSortOrdering: (ABPersonSortOrdering)sortOrdering andAddressBookRef: (ABAddressBookRef)addressBookRef;
-
-+ (NSString *)documentsDirectoryPath;
 
 @end
