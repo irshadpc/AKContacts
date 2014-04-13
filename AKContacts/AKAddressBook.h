@@ -29,20 +29,24 @@
 #import <Foundation/Foundation.h>
 
 FOUNDATION_EXPORT const void *const IsOnMainQueueKey;
+FOUNDATION_EXPORT const void *const IsOnSerialBackgroundQueueKey;
 FOUNDATION_EXPORT const BOOL ShowGroups;
-FOUNDATION_EXPORT const NSInteger kUnkownContactID;
+FOUNDATION_EXPORT const ABRecordID kUnkownContactID;
+FOUNDATION_EXPORT NSString *const noPhoneNumberKey;
 
 @class AKAddressBook;
 @class AKContact;
 @class AKGroup;
 @class AKSource;
+@protocol HWContactProtocol;
 
-typedef NS_ENUM(NSInteger, AddressBookStatus)
+#define kAddressBookLoadingMask (1 << 8)
+
+typedef NS_ENUM(uint32_t, AddressBookStatus)
 {
-    kAddressBookOffline = 0,
-    kAddressBookInitializing,
-    kAddressBookLoading,
-    kAddressBookOnline
+    kAddressBookOffline = 0x0,
+    kAddressBookInitializing = 0x1,
+    kAddressBookOnline = 0x2,
 };
 
 typedef struct AKSourceGroup {
@@ -59,10 +63,15 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 
 @protocol AKAddressBookPresentationDelegate <NSObject>
 
+@optional
+- (void)addressBookWillBeginLoading: (AKAddressBook *)addressBook;
+- (void)addressBookDidEndLoading: (AKAddressBook *)addressBook;
+@optional
 - (void)addressBookWillBeginUpdates: (AKAddressBook *)addressBook;
 - (void)addressBook: (AKAddressBook *)addressBook didInsertRecordID: (ABRecordID)recordID;
 - (void)addressBook: (AKAddressBook *)addressBook didRemoveRecordID: (ABRecordID)recordID;
 - (void)addressBookDidEndUpdates: (AKAddressBook *)addressBook;
+- (void)addressBook:(AKAddressBook *)addressBook didMakeLoadProgress: (CGFloat)progress;
 
 @end
 
@@ -77,6 +86,10 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 @property (strong, nonatomic, readonly) dispatch_semaphore_t semaphore;
 
 @property (assign, nonatomic) AddressBookStatus status;
+@property (assign, nonatomic, getter = isLoading) BOOL loading;
+
+@property (assign, readonly, nonatomic) BOOL canAccessNativeAddressBook;
+@property (assign, readonly, nonatomic) ABAuthorizationStatus nativeAddressBookAuthorizationStatus;
 
 @property (strong, nonatomic) NSProgress *loadProgress;
 /**
@@ -97,6 +110,7 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 @property (nonatomic, readonly) NSDictionary *hashTable;
 @property (nonatomic, readonly) NSDictionary *hashTableSortedInverse;
 @property (nonatomic, readonly) NSArray *allContactIDs;
+@property (nonatomic, readonly) NSSet *contactIDsWithoutPhoneNumber;
 /**
  * ID of displayed source and group
  **/
@@ -105,28 +119,28 @@ NS_INLINE AKSourceGroup AKMakeSourceGroup(NSUInteger source, NSUInteger group) {
 
 @property (assign, nonatomic) BOOL needReload;
 
-@property (assign, nonatomic, readonly) NSInteger contactsCount;
+@property (assign, nonatomic) NSInteger contactsCount;
+@property (assign, nonatomic) NSInteger nativeContactsCount;
 
 @property (nonatomic) NSDate *dateAddressBookLoaded;
 
 @property (assign, nonatomic, readonly) ABPersonSortOrdering sortOrdering;
 
-@property (assign, nonatomic, readonly) ABAuthorizationStatus authorizationStatus;
-
 + (AKAddressBook *)sharedInstance;
 + (NSArray *)sectionKeys;
-+ (NSArray *)prefixesToDiscardOnSearch;
-
++ (NSArray *)countryCodePrefixes;
++ (NSString *)documentsDirectoryPath;
+- (BOOL)hasStatus: (AddressBookStatus)status;
 - (void)requestAddressBookAccessWithCompletionHandler:(void (^)(BOOL))completionHandler;
 - (void)reloadAddressBook;
 - (void)loadAddressBook;
-- (void)deleteRecordID: (ABRecordID)recordID;
-
 - (AKSource *)defaultSource;
 - (AKSource *)sourceForSourceId: (ABRecordID)recordId;
 - (AKContact *)contactForContactId: (ABRecordID)recordId;
 - (AKContact *)contactForContactId: (ABRecordID)recordId withAddressBookRef: (ABAddressBookRef)addressBookRef;
 - (AKContact *)contactForPhoneNumber: (NSString *)phoneNumber;
+- (AKContact *)contactForPhoneNumber: (NSString *)phoneNumber withAddressBookRef: (ABAddressBookRef)addressBookRef;
 - (AKSource *)sourceForContactId: (ABRecordID)recordId;
+- (void)deleteRecordID: (ABRecordID)recordID;
 
 @end

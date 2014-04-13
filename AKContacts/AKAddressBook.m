@@ -42,12 +42,20 @@ const BOOL ShowGroups = YES;
  * subsystem or any other value that allows you to identify the value uniquely.
  **/
 const void *const IsOnMainQueueKey = &IsOnMainQueueKey;
+const void *const IsOnSerialBackgroundQueueKey = &IsOnSerialBackgroundQueueKey;
 
-@interface AKAddressBook ()
+/**
+ * kUnknownContactID is the 32-bit flavor of NSNotfound. Hardcoded to prevent change on 64 bit
+ * 2147483647 is explicitly defined in core data as default
+ */
+const ABRecordID kUnkownContactID = 0x7FFFFFFF;
+
+NSString *const noPhoneNumberKey = @"-";
+
+@interface AKAddressBook () <UIAlertViewDelegate>
 
 @property (assign, nonatomic) ABPersonSortOrdering sortOrdering;
-
-@property (assign, nonatomic) NSInteger contactsCount;
+@property (assign, nonatomic) ABAuthorizationStatus nativeAddressBookAuthorizationStatus;
 
 @end
 
@@ -74,16 +82,22 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     return akAddressBook;
 }
 
-+ (NSArray *)prefixesToDiscardOnSearch
-{
-    return @[@"1"];
-}
-
 + (NSArray *)sectionKeys;
 {
     return @[@"A",@"B",@"C",@"D",@"E",@"F",@"F",@"G",@"H",
              @"I",@"J",@"K",@"L",@"M",@"N",@"O",@"P",@"Q",
              @"R",@"S",@"T",@"U",@"V",@"W",@"X",@"Y",@"Z",@"#"];
+}
+
++ (NSArray *)countryCodePrefixes
+{
+    return @[@"36", @"1"];
+}
+
++ (NSString *)documentsDirectoryPath
+{
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    return [paths objectAtIndex: 0];
 }
 
 #pragma mark - Instance methods
@@ -94,11 +108,14 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     if (self)
     {
         _serial_queue = dispatch_queue_create([NSStringFromClass([AKAddressBook class]) UTF8String], DISPATCH_QUEUE_SERIAL);
+        dispatch_queue_set_specific(_serial_queue, IsOnSerialBackgroundQueueKey, (__bridge void *)self, NULL);
         _semaphore = dispatch_semaphore_create(1);
         
         _needReload = YES;
         
         _loadProgress = [[NSProgress alloc] initWithParent: nil userInfo: nil];
+        [_loadProgress addObserver: self forKeyPath: NSStringFromSelector(@selector(totalUnitCount)) options: NSKeyValueObservingOptionNew context:nil];
+        [_loadProgress addObserver: self forKeyPath: NSStringFromSelector(@selector(completedUnitCount)) options: NSKeyValueObservingOptionNew context:nil];
         
         _status = kAddressBookOffline;
         
@@ -120,16 +137,38 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
         CFErrorRef error = NULL;
         _addressBookRef = ABAddressBookCreateWithOptions(NULL, &error);
-        if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
+        if (error) { CFStringRef desc = CFErrorCopyDescription(error); NSLog(@"Address book reference error (%ld): %@", CFErrorGetCode(error), desc); CFRelease(desc); error = NULL; }
 #else
         _addressBookRef = ABAddressBookCreate();
 #endif
         
         _sortOrdering = ABPersonGetSortOrdering();
+        if (&ABAddressBookGetAuthorizationStatus) {
+            _nativeAddressBookAuthorizationStatus = ABAddressBookGetAuthorizationStatus();
+        }
+        else {
+            _nativeAddressBookAuthorizationStatus = kABAuthorizationStatusAuthorized;
+        }
+        
+        
+        [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(applicationWillEnterForeground:) name: UIApplicationWillEnterForegroundNotification object: nil];
         
         ABAddressBookRegisterExternalChangeCallback(_addressBookRef, addressBookChanged, (__bridge void*) self);
     }
     return self;
+}
+
+- (void)applicationWillEnterForeground: (NSNotification *)notification
+{
+    if ([self hasStatus: kAddressBookOnline])
+    {
+        NSInteger contactsCount = ABAddressBookGetPersonCount(self.addressBookRef);
+        NSLog(@"Number of contacts: %ld %ld", (long)contactsCount, (long)self.nativeContactsCount);
+        if (contactsCount != self.nativeContactsCount)
+        {
+            [self reloadAddressBook];
+        }
+    }
 }
 
 - (NSDate *)dateAddressBookLoaded
@@ -146,55 +185,79 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (void)dealloc
 {
-    CFRelease(_addressBookRef);
+    if (_addressBookRef) {
+        CFRelease(_addressBookRef);
+    }
+    [self.loadProgress removeObserver: self forKeyPath: NSStringFromSelector(@selector(totalUnitCount))];
+    [self.loadProgress removeObserver: self forKeyPath: NSStringFromSelector(@selector(completedUnitCount))];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 
 #pragma mark - Address Book
 
-- (ABAuthorizationStatus)authorizationStatus
+- (BOOL)isLoading
 {
-    return ABAddressBookGetAuthorizationStatus();
+    return ((self.status & kAddressBookLoadingMask) == kAddressBookLoadingMask);
+}
+
+- (void)setLoading:(BOOL)loading
+{
+    if (loading) {
+        self.status |= kAddressBookLoadingMask;
+    }
+    else {
+        self.status &= ~kAddressBookLoadingMask;
+    }
+}
+
+- (BOOL)hasStatus: (AddressBookStatus)status
+{
+    return ((self.status & status) == status);
+}
+
+- (BOOL)canAccessNativeAddressBook
+{
+    BOOL canAccessNativeAddressBook = (self.nativeAddressBookAuthorizationStatus == kABAuthorizationStatusAuthorized);
+    return canAccessNativeAddressBook;
 }
 
 - (void)requestAddressBookAccessWithCompletionHandler:(void (^)(BOOL))completionHandler
 {
     NSAssert(dispatch_get_specific(IsOnMainQueueKey), @"Must be dispatched on main queue");
     
-    ABAuthorizationStatus authStatus = kABAuthorizationStatusAuthorized;
+    void (^requestBlock)(bool granted, CFErrorRef error) = ^(bool granted, CFErrorRef error){
+        NSLog(@"Access %@ to addressBook", (granted) ? @"granted" : @"denied");
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (granted) {
+                self.nativeAddressBookAuthorizationStatus = kABAuthorizationStatusAuthorized;
+            }
+            else {
+                self.nativeAddressBookAuthorizationStatus = kABAuthorizationStatusDenied;
+            }
+            if (completionHandler) {
+                completionHandler(granted);
+            }
+        });
+    };
     
+    ABAuthorizationStatus authorizationStatus = kABAuthorizationStatusAuthorized;
     if (&ABAddressBookGetAuthorizationStatus)
     {
-        authStatus = ABAddressBookGetAuthorizationStatus();
+        authorizationStatus = self.nativeAddressBookAuthorizationStatus;
         
-        if (authStatus == kABAuthorizationStatusNotDetermined)
+        if (authorizationStatus == kABAuthorizationStatusNotDetermined)
         {
-            void (^block)(bool granted, CFErrorRef error) = ^(bool granted, CFErrorRef error){
-                if (granted)
-                {
-                    NSLog(@"Access granted to addressBook");
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        if (completionHandler) {
-                            completionHandler(granted);
-                        }
-                    });
-                }
-                else
-                {
-                    NSLog(@"Access denied to addressBook");
-                }
-            };
-            ABAddressBookRequestAccessWithCompletion(self.addressBookRef, block);
+            ABAddressBookRequestAccessWithCompletion(self.addressBookRef, requestBlock);
         }
-        else if (authStatus == kABAuthorizationStatusDenied)
+        else if (authorizationStatus == kABAuthorizationStatusDenied)
         {
             NSLog(@"kABAuthorizationStatusDenied");
         }
-        else if (authStatus == kABAuthorizationStatusRestricted)
+        else if (authorizationStatus == kABAuthorizationStatusRestricted)
         {
             NSLog(@"kABAuthorizationStatusRestricted");
         }
-        else if (authStatus == kABAuthorizationStatusAuthorized)
+        else if (authorizationStatus == kABAuthorizationStatusAuthorized)
         {
             NSLog(@"kABAuthorizationStatusAuthorized");
         }
@@ -202,7 +265,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     
     if (completionHandler)
     {
-        completionHandler((authStatus == kABAuthorizationStatusAuthorized));
+        completionHandler((authorizationStatus == kABAuthorizationStatusAuthorized));
     }
 }
 
@@ -211,8 +274,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
     if (self.dateAddressBookLoaded)
     {
         NSTimeInterval elapsed = fabs([self.dateAddressBookLoaded timeIntervalSinceNow]);
-        NSLog(@"Elasped since last AB load: %f", elapsed);
-        if (elapsed < 5.0)
+        NSLog(@"Elapsed since last AB load: %f", elapsed);
+        if (elapsed < 2.0)
         {
             return;
         }
@@ -222,10 +285,10 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
         }
     }
     
-    if (self.status != kAddressBookLoading && self.needReload)
+    if (!self.isLoading && self.needReload)
     {
         __weak AKAddressBook *_self = self;
-        void(^block)(void) = ^{
+        dispatch_block_t block = ^{
             [_self loadAddressBook];
         };
         if (dispatch_get_specific(IsOnMainQueueKey)) block();
@@ -237,62 +300,45 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 {
     NSAssert(dispatch_get_specific(IsOnMainQueueKey), @"Must be dispatched on main queue");
     
+    if (self.isLoading) {
+        // Skip if loading is already in progress
+        return;
+    }
+    
     switch (self.status)
     {
         case kAddressBookOffline:
             self.status = kAddressBookInitializing;
             break;
         case kAddressBookOnline:
-            // self.addressBookRef needs a revert to recognize external changes
-            ABAddressBookRevert(self.addressBookRef);
-            self.status = kAddressBookLoading;
+            // addressBookRef needs a revert to recognize external changes
+            if (self.addressBookRef) {
+                ABAddressBookRevert(self.addressBookRef);
+            }
             break;
         case kAddressBookInitializing:
-        case kAddressBookLoading: {
-            // we are already loading the address book, do not start again
-            return;
-        }
+        default:
+            break;
     }
     
     NSDate *start = [NSDate date];
     
-    self.contactsCount = ABAddressBookGetPersonCount(self.addressBookRef);
+    if ([self.presentationDelegate respondsToSelector:@selector(addressBookWillBeginLoading:)])
+    {
+        [self.presentationDelegate addressBookWillBeginLoading: self];
+    }
     
-    [self loadAddressBookWithCompletionHandler:^(BOOL success) {
-        if (success) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                self.dateAddressBookLoaded = [NSDate date];
-                NSLog(@"Address book loaded in %.2f", fabs([self.dateAddressBookLoaded timeIntervalSinceDate: start]));
-                
-                self.status = kAddressBookOnline;
-            });
+    [self loadAddressBookWithCompletionHandler:^(BOOL addressBookChanged) {
+        self.dateAddressBookLoaded = [NSDate date];
+        NSLog(@"Address book loaded in %.2f", fabs([self.dateAddressBookLoaded timeIntervalSinceDate: start]));
+        
+        self.status = kAddressBookOnline;
+        
+        if ([self.presentationDelegate respondsToSelector:@selector(addressBookDidEndLoading:)])
+        {
+            [self.presentationDelegate addressBookDidEndLoading: self];
         }
     }];
-}
-
-- (void)deleteRecordID: (ABRecordID)recordID
-{
-    AKContact *contact = [self contactForContactId: recordID];
-    
-    for (NSString *key in self.hashTableSortedByFirst)
-    {
-        NSMutableArray *sectionArray = [[self.hashTableSortedByFirst objectForKey: key] copy];
-        [sectionArray removeObject: @(recordID)];
-    }
-    for (NSString *key in self.hashTableSortedByLast)
-    {
-        NSMutableArray *sectionArray = [[self.hashTableSortedByLast objectForKey: key] copy];
-        [sectionArray removeObject: @(recordID)];
-    }
-    
-    [self setNeedReload: NO];
-    
-    CFErrorRef error = NULL;
-    ABAddressBookRemoveRecord(self.addressBookRef, contact.recordRef, &error);
-    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
-    
-    ABAddressBookSave(self.addressBookRef, &error);
-    if (error) { NSLog(@"%ld", CFErrorGetCode(error)); error = NULL; }
 }
 
 - (NSDictionary *)hashTable
@@ -318,6 +364,12 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
         }
     }
     return (contactIDs.count > 0) ? [contactIDs allObjects] : nil;
+}
+
+- (NSSet *)contactIDsWithoutPhoneNumber
+{
+    NSArray *contactIDsWithoutPhoneNumbers = [self.hashTableSortedByPhone objectForKey: noPhoneNumberKey];
+    return (contactIDsWithoutPhoneNumbers.count > 0) ? [[NSSet alloc] initWithArray: contactIDsWithoutPhoneNumbers] : [[NSSet alloc] init];
 }
 
 - (AKSource *)defaultSource
@@ -355,6 +407,8 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 
 - (AKContact *)contactForContactId: (ABRecordID)recordId
 {
+    NSAssert(dispatch_get_specific(IsOnMainQueueKey), @"Must be dispatched on main queue");
+
     return [[AKContact alloc] initWithABRecordID: recordId sortOrdering: self.sortOrdering andAddressBookRef: self.addressBookRef];
 }
 
@@ -366,10 +420,16 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
 #warning Deal with hashTable being mutated on loading while this and other methods iterate on it
 - (AKContact *)contactForPhoneNumber: (NSString *)phoneNumber
 {
-    AKContact *contact;
+    NSAssert(dispatch_get_specific(IsOnMainQueueKey), @"Must be dispatched on main queue");
     
+    return [self contactForPhoneNumber: phoneNumber withAddressBookRef: self.addressBookRef];
+}
+
+- (AKContact *)contactForPhoneNumber: (NSString *)phoneNumber withAddressBookRef: (ABAddressBookRef)addressBookRef
+{
+    AKContact *contact;
     phoneNumber = phoneNumber.stringWithNonDigitsRemoved;
-    for (NSString *prefix in [AKAddressBook prefixesToDiscardOnSearch]) {
+    for (NSString *prefix in [AKAddressBook countryCodePrefixes]) {
         if ([phoneNumber hasPrefix: prefix]) {
             phoneNumber = [phoneNumber substringFromIndex: prefix.length];
         }
@@ -380,7 +440,7 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
         NSNumber *recordID = [self.phoneNumberCache objectForKey: phoneNumber];
         if (recordID)
         {
-            contact = [self contactForContactId: recordID.intValue];
+            contact = [self contactForContactId: recordID.intValue withAddressBookRef: addressBookRef];
         }
         else
         {
@@ -388,10 +448,10 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
             NSArray *sectionArray = [[self.hashTableSortedByPhone objectForKey: firstDigit] copy];
             for (NSNumber *recordID in sectionArray)
             {
-                AKContact *record = [self contactForContactId: recordID.intValue];
+                AKContact *record = [self contactForContactId: recordID.intValue withAddressBookRef: addressBookRef];
                 if (record)
                 {
-                    if ([record numberOfPhoneNumbersMatchingTerms: @[phoneNumber] preciseMatch: YES] > 0)
+                    if ([[record indexesOfPhoneNumbersMatchingTerms: @[phoneNumber] preciseMatch: YES] count] > 0)
                     {
                         [self.phoneNumberCache setObject: recordID forKey: [phoneNumber copy]];
                         contact = record;
@@ -420,6 +480,62 @@ void addressBookChanged(ABAddressBookRef reference, CFDictionaryRef dictionary, 
         }
     }
     return ret;
+}
+
+- (void)deleteRecordID: (ABRecordID)recordID
+{
+    NSAssert(dispatch_get_specific(IsOnMainQueueKey), @"Must be dispatched on main queue");
+    
+    AKContact *contact = [self contactForContactId: recordID];
+    
+    for (NSString *key in self.hashTableSortedByFirst)
+    {
+        NSMutableArray *sectionArray = [[self.hashTableSortedByFirst objectForKey: key] copy];
+        [sectionArray removeObject: @(recordID)];
+    }
+    for (NSString *key in self.hashTableSortedByLast)
+    {
+        NSMutableArray *sectionArray = [[self.hashTableSortedByLast objectForKey: key] copy];
+        [sectionArray removeObject: @(recordID)];
+    }
+    
+    [self setNeedReload: NO];
+    
+    CFErrorRef error = NULL;
+    ABAddressBookRemoveRecord(self.addressBookRef, contact.recordRef, &error);
+    if (error) { CFStringRef desc = CFErrorCopyDescription(error); NSLog(@"ABAddressBookRemoveRecord (%ld): %@", CFErrorGetCode(error), desc); CFRelease(desc); error = NULL; }
+    
+    ABAddressBookSave(self.addressBookRef, &error);
+    if (error) { CFStringRef desc = CFErrorCopyDescription(error); NSLog(@"ABAddressBookSave (%ld): %@", CFErrorGetCode(error), desc); CFRelease(desc); error = NULL; }
+}
+
+#pragma mark - Key-Value Observing
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{   // This is not dispatched on main queue
+    if (object == self.loadProgress)
+    {
+        int64_t completedUnitCount = self.loadProgress.completedUnitCount;
+        int64_t totalUnitCount = self.loadProgress.totalUnitCount;
+        
+        int64_t denom = (totalUnitCount > 100) ? (totalUnitCount / 100) : totalUnitCount;
+        if (completedUnitCount % denom == 0) { // Don't call to often; this eats precious CPU time
+            dispatch_block_t block = ^{
+                if ([self.presentationDelegate respondsToSelector:@selector(addressBook:didMakeLoadProgress:)]) {
+                    [self.presentationDelegate addressBook: self didMakeLoadProgress: self.loadProgress.fractionCompleted];
+                }
+            };
+            if (dispatch_get_specific(IsOnMainQueueKey)) block();
+            else dispatch_async(dispatch_get_main_queue(), block);
+        }
+    }
+}
+
+#pragma mark - UIAlertViewDelegate
+
+- (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex
+{
+    
 }
 
 @end
